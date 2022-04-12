@@ -1,0 +1,59 @@
+{
+  "name": "boolean-parser",
+  "version": "0.0.2",
+  "description": "Script that parses a boolean query to an array with all the possibilities. IE: (a AND (b OR c)) -> [[a, b],[a, c]]",
+  "main": "index.js",
+  "scripts": {
+    "test": "./node_modules/mocha/bin/mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/riichard/boolean-parser-js.git"
+  },
+  "keywords": [
+    "boolean",
+    "keywords",
+    "parser",
+    "query",
+    "parser",
+    "lucene"
+  ],
+  "author": {
+    "name": "Richard Kraaijenhagen",
+    "email": "stdin@riichard.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/riichard/boolean-parser-js/issues"
+  },
+  "homepage": "https://github.com/riichard/boolean-parser-js",
+  "devDependencies": {
+    "mocha": "^3.1.0"
+  },
+  "gitHead": "90a13a2f721f893d8973191e7c909f6e8ebda7e5",
+  "_id": "boolean-parser@0.0.2",
+  "_shasum": "58721f1172e65fd132d6e6debbd00053deaffa12",
+  "_from": "boolean-parser@latest",
+  "_npmVersion": "4.0.5",
+  "_nodeVersion": "7.4.0",
+  "_npmUser": {
+    "name": "riichard",
+    "email": "stdin@riichard.com"
+  },
+  "dist": {
+    "shasum": "58721f1172e65fd132d6e6debbd00053deaffa12",
+    "tarball": "https://registry.npmjs.org/boolean-parser/-/boolean-parser-0.0.2.tgz"
+  },
+  "maintainers": [
+    {
+      "name": "riichard",
+      "email": "stdin@riichard.com"
+    }
+  ],
+  "_npmOperationalInternal": {
+    "host": "packages-18-east.internal.npmjs.com",
+    "tmp": "tmp/boolean-parser-0.0.2.tgz_1485428302393_0.05734870443120599"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/boolean-parser/-/boolean-parser-0.0.2.tgz"
+}

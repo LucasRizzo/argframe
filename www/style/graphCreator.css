@@ -1,0 +1,487 @@
+#toolbox{
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    margin-bottom: 0.5em;
+    margin-left: 1em;
+    /* border: 2px solid #ff8080; */
+    border-radius: 5px;
+    padding: 0.8em;
+    z-index: 5;
+}
+
+#toolbox input{
+    width: 35px;
+    opacity: 0.6;
+}
+
+#toolbox input:hover{
+    opacity: 1;
+    cursor: pointer;
+}
+
+#toolboxdisabled{
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    margin-bottom: 0.5em;
+    margin-left: 1em;
+    /* border: 2px solid #ff8080; */
+    border-radius: 5px;
+    padding: 0.8em;
+    z-index: 5;
+}
+
+#toolboxdisabled input{
+    width: 35px;
+    opacity: 0.6;
+}
+
+#toolboxbottomleft{
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    margin-bottom: 0.5em;
+    margin-left: 1em;
+    border: 2px solid #EEEEEE;
+    border-radius: 5px;
+    padding: 0.8em;
+    z-index: 5;
+}
+
+#toolboxbottomleft input{
+    width: 35px;
+    opacity: 0.6;
+}
+
+#toolboxbottomleftdisabled{
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    margin-bottom: 0.5em;
+    margin-left: 1em;
+    border: 2px solid #EEEEEE;
+    border-radius: 5px;
+    padding: 0.8em;
+    z-index: 5;
+}
+
+#toolboxbottomleftdisabled input{
+    width: 35px;
+    opacity: 0.6;
+}
+
+#toolboxbottomleft input:hover{
+    opacity: 1;
+    cursor: pointer;
+}
+
+#toolboxinfo{
+    position: absolute;
+    top:0;
+    left:0;
+    margin-bottom: 0.5em;
+    margin-left: 1em;
+    /* border: 2px solid #EEEEEE; */
+    border-radius: 5px;
+    padding: 1em;
+    z-index: 5;
+}
+
+#toolboxinfo input{
+    width: 30px;
+    opacity: 0.4;
+}
+#toolboxinfo input:hover{
+    opacity: 1;
+    cursor: pointer;
+}
+
+#toolboxtop{
+    position: absolute;
+    top:0;
+    right:0;
+    margin-bottom: 0.5em;
+    margin-left: 1em;
+    /* border: 2px solid #EEEEEE; */
+    border-radius: 5px;
+    padding: 1em;
+    z-index: 5;
+}
+
+#toolboxtop input{
+    width: 30px;
+    opacity: 0.4;
+}
+#toolboxtop input:hover{
+    opacity: 1;
+    cursor: pointer;
+}
+
+#toolboxbottomright{
+    position: absolute;
+    bottom:0;
+    right:0;
+    margin-bottom: 0.5em;
+    margin-left: 1em;
+    border: 2px solid #EEEEEE;
+    border-radius: 5px;
+    padding: 1em;
+    z-index: 5;
+    background-color: rgb(248, 248, 248);
+}
+
+#toolboxbottomright input{
+    width: 30px;
+    opacity: 0.4;
+}
+
+#toolboxbottomrightdisabled{
+    position: absolute;
+    bottom:0;
+    right:0;
+    margin-bottom: 0.5em;
+    margin-left: 1em;
+    border: 2px solid #EEEEEE;
+    border-radius: 5px;
+    padding: 1em;
+    z-index: 5;
+    background-color: rgb(248, 248, 248);
+}
+
+#toolboxbottomrightdisabled input{
+    width: 30px;
+    opacity: 0.4;
+}
+
+#toolboxbottomright input:hover{
+    opacity: 1;
+    cursor: pointer;
+}
+
+#toolboxtopleft{
+    position: absolute;
+    top:0;
+    left:0;
+    margin-bottom: 0.2em;
+    margin-left: 0.2em;
+    /*border: 2px solid #EEEEEE;*/
+    border-radius: 1px;
+    padding: 0.2em;
+    z-index: 5;
+}
+
+#toolboxtopleft input{
+    width: 30px;
+    opacity: 0.4;
+}
+
+#toolboxleft{
+    position: absolute;
+    top:15%;
+    left:1%;
+    margin-bottom: 0.2em;
+    margin-left: 0.2em;
+    /*border: 2px solid #EEEEEE;*/
+    border-radius: 1px;
+    padding: 0.2em;
+    z-index: 5;
+}
+
+#toolboxleft input{
+    width: 30px;
+    opacity: 0.4;
+}
+
+#toolboxleft input:hover{
+    opacity: 1;
+    cursor: pointer;
+}
+
+#toolboxleftdisabled{
+    position: absolute;
+    top:40%;
+    left:2%;
+    margin-bottom: 0.2em;
+    margin-left: 0.2em;
+    /*border: 2px solid #EEEEEE;*/
+    border-radius: 1px;
+    padding: 0.2em;
+    z-index: 5;
+}
+
+#toolboxleftdisabled input{
+    width: 30px;
+    opacity: 0.4;
+}
+
+
+
+#toolboxtopleft input:hover{
+    opacity: 1;
+    cursor: pointer;
+}
+
+#toolboxtopright{
+    position: absolute;
+    top:0;
+    right:0;
+    margin-bottom: 0.2em;
+    margin-left: 1em;
+    /*border: 2px solid #EEEEEE;*/
+    border-radius: 5px;
+    padding: 1em;
+    z-index: 5;
+}
+
+#toolboxtopright input{
+    width: 20px;
+    opacity: 0.4;
+}
+
+#toolboxtopright input:hover{
+    opacity: 1;
+    cursor: pointer;
+}
+
+#toolboxtoprightbottom{
+    position: absolute;
+    top:5%;
+    right:0;
+    margin-bottom: 0.2em;
+    margin-left: 1em;
+    /*border: 2px solid #EEEEEE;*/
+    border-radius: 5px;
+    padding: 1em;
+    z-index: 5;
+}
+
+#toolboxtoprightbottom input{
+    width: 20px;
+    opacity: 0.4;
+}
+
+#toolboxtoprightbottom input:hover{
+    opacity: 1;
+    cursor: pointer;
+}
+
+
+#toolboxtopleft{
+    position: absolute;
+    top:0;
+    left:0;
+    margin-bottom: 0.2em;
+    margin-left: 1em;
+    /*border: 2px solid #EEEEEE;*/
+    border-radius: 5px;
+    padding: 1em;
+    z-index: 5;
+}
+
+#toolboxtopleft input{
+    width: 30px;
+    opacity: 0.4;
+}
+
+
+#toolboxtopleftdisabled{
+    position: absolute;
+    top:0;
+    left:0;
+    margin-bottom: 0.2em;
+    margin-left: 1em;
+    /*border: 2px solid #EEEEEE;*/
+    border-radius: 5px;
+    padding: 1em;
+    z-index: 5;
+}
+
+#toolboxtopleftdisabled input{
+    width: 30px;
+    opacity: 0.4;
+}
+
+#toolboxcornerleft{
+    position: fixed;
+    top:30%;
+    left:3%;
+    /* margin-bottom: 0.2em; */
+    /* margin-left: 1em; */
+    /* border: 2px solid #EEEEEE; */
+    /* border-radius: 5px;*/
+    /* padding: 1em; */
+    z-index: 5;
+}
+
+#toolboxcornerleft input{
+    width: 30px;
+    opacity: 0.4;
+}
+#toolboxcornerleft input:hover{
+    opacity: 1;
+    cursor: pointer;
+}
+
+#hidden-file-upload{
+    display: none;
+}
+
+#download-input{
+    margin: 0 0.5em;
+}
+
+.conceptG text{
+    pointer-events: none;
+}
+
+marker{
+    fill: #333;
+}
+
+g.conceptG circle{
+    fill: #F6FBFF;
+    stroke: #333;
+    stroke-width: 2px;
+}
+
+g.metaG circle{
+    fill: #F6FBFF;
+    stroke: #333;
+    stroke-width: 2px;
+    stroke-dasharray: 10 10;
+}
+
+g.deniedG circle{
+    fill: #ff9393;
+    stroke: #333;
+    stroke-width: 2px;
+}
+
+g.initialG circle{
+    fill: #FF8C00;
+    stroke: #333;
+    stroke-width: 2px;
+}
+
+
+g.acceptedG circle{
+    fill: #00FA9A;
+    stroke: #333;
+    stroke-width: 2px;
+}
+
+g.acceptedG:hover circle{
+    fill: #20B2AA;
+    stroke: #333;
+    stroke-width: 2px;
+}
+
+g.onlyActivatedG circle{
+    fill: #a5c7ff;
+    stroke: #333;
+    stroke-width: 2px;
+}
+
+g.onlyActivatedG:hover circle{
+    fill: #003AFE;
+    stroke: #333;
+    stroke-width: 2px;
+}
+
+g.deniedG:hover circle{
+    fill: #B22222;
+    stroke: #333;
+    stroke-width: 2px;
+}
+
+g.conceptG:hover circle{
+    fill: rgb(200, 238, 241);
+}
+
+g.selected circle{
+    fill: rgb(250, 232, 255);
+}
+g.selected:hover circle{
+    fill: rgb(250, 232, 255);
+}
+
+g.connect-node circle{
+    fill: #BEFFFF;
+}
+
+path.link {
+    fill: none;
+    stroke: #333;
+    stroke-width: 6px;
+    cursor: default;
+}
+
+path.link:hover{
+    stroke: rgb(94, 196, 204);
+}
+
+path.link.hidden{
+    stroke-width: 0;
+}
+
+path.link.selected {
+    stroke: rgb(229, 172, 247);
+}
+
+path.linkRed {
+    fill: none;
+    stroke: #A3C493;
+    stroke-width: 6px;
+    cursor: default;
+}
+
+path.linkRed:hover{
+    stroke: rgb(94, 196, 204);
+}
+
+path.linkRed.hidden{
+    stroke-width: 0;
+}
+
+path.linkRed.selected {
+    stroke: rgb(229, 172, 247);
+}
+
+path.linkBlue {
+    fill: none;
+    stroke: #FFC300;
+    stroke-width: 6px;
+    cursor: default;
+}
+
+path.linkBlue:hover{
+    stroke: rgb(94, 196, 204);
+}
+
+path.linkBlue.hidden{
+    stroke-width: 0;
+}
+
+path.linkBlue.selected {
+    stroke: rgb(229, 172, 247);
+}
+
+path.linkGreen {
+    fill: none;
+    stroke: #FF5733;
+    stroke-width: 6px;
+    cursor: default;
+}
+
+path.linkGreen:hover{
+    stroke: rgb(94, 196, 204);
+}
+
+path.linkGreen.hidden{
+    stroke-width: 0;
+}
+
+path.linkGreen.selected {
+    stroke: rgb(229, 172, 247);
+}
