@@ -16,7 +16,7 @@ window.alert = function(message, title) {
         </div>');
     }
     $("#bootstrap-alert-box-modal .modal-header h4").text(title || "");
-    $("#bootstrap-alert-box-modal .modal-body p").text(message || "");
+    $("#bootstrap-alert-box-modal .modal-body p").html(message || "");
     $("#bootstrap-alert-box-modal").modal('show');
 };
 
@@ -50,7 +50,7 @@ window.confirm = function(message, title, yes_label, callback) {
     }
  
     $("#bootstrap-confirm-box-modal .modal-header h4").text(title || "");
-    $("#bootstrap-confirm-box-modal .modal-body p").text(message || "");
+    $("#bootstrap-confirm-box-modal .modal-body p").html(message || "");
     $("#bootstrap-confirm-box-modal").modal('show');
 };
 

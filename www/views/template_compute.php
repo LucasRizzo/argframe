@@ -3,41 +3,6 @@
 ini_set('max_post_size', '100M');
 ini_set('php_max_size', '100M');
 
-/*
-$atts = array(
-    0=>array('a'=>'b'),
-    1=>array('b'=>'a'),
-    2=>array('b'=>'c'),
-    3=>array('c'=>'d'),
-    4=>array('d'=>'e'),
-    5=>array('e'=>'c'),
-    //5=>array('g'=>'c'),
-    //6=>array('g'=>'e'),
-    //7=>array('g'=>'f'),
-    //8=>array('e'=>'h'),
-    //9=>array('f'=>'e'),
-    //10=>array('f'=>'h'),
-    //11=>array('h'=>'i'),
-    //12=>array('i'=>'c'),
-    //13=>array('c'=>'h'),
-    //4=>array('a'=>'c'),
-    //4=>array('g'=>'h'),
-);
-
-// Example to test cartesian product and Preferred semantics
-//DungAF af = new DungAF(Arrays.asList(new String[]{"a","b"}, new String[]{"b","c"}, new String[]{"c","b"}, new String[]{"d","a"}, new String[]{"a","d"}, new String[]{"d","e"}, new String[]{"e","d"}, new String[]{"a","e"}, new String[]{"e","a"}));
-
-$af = DungAF::PopulatedDungAF($atts);
-//$af->addArgs(array("d"));
-
-//$groundedExt =  $af->getPreferredExts();
-//$groundedExt =  $af->getEagerExt();
-//$groundedExt =  $af->getAdmissibleSets();
-//$groundedExt =  $af->getIdealExt();
-
-echo "<br><br>Final: ";
-var_dump($groundedExt);
-echo "<br><br>"; */
 
 ?>
 
@@ -193,41 +158,9 @@ echo "<br><br>"; */
                         <label class="checkbox-inline"><input name="accrualExport" type="checkbox" value="Highest conclusion">Highest conclusion</label></br>
                         <label class="checkbox-inline"><input name="accrualExport" type="checkbox" value="Highest and weighted">Highest and weighted</label></br>
                         
-                       <!-- <label for="timeLimit">Accrual:: &nbsp</label>
-                        <label class="radio-inline">
-                            <input id='accrualSumExport' type="radio" name="optradioExport">Sum
-                        </label>
-                        <label class="radio-inline">
-                            <input id='accrualAverageExport' type="radio" name="optradioExport" checked="">Average
-                        </label>
-                        <label class="radio-inline">
-                            <input id='cardinalityAverageExport' type="radio" name="optradioExport">Highest cardinality
-                        </label>
-                        <label class="radio-inline">
-                            <input id='medianExport' type="radio" name="optradioExport">Median
-                        </label>
-                        <label class="radio-inline">
-                            <input id='weightedExport' type="radio" name="optradioExport">Weighted average
-                        </label>
-                        <label class="radio-inline">
-                            <input id='highestConclusionExport' type="radio" name="optradioExport">Highest conclusion
-                        </label>
-                        <label class="radio-inline">
-                            <input id='absoluteConclusionExport' type="radio" name="optradioExport">Absolute highest conclusion
-                        </label>
-                        <label class="radio-inline">
-                            <input id='nConclusionsExport' type="radio" name="optradioExport"># Conclusions
-                        </label>
-                        <label class="radio-inline">
-                            <input id='highestWeightedExport' type="radio" name="optradioExport">Highest and weighted
-                        </label>-->
                     </div>
                     <br>
                     <br>
-                    <!--<div class="form-group">
-                        <label for="timeLimit">Time limit per instance per semantic(s): &nbsp</label>
-                        <input class="form-control" required id="timeLimit" type="number" min="0" placeholder="1" value="1">
-                    </div>-->
                 </form>
             </div>
             <div class="modal-footer">
@@ -290,40 +223,6 @@ echo "<br><br>"; */
                 </select>
                 <button type="button" onclick="showAccrualHelp()" class="btn btn-default"> <span class="glyphicon glyphicon glyphicon-question-sign"></span></button>
             </div>
-            
-            
-            <!--<label for="sel1">Accrual &nbsp</label>
-            <form>
-                <label class="radio-inline">
-                    <input id='accrualSum' type="radio" name="optradio">Sum
-                </label>
-                <label class="radio-inline">
-                    <input id='accrualAverage' type="radio" name="optradio" checked="">Average
-                </label>
-                <label class="radio-inline">
-                    <input id='cardinalityAverage' type="radio" name="optradio">Highest cardinality
-                </label>
-                <br>
-                <label class="radio-inline">
-                    <input id='median' type="radio" name="optradio">Median
-                </label>
-                <label class="radio-inline">
-                    <input id='accrualWeighted' type="radio" name="optradio">Weighted average
-                </label>
-                <label class="radio-inline">
-                    <input id='highestConclusion' type="radio" name="optradio">Highest conclusion
-                </label>
-                <br>
-                <label class="radio-inline">
-                    <input id='absoluteConclusion' type="radio" name="optradio">Absolute highest conclusion
-                </label>
-                <label class="radio-inline">
-                    <input id='nConclusions' type="radio" name="optradio"># Conclusions
-                </label>
-                <label class="radio-inline">
-                    <input id='highestWeighted' type="radio" name="optradio">Highest and weighted
-                </label>
-            </form>-->
             _______________________
             <br>
             <br>
@@ -338,10 +237,6 @@ echo "<br><br>"; */
                         <br>
                         <b><kbd>Inference:</kbd> </b><a href="#" id='resultsContent' data-toggle="popover" data-html="true" data-content="Import data in order to compute extensions."></a>
                         <br>
-                        <!-- <button class="btn btn-primary" type="submit" id="downloadExports" onclick="joinCsv()" disabled="true" ><span class="glyphicon glyphicon-download-alt"></span>&nbsp Download</button> -->
-                        <!-- <span id="downloadExports" style="visibility: hidden"></span> -->
-                        
-                        <!-- <span id="exportControlPercentage" style="visibility: hidden"></span> -->
                     </div>
                 </form>
             </form>
@@ -377,6 +272,7 @@ echo "<br><br>"; */
                 }
                 ?>
             </select>
+            <span id="data-download"></span>
             <label for="sel1">&nbsp &nbsp Select graph: &nbsp</label>
                 <select class="form-control confirmation-callback" name="featuresetgraph" id="featuresetgraph">
             </select>
@@ -659,6 +555,18 @@ function addGraphs() {
     var currentFeatureset = null;
     if (i != -1) {
         currentFeatureset = select.options[i].text;
+
+        if (currentFeatureset == "trust_features") {
+            document.getElementById("data-download").setAttribute("class", "glyphicon glyphicon-download");
+            document.getElementById("data-download").innerHTML = "&nbsp <a href='https://www.lucasrizzo.com/framework/data/journal_trust.zip'>Example data</a>";
+        } else if (currentFeatureset == "fish_surf") {
+            document.getElementById("data-download").setAttribute("class", "glyphicon glyphicon-download");
+            document.getElementById("data-download").innerHTML = "&nbsp <a href='https://www.lucasrizzo.com/framework/data/toy_example.csv'>Example data</a>";
+        } else {
+            document.getElementById("data-download").innerHTML = "";
+            document.getElementById("data-download").setAttribute("class", "");
+        }
+
     } else {
     
         document.getElementById('files').disabled = true;
@@ -671,6 +579,8 @@ function addGraphs() {
         document.getElementById('zoomout').disabled = true;
         document.getElementById('featureset').disabled = true;
         document.getElementById('featuresetgraph').disabled = true;
+        document.getElementById("data-download").innerHTML = "";
+        document.getElementById("data-download").setAttribute("class", "");
     
         if (featuresets_.length > 0) {
             window.alert("Please create a new graph in the graphs page!", "No graphs error.");
@@ -936,7 +846,7 @@ function fillTable() {
         i = select.selectedIndex,
         currentFeatureset = select.options[i].text;
 
-    var ignoredColumns = "";
+    var ignoredColumns = "<ul>";
     var removeColumns = []
     var nColumns = 0;
 
@@ -991,9 +901,11 @@ function fillTable() {
                 // If all attributes were checked and header didn't match any of them it will not be imported.
                 // Print list of not imported column
                 // TODO: is this really necessary? Maybe import everything and using only valid data
-                ignoredColumns += key + "\n";
+                ignoredColumns += "<li>" + key + "</li>";
                 removeColumns.push(key);
             }
+
+            ignoredColumns += "</ul>"
         }
     }
 
@@ -1021,7 +933,7 @@ function fillTable() {
     if (error == 0) {
         if (ignoredColumns.length > 0) {
             window.alert("The following columns were ignored because they " +
-                         "do not have a relative feature in the feature set: \n\n" + ignoredColumns, "No feature alert!");
+                         "do not have a relative feature in the feature set: <br>" + ignoredColumns, "Import data alert!");
         }
 
         var maxTableHeight = (document.getElementById('left-side').clientHeight / 2).toString() + "px";

@@ -93,8 +93,8 @@ define("GENERAL_RESOURCE_DELETED", "Resource has been deleted");
 define("GENERAL_INVALIDBODY", "Request is ok but transmitted body is invalid");
 
 define("ADDRESS_PREFIX", "/");
-define("ADDRESS_CALL", "http://localhost/index.php/");
-define("ABSOLUTE_CALL", "/framework/");
+define("ADDRESS_CALL", "http://localhost:8001/index.php/");
+define("ABSOLUTE_CALL", "/");
 
 $userList = array("luca"=>"pw1", "lucas@gmail.com" => "pw2", "luiz" => "benga");
 

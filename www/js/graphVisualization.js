@@ -2604,7 +2604,23 @@ function create(d3, saveAs, Blob) {
             return d === state.selectedEdge;
         })
         .attr("d", function(d){
-            return "M" + d.source.x + "," + d.source.y + "L" + d.target.x + "," + d.target.y;
+            
+            var operator1 = 1;
+            var operator2 = -1;
+            if (d.target.x < d.source.x) {
+                operator1 = -1;
+                operator2 = 1;
+            }
+        
+            // Find the points in the border of the circle given their origin
+            var angle = Math.atan((d.target.y - d.source.y)/(d.target.x - d.source.x))
+            var x_source = d.source.x + (operator1 * consts.nodeRadius * Math.cos(angle));
+            var y_source = d.source.y + (operator1 * consts.nodeRadius * Math.sin(angle));
+            
+            var x_target = d.target.x + (operator2 * consts.nodeRadius * Math.cos(angle));
+            var y_target = d.target.y + (operator2 * consts.nodeRadius * Math.sin(angle));
+
+            return "M" + x_source + "," + y_source + "L" + x_target + "," + y_target;
         });
 
         // add new paths
@@ -2654,7 +2670,22 @@ function create(d3, saveAs, Blob) {
             return d.type == "none";
         })
         .attr("d", function(d){
-            return "M" + d.source.x + "," + d.source.y + "L" + d.target.x + "," + d.target.y;
+            var operator1 = 1;
+            var operator2 = -1;
+            if (d.target.x < d.source.x) {
+                operator1 = -1;
+                operator2 = 1;
+            }
+        
+            // Find the points in the border of the circle given their origin
+            var angle = Math.atan((d.target.y - d.source.y)/(d.target.x - d.source.x))
+            var x_source = d.source.x + (operator1 * consts.nodeRadius * Math.cos(angle));
+            var y_source = d.source.y + (operator1 * consts.nodeRadius * Math.sin(angle));
+            
+            var x_target = d.target.x + (operator2 * consts.nodeRadius * Math.cos(angle));
+            var y_target = d.target.y + (operator2 * consts.nodeRadius * Math.sin(angle));
+
+            return "M" + x_source + "," + y_source + "L" + x_target + "," + y_target;
         });
         /*.on("mousedown", function(d){
             thisGraph.pathMouseDown.call(thisGraph, d3.select(this), d);
@@ -2761,41 +2792,80 @@ function create(d3, saveAs, Blob) {
                 d3.select(this).classed(consts.connectClass, true);
             }
 
-            var source = 0;
-            var target = 0;
+            var nSourceActive = 0;
+            var sourceActive = "";
+            var nTargetActive = 0;
+            var targetActive = "";
+            var nSourceOriginal = 0;
+            var sourceOriginal = "";
+            var nTargetOriginal = 0;
+            var targetOriginal = "";
             edges.forEach(function(val, i){
                 if (val.target.id == d.id) {
 
                     var sourceCircle = thisGraph.circles.filter(function(sd){
                                             return sd.id === val.source.id;
                                         });
+                    
+                    nSourceOriginal++;
 
                     sourceCircle.each(function(sd){
+                        
+                        sourceOriginal += sd.title + ", ";
+
                         if (sd.activated && graph.isAttackValid(sd, d, false)) {
-                            target++;
+                            nTargetActive++;
+                            targetActive += sd.title + ", ";
                         }
                     });
                 }
 
+               
                 if (val.source.id == d.id) {
 
                     var targetCircle = thisGraph.circles.filter(function(td){
                                             return td.id === val.target.id;
                                         });
+                    
+                    nTargetOriginal++;
 
                     targetCircle.each(function(td){
+
+                        targetOriginal += td.title + ", ";
+
                         if (td.activated && graph.isAttackValid(d, td, false)) {
-                            source++;
+                            nSourceActive++;
+                            sourceActive += td.title + ", ";
                         }
                     });
+
                 }
             });
+            
+            // Remove commas
+            if (sourceOriginal.length > 0) {
+                sourceOriginal = sourceOriginal.slice(0, -2);
+            }
+
+            if (targetActive.length > 0) {
+                targetActive.slice(0, -2);
+            }
+
+            if (targetOriginal.length > 0) {
+                targetOriginal = targetOriginal.slice(0, -2);
+            }
+
+            if (sourceActive.length > 0) {
+                sourceActive.slice(0, -2)
+            }
 
 
             tooltip.selectAll("text").remove();
             tooltip.append("text");
 
-            tooltip.selectAll("text").html("<b>Argument</b>: " + d.tooltip + "<br /><br /><b>Source edges:</b> " + String(source) + "<br /><b>Target edges:</b> " + String(target));
+            tooltip.selectAll("text").html("<b>" + d.title + "</b>: " + d.tooltip + "<br/><br/>" + 
+                                           "<i>Source attack activated:</i> " + String(nSourceActive) + ". " + sourceActive + "<br/><i>Target attack activated:</i> " + String(nTargetActive) + ". " + targetActive + "<br/><br/>" +
+                                           "<i>All source attacks:</i> " + String(nSourceOriginal) + ". " + sourceOriginal + "<br/><i>All target attacks:</i> " + String(nTargetOriginal) + ". " + targetOriginal + "<br/><br/>");
 
             tooltip.style("visibility", "visible");
         })
@@ -3004,49 +3074,6 @@ function create(d3, saveAs, Blob) {
 }
 
 var graph = create(window.d3, window.saveAs, window.Blob);
-/*
-var string = "\"high Arousal\" OR \"high Arousal\" OR \"high ContextBias\" AND \"mediumLower ContextBias\"";
-        //Remove levels and evaluate possible true sets
-        var searchBoolean = "";//premiseAndConclusion[0].replace("\"", "");
-
-        // Start after first "
-        var i = 1;
-
-        do {
-            // Find space after level
-            while (string[i] != " ") {
-                i++;
-            }
-
-            i++;
-
-            // Copy attribute after level
-            while (string[i] != "\"") {
-                searchBoolean += string[i];
-                i++;
-            }
-
-            i++;
-
-            // If it is the last attribute break
-            if (i >= string.length - 1) {
-                break;
-            }
-
-            // Copy operator until next level
-            while (string[i] != "\"") {
-                searchBoolean += string[i];
-                i++;
-            }
-
-            i++;
-
-        // Continue while there is another attribute
-        } while(i < string.length - 1);
-
-        var parsedQuery = parseBooleanQuery(searchBoolean);
-
-        console.log(parsedQuery);*/
 
 d3.select("#featuresetgraph").on("change", function() {
     d3.event.preventDefault();
