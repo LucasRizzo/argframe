@@ -60,7 +60,7 @@ Longo, L. and **Rizzo, L.** (2021) Examining the modelling capabilities of defea
 **Rizzo, L.**, Dondio P., Longo L. (2020) Exploring the potential of defeasible argumentation for quantitative inferences in real-world contexts: An assessment of computational trust intelligence in: Proceedings for the 28th AIAI Irish Conference on Artificial Intelligence and Cognitive Science pp. 25-36
 
 <a id="5">[5]</a>
-**Rizzo, L.**and Longo, L. (2019) Inferential models of mental workload with defeasible argumentation and non-monotonic fuzzy reasoning: a comparative study in: 2nd Workshop on Advances In Argumentation In Artificial Intelligence pp. 11–26
+**Rizzo, L.** and Longo, L. (2019) Inferential models of mental workload with defeasible argumentation and non-monotonic fuzzy reasoning: a comparative study in: 2nd Workshop on Advances In Argumentation In Artificial Intelligence pp. 11–26
 
 <a id="6">[6]</a>
 **Rizzo, L.** and Longo, L. (2018) A qualitative investigation of the degree of explainability of defeasible argumentation and non-monotonic fuzzy reasoning in: 26th AIAI Irish Conference on Artificial Intelligence and Cognitive Science pp. 138–149
