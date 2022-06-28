@@ -34,8 +34,8 @@ A running example can be seen here https://lucasrizzo.com/framework/index.php
 
 3. Build docker image by running below commands in the terminal (make sure docker is running):
 
-`cd argframe
-sudo docker-compose up -d`
+`cd argframe`
+`sudo docker-compose up -d`
 
 4. Go to the link http://localhost:8001/index.php/login to use the app
 
