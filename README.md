@@ -45,6 +45,10 @@ sudo docker-compose up -d
 
 6. To add new users go to the link http://localhost:8000/ to manage the database. Login/password: admin/admin. In the `arg-db` databases, add new users to the table `users` by inserting email and md5(password).
 
+## Contact
+
+Contact me at lucasmrizzo@gmail.com
+
 ## References
 
 The following papers have used this framework for experimentation.
