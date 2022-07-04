@@ -32,7 +32,7 @@ A running example can be seen here https://lucasrizzo.com/framework/index.php
 
 `git pull https://github.com/LucasRizzo/argframe.git`
 
-3. Build docker image by running below commands in the terminal (make sure docker is running):
+3. Build docker image by running below commands in the terminal (make sure docker is running and you have docker-compose installed):
 
 ```
 cd argframe
