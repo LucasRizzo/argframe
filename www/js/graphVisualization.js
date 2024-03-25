@@ -122,7 +122,7 @@ function create(d3, saveAs, Blob) {
         defs.append('svg:marker')
             .attr('id', 'mark-end-arrow')
             .attr('viewBox', '0 -5 10 10')
-            .attr('refX', 7)
+            .attr('refX', "7")
             .attr('markerWidth', 3.5)
             .attr('markerHeight', 3.5)
             .attr('orient', 'auto')
@@ -2712,10 +2712,25 @@ function create(d3, saveAs, Blob) {
             });
 
             if (reversePath[0].length > 0) {
+
                 originalPath.attr("d", function(d){
-                    var upSource = d.source.y + 20;
-                    var upTarget = d.target.y;
-                    return "M" + d.source.x + "," + upSource + "L" + d.target.x + "," + upTarget;
+                    // Fix links for rebuttal attacks
+                    var operator1 = 1;
+                    var operator2 = -1;
+                    if (d.target.x < d.source.x) {
+                        operator1 = -1;
+                        operator2 = 1;
+                    }
+                
+                    // Find the points in the border of the circle given their origin
+                    var angle = Math.atan((d.target.y - (d.source.y))/(d.target.x - d.source.x))
+                    var x_source = d.source.x + (operator1 * consts.nodeRadius * Math.cos(angle)) + 15;
+                    var y_source = d.source.y + (operator1 * consts.nodeRadius * Math.sin(angle)) + 20;
+                    
+                    var x_target = d.target.x + (operator2 * consts.nodeRadius * Math.cos(angle));
+                    var y_target = d.target.y + (operator2 * consts.nodeRadius * Math.sin(angle));
+        
+                    return "M" + x_source + "," + y_source + "L" + x_target + "," + y_target;
                 })
                 .style('marker-end', function(d){
                     if (d.type == "undermine") {
@@ -2729,9 +2744,23 @@ function create(d3, saveAs, Blob) {
                     }
                 });
                 reversePath.attr("d", function(d){
-                    var downSource = d.source.y - 20;
-                    var downTarget = d.target.y;
-                    return "M" + d.source.x + "," + downSource + "L" + d.target.x + "," + downTarget;
+                    // Fix links for rebuttal attacks
+                    var operator1 = 1;
+                    var operator2 = -1;
+                    if (d.target.x < d.source.x) {
+                        operator1 = -1;
+                        operator2 = 1;
+                    }
+                
+                    // Find the points in the border of the circle given their origin
+                    var angle = Math.atan((d.target.y - (d.source.y))/(d.target.x - d.source.x))
+                    var x_source = d.source.x + (operator1 * consts.nodeRadius * Math.cos(angle)) - 15;
+                    var y_source = d.source.y + (operator1 * consts.nodeRadius * Math.sin(angle)) - 20;
+                    
+                    var x_target = d.target.x + (operator2 * consts.nodeRadius * Math.cos(angle));
+                    var y_target = d.target.y + (operator2 * consts.nodeRadius * Math.sin(angle));
+        
+                    return "M" + x_source + "," + y_source + "L" + x_target + "," + y_target;
                 })
                 .style('marker-end',function(d){
                     if (d.type == "undermine") {
