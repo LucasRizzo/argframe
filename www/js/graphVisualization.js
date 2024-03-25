@@ -2711,27 +2711,12 @@ function create(d3, saveAs, Blob) {
                             d.target.id == val.source.id;
             });
 
-            if (reversePath[0].length > 0) {
+            
 
-                originalPath.attr("d", function(d){
-                    // Fix links for rebuttal attacks
-                    var operator1 = 1;
-                    var operator2 = -1;
-                    if (d.target.x < d.source.x) {
-                        operator1 = -1;
-                        operator2 = 1;
-                    }
-                
-                    // Find the points in the border of the circle given their origin
-                    var angle = Math.atan((d.target.y - (d.source.y))/(d.target.x - d.source.x))
-                    var x_source = d.source.x + (operator1 * consts.nodeRadius * Math.cos(angle)) + 15;
-                    var y_source = d.source.y + (operator1 * consts.nodeRadius * Math.sin(angle)) + 20;
-                    
-                    var x_target = d.target.x + (operator2 * consts.nodeRadius * Math.cos(angle));
-                    var y_target = d.target.y + (operator2 * consts.nodeRadius * Math.sin(angle));
-        
-                    return "M" + x_source + "," + y_source + "L" + x_target + "," + y_target;
-                })
+            if (reversePath[0].length > 0) {
+               
+                // Translate path to distantiate from other attack in the rebuttal
+                originalPath.attr("transform", "translate(0, 8)")
                 .style('marker-end', function(d){
                     if (d.type == "undermine") {
                         return 'url(#end-arrow-blue)';
@@ -2743,25 +2728,9 @@ function create(d3, saveAs, Blob) {
                         return 'url(#end-arrow)';
                     }
                 });
-                reversePath.attr("d", function(d){
-                    // Fix links for rebuttal attacks
-                    var operator1 = 1;
-                    var operator2 = -1;
-                    if (d.target.x < d.source.x) {
-                        operator1 = -1;
-                        operator2 = 1;
-                    }
-                
-                    // Find the points in the border of the circle given their origin
-                    var angle = Math.atan((d.target.y - (d.source.y))/(d.target.x - d.source.x))
-                    var x_source = d.source.x + (operator1 * consts.nodeRadius * Math.cos(angle)) - 15;
-                    var y_source = d.source.y + (operator1 * consts.nodeRadius * Math.sin(angle)) - 20;
-                    
-                    var x_target = d.target.x + (operator2 * consts.nodeRadius * Math.cos(angle));
-                    var y_target = d.target.y + (operator2 * consts.nodeRadius * Math.sin(angle));
-        
-                    return "M" + x_source + "," + y_source + "L" + x_target + "," + y_target;
-                })
+
+                // Translate path to distantiate from other attack in the rebuttal
+                reversePath.attr("transform","translate(0, -8)")               
                 .style('marker-end',function(d){
                     if (d.type == "undermine") {
                         return 'url(#end-arrow-blue)';
