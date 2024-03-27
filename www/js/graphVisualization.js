@@ -1851,6 +1851,402 @@ function create(d3, saveAs, Blob) {
         overallString = overallString.substring(1);
         return overallString;
     }
+
+    GraphCreator.prototype.exportAllSql = function(currentFeatureset, semantics, timeLimit, invisible = false, savetoServer = false, parser = undefined, size = 0) {
+
+        //document.getElementById('progressRow').className = "col-md-12";
+
+        var maxComputation = 1000;
+
+        console.log("Alldata: ", allData_.length);
+
+        var semanticsAndAccrual = String(semantics).split("-");
+
+        // Remove first caracter
+        var semanticsVector = String(semanticsAndAccrual[0].slice(1)).split(",");
+        var accrualVector = String(semanticsAndAccrual[1]).split("*");
+
+        var emptySemantics = "[";
+
+        for (var i = 0; i < semanticsVector.length; i++) {
+            if (semanticsVector[i] == "expert") {
+                emptySemantics += "[],";
+            } else if (semanticsVector[i] == "grouded") {
+                emptySemantics += "[],";
+            } else if (semanticsVector[i] == "eager") {
+                emptySemantics += "[],";
+            } else if (semanticsVector[i] == "ideal") {
+                emptySemantics += "[],";
+            } else if (semanticsVector[i] == "preferred") {
+                emptySemantics += "[[]],";
+            } else if (semanticsVector[i] == "stable") {
+                emptySemantics += "[[]],";
+            } else if (semanticsVector[i] == "semistable") {
+                emptySemantics += "[[]],";
+            } else if (semanticsVector[i] == "admissible") {
+                emptySemantics += "[[]],";
+            } else if (semanticsVector[i] == "categoriser") {
+                emptySemantics += "[],";
+            }
+        }
+
+        emptySemantics = emptySemantics.slice(0, -1);
+        emptySemantics += "]";
+
+        var url = addressCall_ + 'deleteComputations';
+        var request = new XMLHttpRequest();
+        // When semantics has been computed on server
+        request.onreadystatechange = function() {
+            if (request.readyState == 4 && request.status == 200) {
+                // Save computations from 0 until maxComputation records in SQL.
+                // If more than maxComputation records then recursive call
+                saveComputations(0, maxComputation);
+            }
+        };
+
+        request.open('GET', url);
+        request.send();
+
+        function saveComputations(from, to) {
+            var thisGraph = this;
+            var allGraphStrings = [];
+
+            var dataString = "";
+            for (var i = from; i < Math.min(to, allData_.length); i++) {
+                graph.activeAll(allData_[i], currentFeatureset, !invisible, true);
+
+                if (String(graph.getStringGraph(true) + semanticsAndAccrual[0]).length > 0) {
+                    dataString += graph.getStringGraph(true) + semanticsAndAccrual[0];
+                } else {
+                    dataString += emptySemantics;
+                }
+
+                if (i < Math.min(to, allData_.length) - 1) {
+                    dataString += ";;";
+                }
+            }
+
+            var dataPost = new FormData();
+            dataPost.append("data" , dataString);
+            var request = (window.XMLHttpRequest) ? new XMLHttpRequest() : new activeXObject("Microsoft.XMLHTTP");
+            request.open('post', addressCall_ + 'saveComputations', true);
+            request.send(dataPost);
+
+            // When file has been saved on server
+            request.onreadystatechange = function() {//Call a function when the state changes.
+                if(request.readyState == 4 && request.status == 200) {
+                    if (savetoServer) {
+                        var percentage = parseFloat((to / allData_.length * 100) / 2).toFixed(2);
+                        console.log(percentage + "%");
+                        //document.getElementById('exportControlPercentage').innerHTML = " (" + percentage + "%).";
+                    }
+                    if (to < allData_.length) {
+                        from = to;
+                        to += maxComputation;
+                        saveComputations(from, to);
+                    } else {
+                        var url = addressCall_ + 'getComputations';
+                        var computationsRequest = new XMLHttpRequest();
+                        // When semantics has been computed on server
+                        computationsRequest.onreadystatechange = function() {
+                            if (computationsRequest.readyState == 4 && computationsRequest.status == 200) {
+                                var data = [];
+                                var extensions = JSON.parse(computationsRequest.responseText);
+
+                                var from = 0;
+                                var to = maxComputation;
+
+                                for (var key in extensions) {
+                                    // ???
+                                    extensions[key].extensions = "[" + extensions[key].extensions;
+
+                                    getSemanticsIndex(extensions[key].extensions, semanticsVector, accrualVector, from, to, data);
+
+
+                                    from = to;
+                                    to += maxComputation;
+
+                                    if (savetoServer) {
+                                        var percentage = Math.min((to / allData_.length * 100) / 2 + 50, 100);
+                                        percentage = parseFloat(percentage).toFixed(2);
+                                        console.log(percentage + "%");
+                                    }
+                                }
+
+                                var row = [];
+                                row.push("ID");
+
+                                for (var key in allData_[0]) {
+                                    if (key == "GroundTruth") {
+                                        row.push("GroundTruth");
+                                        break;
+                                    }
+                                }
+
+                                // Semantics header
+                                for (var i = 0; i < semanticsVector.length; i++) {
+                                    if (semanticsVector[i] == "expert") {
+                                        //row.push("Expert System");
+                                        for (var j = 0; j < accrualVector.length; j++) {
+                                            row.push("Expert System - " + accrualVector[j]);
+                                        }
+                                    } else if (semanticsVector[i] == "grounded") {
+                                        //row.push("Grounded Semantics");
+                                        for (var j = 0; j < accrualVector.length; j++) {
+                                            row.push("Grounded Semantics - " + accrualVector[j]);
+                                        }
+                                    } else if (semanticsVector[i] == "eager") {
+                                        //row.push("Eager Semantics");
+                                        for (var j = 0; j < accrualVector.length; j++) {
+                                            row.push("Eager Semantics - " + accrualVector[j]);
+                                        }
+                                    } else if (semanticsVector[i] == "ideal") {
+                                        //row.push("Ideal Semantics");
+                                        for (var j = 0; j < accrualVector.length; j++) {
+                                            row.push("Ideal Semantics - " + accrualVector[j]);
+                                        }
+                                    } else if (semanticsVector[i] == "preferred") {
+                                        //row.push("Preferred Semantics");
+                                        for (var j = 0; j < accrualVector.length; j++) {
+                                            //console.log("Preferred Semantics - " + accrualVector[j]);
+                                            row.push("Preferred Semantics - " + accrualVector[j]);
+                                        }
+                                    } else if (semanticsVector[i] == "stable") {
+                                        //row.push("Stable Semantics");
+                                        for (var j = 0; j < accrualVector.length; j++) {
+                                            row.push("Stable Semantics - " + accrualVector[j]);
+                                        }
+                                    } else if (semanticsVector[i] == "semistable") {
+                                        //row.push("Semi-stable Semantics");
+                                        for (var j = 0; j < accrualVector.length; j++) {
+                                            row.push("Semi-stable Semantics - " + accrualVector[j]);
+                                        }
+                                    } else if (semanticsVector[i] == "admissible") {
+                                        //row.push("Admissible Semantics");
+                                        for (var j = 0; j < accrualVector.length; j++) {
+                                            row.push("Admissible Semantics - " + accrualVector[j]);
+                                        }
+                                    } else if (semanticsVector[i] == "categoriser") {
+                                        //row.push("Categoriser");
+                                        for (var j = 0; j < accrualVector.length; j++) {
+                                            row.push("Categoriser - " + accrualVector[j]);
+                                        }
+                                    }
+                                }
+
+
+                                var url = addressCall_ + 'deleteComputations';
+                                var request = new XMLHttpRequest();
+                                // When semantics has been computed on server
+                                request.onreadystatechange = function() {
+                                    if (request.readyState == 4 && request.status == 200) {
+                                        // Header of the csv in the first row
+                                        console.log(data);
+
+                                        if (! savetoServer || savetoServer && size <= Papa.LocalChunkSize) {
+                                            data.unshift(row);
+                                        }
+
+                                        // Pass name of the csv to be saved at the
+                                        // beginning of the data
+                                        var csvContent = ""; //file_.name + "_" + String(size) + "*";//"data:text/csv;charset=utf-8,";
+
+                                        data.forEach(function(infoArray, i){
+
+                                            var dataString = infoArray.join(",");
+                                            csvContent += i < data.length ? dataString + "\n" : dataString;
+
+                                        });
+
+                                        var csvData = new Blob([csvContent], { type: 'text/csv' }); //new way
+
+                                        if (! savetoServer) {
+                                            var csvUrl = URL.createObjectURL(csvData);
+
+                                            var link = document.createElement("a");
+                                            link.setAttribute("href", csvUrl);
+                                            link.setAttribute("download", "my_data.csv");
+                                            document.body.appendChild(link); // Required for FF
+
+                                            link.click();
+                                        } else {
+
+                                            var csvUrl = URL.createObjectURL(csvData);
+                                            var link = document.createElement("a");
+                                            link.setAttribute("href", csvUrl);
+                                            var aux = size/1000000;
+                                            var zeroFilled = ('000' + aux).substr(-3)
+
+                                            link.setAttribute("download", file_.name + "_" + String(zeroFilled) + "mb.csv");
+                                            document.body.appendChild(link); // Required for FF
+
+                                            link.click();
+
+                                            if (parser != undefined) {
+                                                parser.resume();
+                                            }
+                                        }
+
+                                        if (! savetoServer) {
+                                            console.log("File should be ready...");
+                                        }
+                                    }
+                                };
+
+                                request.open('GET', url);
+                                request.send();
+                            }
+                        };
+
+                        computationsRequest.open('GET', url);
+                        computationsRequest.send();
+                    }
+                }
+            }
+
+        }
+
+        function getSemanticsIndex(extensions, semanticsVector, accrualVector, from, to, data) {
+
+            var enxtensionVector = String(extensions.slice(1)).split(";;");
+
+            // ???
+            //enxtensionVector[0] = "[" + enxtensionVector[0];
+
+            for (var index = from; index < Math.min(to, allData_.length); index++) {
+
+                // Fill values that are not semantic indexes
+                var row = [];
+                //console.log(allData_[index]);
+                for (var key in allData_[index]) {
+                    if (key.toUpperCase() == "ID" || key == "GroundTruth") {
+                        row.push(allData_[index][key]);
+                    }
+                }
+
+                graph.activeAll(allData_[index], currentFeatureset, !invisible, true);
+
+                //console.log("a: ", enxtensionVector[index - from]);
+                var jsonExtension = JSON.parse(enxtensionVector[index - from]);
+
+                //console.log(semanticsVector);
+                for (var ei = 0; ei < semanticsVector.length; ei++) {
+
+                    // Expert system, grounded, eager or ideal. Only one extension
+                    if (jsonExtension[ei].toString().search("Maximum execution time") != -1) {
+
+                        var timeLimit = ""
+                        for (var i = 0; i < accrualVector.length; i++) {
+                            timeLimit += "Time limit,";
+                        }                        
+                        timeLimit.slice(0, -1);
+
+                        row.push(timeLimit);
+                        continue;
+                    }
+
+                    if (jsonExtension[ei].toString().search("Allowed memory size") != -1) {
+
+                        var memoryLimit = ""
+                        for (var i = 0; i < accrualVector.length; i++) {
+                            memoryLimit += "Memory limit,";
+                        }                        
+                        memoryLimit.slice(0, -1);
+
+                        row.push(memoryLimit);
+
+                        continue;
+                    }
+
+                    // Unique extension semantics
+                    if (semanticsVector[ei] == "categoriser") {
+                        if (! invisible) {
+                            row.push(graph.semanticsPerRow(jsonExtension[ei][0], true, false, true));
+                        } else {
+                            row.push(graph.semanticsPerRowInvisible(jsonExtension[ei][0], accrualVector, true));
+                        }
+                    } else if (semanticsVector[ei] == "grounded" || semanticsVector[ei] == "expert" ||
+                        semanticsVector[ei] == "eager" || semanticsVector[ei] == "ideal") {
+                        if (! invisible) {
+                            row.push(graph.semanticsPerRow(jsonExtension[ei], true));
+                        } else {
+                            row.push(graph.semanticsPerRowInvisible(jsonExtension[ei], accrualVector));
+                        }
+                    // Not unique extension semantics
+                    } else {
+                        var sameSizeExtension = 0;
+
+                        // Final index for each accrual when there are multiple extensions of the same size
+                        var finalIndex = [];
+                        for (var i = 0; i < accrualVector.length; i++) {
+                            finalIndex[i] = 0;
+                        }
+
+                        if (jsonExtension[ei].length == 1 && jsonExtension[ei][0].length == 0) {
+                            // There is no extension. Push undefined so it won't
+                            // appear in the csv
+                            if (! invisible) {
+                                row.push(graph.semanticsPerRow(jsonExtension[ei][0], true));
+                            } else {
+                                row.push(graph.semanticsPerRowInvisible(jsonExtension[ei][0], accrualVector));
+                            }
+                            break;
+                        }
+
+                        if (jsonExtension[ei][0] == undefined) {
+                            if (! invisible) {
+                                row.push(graph.semanticsPerRow("[]", true));
+                            } else {
+                                row.push(graph.semanticsPerRowInvisible("[]", accrualVector));
+                            }
+                            break;
+                        }
+
+                        var maxSize = jsonExtension[ei][0].length;
+
+                        for (var ej = 1; ej < jsonExtension[ei].length; ej++) {
+                            if (jsonExtension[ei][ej].length > maxSize) {
+                                maxSize = jsonExtension[ei][ej].length;
+                            }
+                        }
+
+                        for (var ej = 0; ej < jsonExtension[ei].length; ej++) {
+
+                            if (jsonExtension[ei][ej].length == maxSize) {
+                                sameSizeExtension++;
+                                if (! invisible) {
+                                    // each index is correspondent to an accrual option selected
+                                    var indexes = graph.semanticsPerRow(jsonExtension[ei][ej], true).split(",");
+                                    for (var i = 0; i < accrualVector.length; i++) {
+                                        finalIndex[i] += parseFloat(indexes[i]);
+                                    } 
+
+                                } else {
+                                    // each index is correspondent to an accrual option selected
+                                    var indexes = graph.semanticsPerRowInvisible(jsonExtension[ei][ej], accrualVector).split(",");
+                                    for (var i = 0; i < accrualVector.length; i++) {
+                                        finalIndex[i] += parseFloat(indexes[i]);
+                                    } 
+                                }
+                            }
+                        }
+
+                        var finalIndexString = "";
+                        for (var i = 0; i < accrualVector.length; i++) {
+                            finalIndex[i] /= sameSizeExtension;
+                            finalIndexString += finalIndex[i].toString() + ",";
+                        }
+                        finalIndexString = finalIndexString.slice(0, -1);
+                        row.push(finalIndexString.toString());
+                    }
+                }
+
+                data.push(row);
+            }
+
+            return data;
+        }
+    }
     
     GraphCreator.prototype.overallMatches = function(currentFeatureset, semantics, timeLimit) {
 
@@ -1935,14 +2331,9 @@ function create(d3, saveAs, Blob) {
             //console.log(allData_[index]);
             for (var key in allData_[index]) {
                 if (key == "ID" || key == "GroundTruth") {
-                    //console.log("k: " + key);
-                    //console.log("index: " + index);
-                    //console.log("all: " + allData_[index][key]);
                     row.push(allData_[index][key]);
                 }
             }
-
-            //if (allData_[0][key] == "ID" || allData_[0][key] == "GroundTruth") {
 
             graph.activeAll(allData_[index], currentFeatureset, false);
 
@@ -2015,9 +2406,6 @@ function create(d3, saveAs, Blob) {
             data.push(row);
 
             if (index + 1 < nRows) {
-                //console.log(index);
-                //console.log(allGraphStrings[index + 1]);
-                //console.log(index/nRows);
                 var progress = Math.ceil(index/nRows * 100) ;
                 //document.getElementById('progressBar').setAttribute("style", "width:" + progress.toString() + "%");
                 //document.getElementById('progressLabel').innerHTML = progress.toString() + "% (Complete)";
