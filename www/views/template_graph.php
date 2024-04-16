@@ -96,7 +96,7 @@
                     <legend>Current argument
                     </legend>
                     <div style="margin-left: 7px;margin-right: 6px;">
-                        <textarea id="editCurrentArgument" disabled style="width:100%;resize:both;overflow:auto;"></textarea>
+                        <textarea id="editCurrentArgument" style="width:100%;resize:both;overflow:auto;"></textarea>
                     </div>
                     <span id="warningArgument" hidden></span>
                     <span id="acceptArgumentFlag" hidden>0</span>
