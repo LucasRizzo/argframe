@@ -212,11 +212,15 @@ function createEditionGraph(d3, saveAs, Blob) {
             $('#modalCopyGraph').modal('show');
         });
 
+        d3.select("#upload-graph").on("click", function(){
+            $('#modalUploadGraph').modal('show');
+        });
+
         // handle download data
         d3.select("#download-input").on("click", function(){
             var saveEdges = [];
             thisGraph.edges.forEach(function(val, i){
-                saveEdges.push({source: val.source.id, target: val.target.id});
+                saveEdges.push({source: val.source.id, target: val.target.id, type: val.type});
             });
 
             var blob = new Blob([window.JSON.stringify({"nodes": thisGraph.nodes, "edges": saveEdges})], {type: "text/plain;charset=utf-8"});
@@ -541,6 +545,24 @@ function createEditionGraph(d3, saveAs, Blob) {
             });
         return d3txt;
     };
+
+    GraphCreator.prototype.addJSONGraph = function(graphParse) {
+
+        var thisGraph = this;
+        thisGraph.nodes = graphParse.nodes;
+        //thisGraph.setIdCt(graphParse.nodes.length + 1);
+        var newEdges = graphParse.edges;
+
+        // New edges sources and targets need to be nodes. The loop replace the ids by the actual nodes
+        newEdges.forEach(function(e, i){
+            newEdges[i] = {source: thisGraph.nodes.filter(function(n){return n.id == e.source;})[0],
+                           target: thisGraph.nodes.filter(function(n){return n.id == e.target;})[0],
+                           type: e.type};
+        });
+        //console.log(newEdges);
+        thisGraph.edges = newEdges;
+        thisGraph.updateGraph();
+    }
 
     GraphCreator.prototype.addArgument = function() {
 
@@ -1751,6 +1773,44 @@ d3.select("#editRenameGraph").on("click", function() {
         // to update graph list
         document.getElementById("editGraphForm").submit();
     }
+});
+
+
+d3.select('#uploadNewJSONGraph').on("click", function() {
+    d3.event.preventDefault();
+
+    var jsonCode = document.getElementById('jsoncodegraph').value;
+
+    if (graph.nodes.length > 0) {
+        window.alert("You can only upload JSON code for empty graphs. Greate a new graph and upload the code.");
+        return
+    }
+
+    if(jsonCode.length == 0) {
+        window.alert("Please enter some code in the text area.", "Empty code error.");
+        return;
+    }
+    
+    var graphParse;
+    try {
+        graphParse = JSON.parse(jsonCode);
+    } catch(err) {
+        window.alert("Syntax error in imported code. Please check your JSON syntax.", "Syntax error.");
+        return;
+    }
+
+    if (! graphParse.hasOwnProperty('nodes') || ! graphParse.hasOwnProperty('edges')) {
+        window.alert("Your JSON needs a nodes array and an edges array. Please check example.", "Syntax error.");
+        return;
+    }
+
+    graph.addJSONGraph(graphParse);
+
+    $('#modalUploadGraph').modal('hide');
+    document.getElementById('jsoncodegraph').value = 
+
+    console.log(graphParse);
+
 });
 
 // Save new graph version

@@ -306,6 +306,31 @@
     </div>
 </div>
 
+<!-- Modal new featureset -->
+<div id="modalUploadGraph" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Upload graph</h4>
+            </div>
+             <div class="modal-body ">
+                <label for="comment">Upload graph with JSON code (<a href="#" data-toggle="popover" title="JSON example" data-html="true"
+                data-content="<div class='thumbnail'><a href='example_json_rules.png' target='_blank'><img src='example_json_rules.png' alt='JSON EXAMPLE' style='width:100%;heigth:100%'>
+                <div class='caption'>
+                    <p>Graphs can be created through the use of JSON files. Click on the figure for an example of JSON code and resulting graph.</p>
+                </div></div>">?</a>):</label>&nbsp; &nbsp;<button class="btn-xs btn-primary" id="uploadNewJSONGraph" data-toggle="tooltip"
+                        data-placement="top" title="Upload graph with JSON code">
+                        <span class="glyphicon glyphicon-upload">&nbsp; Upload JSON </span>
+                </button>
+                <form class="form-inline">
+                <textarea class="form-control" rows="10" style="width:100%;" name="jsoncodegraph" id="jsoncodegraph"></textarea>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class='col-md-12' style='background-color:rgb(255, 255, 255);border-style: solid;border-width: 2px;border-radius: 3px' id='left-side'>
 
     <div id="toolbox">
@@ -336,7 +361,8 @@
         <input id="rename-graph" type="image" title="rename graph" src="rename.png" alt="rename graph">
         &nbsp
         <input type="image" id="copy-graph" title="copy graph with a new name" src="copy.png" alt="copy graph">
-        <input type="image" id="download-input" title="download graph" src="download-icon.png" alt="download graph">
+        <input type="image" id="download-input" title="download graph" src="download.png" alt="download graph">
+        <input type="image" id="upload-graph" title="upload graph" src="upload.png" alt="upload graph">
         <input type="image" id="editDeletGraph" title="delete graph" src="trash-icon.png" alt="delete graph">
         <input type="image" id="help-graph" title="help" src="question-icon.png" alt="help">
         <!-- Needs to edit graphEdition.js to work -->
@@ -428,6 +454,15 @@
 </div>
 
 <script>
+
+$(document).ready(function(){
+  $('[data-toggle="tooltip"]').tooltip();
+});
+
+$(document).ready(function(){
+    $('[data-toggle="popover"]').popover();   
+});
+
 
 <?php if ($view_successType == "createGraph") {?>
 var featureset = <?php echo json_encode($view_currentFeatureset, JSON_PRETTY_PRINT); ?>;
@@ -963,6 +998,7 @@ function addEditGraphs() {
         document.getElementById('new-empty-graph').disabled = true;
         document.getElementById('rename-graph').disabled = true;
         document.getElementById('copy-graph').disabled = true;
+        document.getElementById('upload-graph').disabled = true;
         document.getElementById('download-input').disabled = true;
         document.getElementById('editDeletGraph').disabled = true;
         document.getElementById('help-graph').disabled = true;
