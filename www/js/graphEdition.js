@@ -1807,9 +1807,7 @@ d3.select('#uploadNewJSONGraph').on("click", function() {
     graph.addJSONGraph(graphParse);
 
     $('#modalUploadGraph').modal('hide');
-    document.getElementById('jsoncodegraph').value = 
-
-    console.log(graphParse);
+    document.getElementById('jsoncodegraph').value = "";
 
 });
 
