@@ -8,7 +8,9 @@ include_once "db/DAO/userDAO.php";
 include_once "db/pdoDbManager.php";
 
 ini_set('max_post_size', '100M');
+ini_set('upload_max_filesize', '100M');
 ini_set('php_max_size', '100M');
+ini_set('post_max_size', '100M');
 ini_set('max_input_vars', '100000');
 
 Slim\Slim::registerAutoloader ();
