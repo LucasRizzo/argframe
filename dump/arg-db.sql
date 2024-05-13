@@ -31,7 +31,7 @@ USE `arg-db`;
 DROP TABLE IF EXISTS `arguments`;
 CREATE TABLE `arguments` (
   `id` int(11) NOT NULL,
-  `argument` varchar(1000) NOT NULL,
+  `argument` varchar(10000) NOT NULL,
   `conclusion` varchar(100) DEFAULT NULL,
   `x` decimal(10,0) NOT NULL,
   `y` decimal(10,0) NOT NULL,
