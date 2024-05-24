@@ -1,5 +1,4 @@
 function fixSpaces(argument) {
-
     argument = argument.replace("  ", " ");
     if (argument[0] == " ") {
         argument = argument.slice(1);
@@ -24,7 +23,7 @@ function create(d3, saveAs, Blob) {
     "use strict";
 
     // define graphcreator object
-    var GraphCreator = function(svg, nodes, edges){
+    var GraphCreator = function (svg, nodes, edges) {
         var thisGraph = this;
 
         thisGraph.idct = 0;
@@ -42,164 +41,176 @@ function create(d3, saveAs, Blob) {
             justScaleTransGraph: false,
             lastKeyDown: -1,
             shiftNodeDrag: false,
-            selectedText: null
+            selectedText: null,
         };
 
         // define arrow markers for graph links
-        var defs = svg.append('svg:defs');
-        defs.append('svg:marker')
-            .attr('id', 'end-arrow')
-            .attr('viewBox', '0 -5 10 10')
-            .attr('refX', "8.5")
-            .attr('markerWidth', 3.5)
-            .attr('markerHeight', 3.5)
-            .attr('orient', 'auto')
-            .append('svg:path')
-            .attr('d', 'M0,-5L10,0L0,5');
+        var defs = svg.append("svg:defs");
+        defs.append("svg:marker")
+            .attr("id", "end-arrow")
+            .attr("viewBox", "0 -5 10 10")
+            .attr("refX", "8.5")
+            .attr("markerWidth", 3.5)
+            .attr("markerHeight", 3.5)
+            .attr("orient", "auto")
+            .append("svg:path")
+            .attr("d", "M0,-5L10,0L0,5");
 
         // Undercut
-        defs.append('svg:marker')
-            .attr('id', 'end-arrow-red')
-            .attr('viewBox', '0 -5 10 10')
-            .attr('refX', "8.5")
-            .attr('markerWidth', 3.5)
-            .attr('markerHeight', 3.5)
-            .attr('orient', 'auto')
-            .append('svg:path')
-            .attr('d', 'M0,-5L10,0L0,5')
+        defs.append("svg:marker")
+            .attr("id", "end-arrow-red")
+            .attr("viewBox", "0 -5 10 10")
+            .attr("refX", "8.5")
+            .attr("markerWidth", 3.5)
+            .attr("markerHeight", 3.5)
+            .attr("orient", "auto")
+            .append("svg:path")
+            .attr("d", "M0,-5L10,0L0,5")
             .attr("fill", "#A3C493");
 
         // Undermine
-        defs.append('svg:marker')
-            .attr('id', 'end-arrow-blue')
-            .attr('viewBox', '0 -5 10 10')
-            .attr('refX', "8.5")
-            .attr('markerWidth', 3.5)
-            .attr('markerHeight', 3.5)
-            .attr('orient', 'auto')
-            .append('svg:path')
-            .attr('d', 'M0,-5L10,0L0,5')
+        defs.append("svg:marker")
+            .attr("id", "end-arrow-blue")
+            .attr("viewBox", "0 -5 10 10")
+            .attr("refX", "8.5")
+            .attr("markerWidth", 3.5)
+            .attr("markerHeight", 3.5)
+            .attr("orient", "auto")
+            .append("svg:path")
+            .attr("d", "M0,-5L10,0L0,5")
             .attr("fill", "#FFC300");
 
         // Rebuttal
-        defs.append('svg:marker')
-            .attr('id', 'end-arrow-green')
-            .attr('viewBox', '0 -5 10 10')
-            .attr('refX', "8.5")
-            .attr('markerWidth', 3.5)
-            .attr('markerHeight', 3.5)
-            .attr('orient', 'auto')
-            .append('svg:path')
-            .attr('d', 'M0,-5L10,0L0,5');
-            //.attr("fill", "#FF5733");
-            //.attr("fill", "#000000");
-            
+        defs.append("svg:marker")
+            .attr("id", "end-arrow-green")
+            .attr("viewBox", "0 -5 10 10")
+            .attr("refX", "8.5")
+            .attr("markerWidth", 3.5)
+            .attr("markerHeight", 3.5)
+            .attr("orient", "auto")
+            .append("svg:path")
+            .attr("d", "M0,-5L10,0L0,5");
+        //.attr("fill", "#FF5733");
+        //.attr("fill", "#000000");
+
         // Hovered
-        defs.append('svg:marker')
-            .attr('id', 'end-arrow-hover')
-            .attr('viewBox', '0 -5 10 10')
-            .attr('refX', "8.5")
-            .attr('markerWidth', 3.5)
-            .attr('markerHeight', 3.5)
-            .attr('orient', 'auto')
-            .append('svg:path')
-            .attr('d', 'M0,-5L10,0L0,5')
+        defs.append("svg:marker")
+            .attr("id", "end-arrow-hover")
+            .attr("viewBox", "0 -5 10 10")
+            .attr("refX", "8.5")
+            .attr("markerWidth", 3.5)
+            .attr("markerHeight", 3.5)
+            .attr("orient", "auto")
+            .append("svg:path")
+            .attr("d", "M0,-5L10,0L0,5")
             .attr("fill", "#5EC4CC");
 
         // Selected
-        defs.append('svg:marker')
-            .attr('id', 'end-arrow-selected')
-            .attr('viewBox', '0 -5 10 10')
-            .attr('refX', "8.5")
-            .attr('markerWidth', 3.5)
-            .attr('markerHeight', 3.5)
-            .attr('orient', 'auto')
-            .append('svg:path')
-            .attr('d', 'M0,-5L10,0L0,5')
+        defs.append("svg:marker")
+            .attr("id", "end-arrow-selected")
+            .attr("viewBox", "0 -5 10 10")
+            .attr("refX", "8.5")
+            .attr("markerWidth", 3.5)
+            .attr("markerHeight", 3.5)
+            .attr("orient", "auto")
+            .append("svg:path")
+            .attr("d", "M0,-5L10,0L0,5")
             .attr("fill", "#E5ACF7");
 
         // define arrow markers for leading arrow
-        defs.append('svg:marker')
-            .attr('id', 'mark-end-arrow')
-            .attr('viewBox', '0 -5 10 10')
-            .attr('refX', "7")
-            .attr('markerWidth', 3.5)
-            .attr('markerHeight', 3.5)
-            .attr('orient', 'auto')
-            .append('svg:path')
-            .attr('d', 'M0,-5L10,0L0,5');
+        defs.append("svg:marker")
+            .attr("id", "mark-end-arrow")
+            .attr("viewBox", "0 -5 10 10")
+            .attr("refX", "7")
+            .attr("markerWidth", 3.5)
+            .attr("markerHeight", 3.5)
+            .attr("orient", "auto")
+            .append("svg:path")
+            .attr("d", "M0,-5L10,0L0,5");
 
         thisGraph.svg = svg;
-        thisGraph.svgG = svg.append("g")
+        thisGraph.svgG = svg
+            .append("g")
             .classed(thisGraph.consts.graphClass, true);
         var svgG = thisGraph.svgG;
 
         // displayed when dragging between nodes
-        thisGraph.dragLine = svgG.append('svg:path')
-            .attr('class', 'link dragline hidden')
-            .attr('d', 'M0,0L0,0')
-            .style('marker-end', 'url(#mark-end-arrow)');
+        thisGraph.dragLine = svgG
+            .append("svg:path")
+            .attr("class", "link dragline hidden")
+            .attr("d", "M0,0L0,0")
+            .style("marker-end", "url(#mark-end-arrow)");
 
-        // svg nodes and edges 
+        // svg nodes and edges
         thisGraph.paths = svgG.append("g").selectAll("g");
         thisGraph.circles = svgG.append("g").selectAll("g");
 
-        thisGraph.drag = d3.behavior.drag()
-            .origin(function(d){
-                return {x: d.x, y: d.y};
+        thisGraph.drag = d3.behavior
+            .drag()
+            .origin(function (d) {
+                return { x: d.x, y: d.y };
             })
-            .on("drag", function(args){
+            .on("drag", function (args) {
                 thisGraph.state.justDragged = true;
                 thisGraph.dragmove.call(thisGraph, args);
             })
-            .on("dragend", function() {
+            .on("dragend", function () {
                 // todo check if edge-mode is selected
             });
 
         // listen for key events
-        d3.select(window).on("keydown", function(){
-            thisGraph.svgKeyDown.call(thisGraph);
-        })
-        .on("keyup", function(){
-            thisGraph.svgKeyUp.call(thisGraph);
+        d3.select(window)
+            .on("keydown", function () {
+                thisGraph.svgKeyDown.call(thisGraph);
+            })
+            .on("keyup", function () {
+                thisGraph.svgKeyUp.call(thisGraph);
+            });
+
+        svg.on("mousedown", function (d) {
+            thisGraph.svgMouseDown.call(thisGraph, d);
+        });
+        svg.on("mouseup", function (d) {
+            thisGraph.svgMouseUp.call(thisGraph, d);
         });
 
-        svg.on("mousedown", function(d){thisGraph.svgMouseDown.call(thisGraph, d);});
-        svg.on("mouseup", function(d){thisGraph.svgMouseUp.call(thisGraph, d);});
-
         // listen for dragging
-        var dragSvg = d3.behavior.zoom()
-            .on("zoom", function(){
-                if (d3.event.sourceEvent.shiftKey){
-                // TODO  the internal d3 state is still changing
-                return false;
-                } else{
-                thisGraph.zoomed.call(thisGraph);
+        var dragSvg = d3.behavior
+            .zoom()
+            .on("zoom", function () {
+                if (d3.event.sourceEvent.shiftKey) {
+                    // TODO  the internal d3 state is still changing
+                    return false;
+                } else {
+                    thisGraph.zoomed.call(thisGraph);
                 }
                 return true;
             })
-            .on("zoomstart", function(){
+            .on("zoomstart", function () {
                 var ael = d3.select("#" + thisGraph.consts.activeEditId).node();
-                if (ael){
-                ael.blur();
+                if (ael) {
+                    ael.blur();
                 }
-                if (!d3.event.sourceEvent.shiftKey) d3.select('body').style("cursor", "move");
+                if (!d3.event.sourceEvent.shiftKey)
+                    d3.select("body").style("cursor", "move");
             })
-            .on("zoomend", function(){
-                d3.select('body').style("cursor", "auto");
+            .on("zoomend", function () {
+                d3.select("body").style("cursor", "auto");
             });
 
         svg.call(dragSvg).on("dblclick.zoom", null);
 
         // listen for resize
-        window.onresize = function(){thisGraph.updateWindow(svg);};
+        window.onresize = function () {
+            thisGraph.updateWindow(svg);
+        };
     };
 
-    GraphCreator.prototype.setIdCt = function(idct){
+    GraphCreator.prototype.setIdCt = function (idct) {
         this.idct = idct;
     };
 
-    GraphCreator.prototype.consts =  {
+    GraphCreator.prototype.consts = {
         selectedClass: "selected",
         connectClass: "connect-node",
         circleGClass: "conceptG",
@@ -214,35 +225,45 @@ function create(d3, saveAs, Blob) {
         BACKSPACE_KEY: 8,
         DELETE_KEY: 46,
         ENTER_KEY: 13,
-        nodeRadius: 50
+        nodeRadius: 50,
     };
 
     /* PROTOTYPE FUNCTIONS */
 
-    GraphCreator.prototype.dragmove = function(d) {
+    GraphCreator.prototype.dragmove = function (d) {
         var thisGraph = this;
-        if (thisGraph.state.shiftNodeDrag){
-        thisGraph.dragLine.attr('d', 'M' + d.x + ',' + d.y + 'L' + d3.mouse(thisGraph.svgG.node())[0] + ',' + d3.mouse(this.svgG.node())[1]);
-        } else{
-        d.x += d3.event.dx;
-        d.y +=  d3.event.dy;
-        thisGraph.updateGraph();
+        if (thisGraph.state.shiftNodeDrag) {
+            thisGraph.dragLine.attr(
+                "d",
+                "M" +
+                    d.x +
+                    "," +
+                    d.y +
+                    "L" +
+                    d3.mouse(thisGraph.svgG.node())[0] +
+                    "," +
+                    d3.mouse(this.svgG.node())[1]
+            );
+        } else {
+            d.x += d3.event.dx;
+            d.y += d3.event.dy;
+            thisGraph.updateGraph();
         }
     };
-
 
     /* insert svg line breaks: taken from http://stackoverflow.com/questions/13241475/how-do-i-include-newlines-in-labels-in-d3-charts */
     GraphCreator.prototype.insertTitleLinebreaks = function (gEl, title) {
         var words = title.split(/\s+/g),
             nwords = words.length;
-        var el = gEl.append("text")
-            .attr("text-anchor","middle")
-            .attr("dy", "-" + (nwords-1)*7.5);
+        var el = gEl
+            .append("text")
+            .attr("text-anchor", "middle")
+            .attr("dy", "-" + (nwords - 1) * 7.5);
 
         for (var i = 0; i < words.length; i++) {
-            var tspan = el.append('tspan').text(words[i]);
+            var tspan = el.append("tspan").text(words[i]);
             if (i > 0) {
-                tspan.attr('x', 0).attr('dy', '15');
+                tspan.attr("x", 0).attr("dy", "15");
             }
         }
     };
@@ -250,88 +271,93 @@ function create(d3, saveAs, Blob) {
     GraphCreator.prototype.styleTitle = function (gEl, title) {
         var words = title.split(/\s+/g),
             nwords = words.length;
-        var el = gEl.append("text")
-            .attr("text-anchor","middle")
-            .attr("dy", "-" + (nwords-1)*7.5);
+        var el = gEl
+            .append("text")
+            .attr("text-anchor", "middle")
+            .attr("dy", "-" + (nwords - 1) * 7.5);
 
         for (var i = 0; i < words.length; i++) {
-            var tspan = el.append('tspan').text(words[i]);
+            var tspan = el.append("tspan").text(words[i]);
             if (i > 0) {
-                tspan.attr('x', 0).attr('dy', '15');
+                tspan.attr("x", 0).attr("dy", "15");
             } else {
-                tspan.attr('font-weight', "bold");
-                tspan.attr('font-size', "30px");
+                tspan.attr("font-weight", "bold");
+                tspan.attr("font-size", "30px");
             }
         }
     };
 
     // remove edges associated with a node
-    GraphCreator.prototype.spliceLinksForNode = function(node) {
+    GraphCreator.prototype.spliceLinksForNode = function (node) {
         var thisGraph = this,
-            toSplice = thisGraph.edges.filter(function(l) {
-        return (l.source === node || l.target === node);
-        });
-        toSplice.map(function(l) {
-        thisGraph.edges.splice(thisGraph.edges.indexOf(l), 1);
+            toSplice = thisGraph.edges.filter(function (l) {
+                return l.source === node || l.target === node;
+            });
+        toSplice.map(function (l) {
+            thisGraph.edges.splice(thisGraph.edges.indexOf(l), 1);
         });
     };
 
-    GraphCreator.prototype.replaceSelectEdge = function(d3Path, edgeData){
+    GraphCreator.prototype.replaceSelectEdge = function (d3Path, edgeData) {
         var thisGraph = this;
         d3Path.classed(thisGraph.consts.selectedClass, true);
-        if (thisGraph.state.selectedEdge){
+        if (thisGraph.state.selectedEdge) {
             thisGraph.removeSelectFromEdge();
         }
         thisGraph.state.selectedEdge = edgeData;
-        d3Path.style('marker-end', "url(#end-arrow-selected)");
+        d3Path.style("marker-end", "url(#end-arrow-selected)");
     };
 
-    GraphCreator.prototype.replaceSelectNode = function(d3Node, nodeData){
+    GraphCreator.prototype.replaceSelectNode = function (d3Node, nodeData) {
         var thisGraph = this;
         d3Node.classed(this.consts.selectedClass, true);
-        if (thisGraph.state.selectedNode){
-        thisGraph.removeSelectFromNode();
+        if (thisGraph.state.selectedNode) {
+            thisGraph.removeSelectFromNode();
         }
         thisGraph.state.selectedNode = nodeData;
     };
-    
-    GraphCreator.prototype.removeSelectFromNode = function(){
+
+    GraphCreator.prototype.removeSelectFromNode = function () {
         var thisGraph = this;
-        thisGraph.circles.filter(function(cd){
-        return cd.id === thisGraph.state.selectedNode.id;
-        }).classed(thisGraph.consts.selectedClass, false);
+        thisGraph.circles
+            .filter(function (cd) {
+                return cd.id === thisGraph.state.selectedNode.id;
+            })
+            .classed(thisGraph.consts.selectedClass, false);
         thisGraph.state.selectedNode = null;
     };
 
-    GraphCreator.prototype.removeSelectFromEdge = function(){
+    GraphCreator.prototype.removeSelectFromEdge = function () {
         var thisGraph = this;
-        thisGraph.paths.filter(function(cd){
-        return cd === thisGraph.state.selectedEdge;
-        }).classed(thisGraph.consts.selectedClass, false);
+        thisGraph.paths
+            .filter(function (cd) {
+                return cd === thisGraph.state.selectedEdge;
+            })
+            .classed(thisGraph.consts.selectedClass, false);
         thisGraph.state.selectedEdge = null;
-        d3Path.style('marker-end', "url(#end-arrow)");
+        d3Path.style("marker-end", "url(#end-arrow)");
     };
 
-    GraphCreator.prototype.pathMouseDown = function(d3path, d){
+    GraphCreator.prototype.pathMouseDown = function (d3path, d) {
         var thisGraph = this,
             state = thisGraph.state;
         d3.event.stopPropagation();
         state.mouseDownLink = d;
 
-        if (state.selectedNode){
-        thisGraph.removeSelectFromNode();
+        if (state.selectedNode) {
+            thisGraph.removeSelectFromNode();
         }
 
-        var prevEdge = state.selectedEdge;  
-        if (!prevEdge || prevEdge !== d){
-        thisGraph.replaceSelectEdge(d3path, d);
-        } else{
-        thisGraph.removeSelectFromEdge();
+        var prevEdge = state.selectedEdge;
+        if (!prevEdge || prevEdge !== d) {
+            thisGraph.replaceSelectEdge(d3path, d);
+        } else {
+            thisGraph.removeSelectFromEdge();
         }
     };
 
     // mousedown on node
-    GraphCreator.prototype.circleMouseDown = function(d3node, d){
+    GraphCreator.prototype.circleMouseDown = function (d3node, d) {
         var thisGraph = this,
             state = thisGraph.state;
         d3.event.stopPropagation();
@@ -346,38 +372,43 @@ function create(d3, saveAs, Blob) {
     };
 
     /* place editable text on node in place of svg text */
-    GraphCreator.prototype.changeTextOfNode = function(d3node, d){
-        var thisGraph= this,
+    GraphCreator.prototype.changeTextOfNode = function (d3node, d) {
+        var thisGraph = this,
             consts = thisGraph.consts,
             htmlEl = d3node.node();
         d3node.selectAll("text").remove();
         var nodeBCR = htmlEl.getBoundingClientRect(),
-            curScale = nodeBCR.width/consts.nodeRadius,
-            placePad  =  5*curScale,
-            useHW = curScale > 1 ? nodeBCR.width*0.71 : consts.nodeRadius*1.42;
+            curScale = nodeBCR.width / consts.nodeRadius,
+            placePad = 5 * curScale,
+            useHW =
+                curScale > 1 ? nodeBCR.width * 0.71 : consts.nodeRadius * 1.42;
         // replace with editableconent text
-        var d3txt = thisGraph.svg.selectAll("foreignObject")
+        var d3txt = thisGraph.svg
+            .selectAll("foreignObject")
             .data([d])
             .enter()
             .append("foreignObject")
-            .attr("x", nodeBCR.left + placePad )
+            .attr("x", nodeBCR.left + placePad)
             .attr("y", nodeBCR.top + placePad)
-            .attr("height", 2*useHW)
+            .attr("height", 2 * useHW)
             .attr("width", useHW)
             .append("xhtml:p")
             .attr("id", consts.activeEditId)
             .attr("contentEditable", "true")
             .text(d.title)
-            .on("mousedown", function(d){
+            .on("mousedown", function (d) {
                 d3.event.stopPropagation();
             })
-            .on("keydown", function(d){
+            .on("keydown", function (d) {
                 d3.event.stopPropagation();
-                if (d3.event.keyCode == consts.ENTER_KEY && !d3.event.shiftKey){
-                this.blur();
+                if (
+                    d3.event.keyCode == consts.ENTER_KEY &&
+                    !d3.event.shiftKey
+                ) {
+                    this.blur();
                 }
             })
-            .on("blur", function(d){
+            .on("blur", function (d) {
                 d.title = this.textContent;
                 thisGraph.insertTitleLinebreaks(d3node, d.title);
                 d3.select(this.parentElement).remove();
@@ -386,12 +417,12 @@ function create(d3, saveAs, Blob) {
     };
 
     // mouseup on nodes
-    GraphCreator.prototype.circleMouseUp = function(d3node, d){
+    GraphCreator.prototype.circleMouseUp = function (d3node, d) {
         var thisGraph = this,
             state = thisGraph.state,
             consts = thisGraph.consts;
         // reset the states
-        state.shiftNodeDrag = false;    
+        state.shiftNodeDrag = false;
         d3node.classed(consts.connectClass, false);
 
         var mouseDownNode = state.mouseDownNode;
@@ -400,41 +431,43 @@ function create(d3, saveAs, Blob) {
 
         thisGraph.dragLine.classed("hidden", true);
 
-        if (mouseDownNode !== d){
+        if (mouseDownNode !== d) {
             // we're in a different node: create new edge for mousedown edge and add to graph
-            var newEdge = {source: mouseDownNode, target: d};
-            var filtRes = thisGraph.paths.filter(function(d){
+            var newEdge = { source: mouseDownNode, target: d };
+            var filtRes = thisGraph.paths.filter(function (d) {
                 /*if (d.source === newEdge.target && d.target === newEdge.source){
                 thisGraph.edges.splice(thisGraph.edges.indexOf(d), 1);
                 }*/
-                return d.source === newEdge.source && d.target === newEdge.target;
+                return (
+                    d.source === newEdge.source && d.target === newEdge.target
+                );
             });
-            if (!filtRes[0].length){
+            if (!filtRes[0].length) {
                 thisGraph.edges.push(newEdge);
                 thisGraph.updateGraph();
             }
-        } else{
+        } else {
             // we're in the same node
             if (state.justDragged) {
                 // dragged, not clicked
                 state.justDragged = false;
-            } else{
+            } else {
                 // clicked, not dragged
-                if (d3.event.shiftKey){
+                if (d3.event.shiftKey) {
                     // shift-clicked node: edit text content
                     /*var d3txt = thisGraph.changeTextOfNode(d3node, d);
                     var txtNode = d3txt.node();
                     thisGraph.selectElementContents(txtNode);
                     txtNode.focus();*/
-                } else{
-                    if (state.selectedEdge){
+                } else {
+                    if (state.selectedEdge) {
                         thisGraph.removeSelectFromEdge();
                     }
                     var prevNode = state.selectedNode;
 
-                    if (!prevNode || prevNode.id !== d.id){
+                    if (!prevNode || prevNode.id !== d.id) {
                         thisGraph.replaceSelectNode(d3node, d);
-                    } else{
+                    } else {
                         thisGraph.removeSelectFromNode();
                     }
                 }
@@ -442,22 +475,21 @@ function create(d3, saveAs, Blob) {
         }
         state.mouseDownNode = null;
         return;
-
     }; // end of circles mouseup
 
     // mousedown on main svg
-    GraphCreator.prototype.svgMouseDown = function(){
+    GraphCreator.prototype.svgMouseDown = function () {
         this.state.graphMouseDown = true;
     };
 
     // mouseup on main svg
-    GraphCreator.prototype.svgMouseUp = function(){
+    GraphCreator.prototype.svgMouseUp = function () {
         var thisGraph = this,
             state = thisGraph.state;
         if (state.justScaleTransGraph) {
             // dragged not clicked
             state.justScaleTransGraph = false;
-        }/* else if (state.graphMouseDown && d3.event.shiftKey){
+        } /* else if (state.graphMouseDown && d3.event.shiftKey){
             // clicked not dragged from svg
             var xycoords = d3.mouse(thisGraph.svgG.node()),
                 d = {id: thisGraph.idct++, title: "new concept", x: xycoords[0], y: xycoords[1]};
@@ -470,7 +502,7 @@ function create(d3, saveAs, Blob) {
                 txtNode = d3txt.node();
             thisGraph.selectElementContents(txtNode);
             txtNode.focus();
-        }*/ else if (state.shiftNodeDrag){
+        }*/ else if (state.shiftNodeDrag) {
             // dragged from node
             state.shiftNodeDrag = false;
             thisGraph.dragLine.classed("hidden", true);
@@ -480,12 +512,12 @@ function create(d3, saveAs, Blob) {
     };
 
     // keydown on main svg
-    GraphCreator.prototype.svgKeyDown = function() {
+    GraphCreator.prototype.svgKeyDown = function () {
         var thisGraph = this,
             state = thisGraph.state,
             consts = thisGraph.consts;
         // make sure repeated key presses don't register for each keydown
-        if(state.lastKeyDown !== -1) return;
+        if (state.lastKeyDown !== -1) return;
 
         state.lastKeyDown = d3.event.keyCode;
         var selectedNode = state.selectedNode,
@@ -509,35 +541,43 @@ function create(d3, saveAs, Blob) {
         }*/
     };
 
-    GraphCreator.prototype.svgKeyUp = function() {
+    GraphCreator.prototype.svgKeyUp = function () {
         this.state.lastKeyDown = -1;
     };
 
-    GraphCreator.prototype.active = function(node, row, currentFeatureset) {
-
+    GraphCreator.prototype.active = function (node, row, currentFeatureset) {
         // Break premises by the logical operator
         // In case more operators are included this method has to be updated
         node.value = 0;
         // Argument weight according to premises weight (if they exist)
         node.weight = 1;
         // Calculate minimum and maximum premisse value in order to normalize
-        // it with conclusion range 
+        // it with conclusion range
         // http://stats.stackexchange.com/questions/70801/how-to-normalize-data-to-0-1-range
         var minimumPremisseValue = 0,
             maximumPremisseValue = 0;
         node.activated = false;
 
-
         var premiseAndConclusion = String(node.tooltip).split(" -> ");
-        var hasConclusion = premiseAndConclusion.length == 2 && premiseAndConclusion[1] != "NULL";
+        var hasConclusion =
+            premiseAndConclusion.length == 2 &&
+            premiseAndConclusion[1] != "NULL";
 
         var conclusionLabel = "";
         var conclusionFrom = "";
         var conclusionTo = "";
 
+        // Check if there are weight columns in the data (important for calculating nodes values)
+        var noWeights = true;
+        for (var key in row) {
+            if (key.startsWith("Weight_")) {
+                noWeights = false;
+                break;
+            }
+        }
+
         // If there is a conclusion get its range
         if (hasConclusion) {
-
             var begin = 0;
             while (premiseAndConclusion[1][begin] != " ") {
                 conclusionLabel += premiseAndConclusion[1][begin];
@@ -581,10 +621,12 @@ function create(d3, saveAs, Blob) {
 
         var i = -1;
         do {
-
             i++;
             // Find first level
-            while (i < premiseAndConclusion[0].length && premiseAndConclusion[0][i] != "\"") {
+            while (
+                i < premiseAndConclusion[0].length &&
+                premiseAndConclusion[0][i] != '"'
+            ) {
                 searchBooleanAttr += premiseAndConclusion[0][i];
                 searchBooleanLevels += premiseAndConclusion[0][i];
                 i++;
@@ -595,7 +637,10 @@ function create(d3, saveAs, Blob) {
             }
 
             // find where level ends
-            while (premiseAndConclusion[0][i] != " " && i < premiseAndConclusion[0].length - 1) {
+            while (
+                premiseAndConclusion[0][i] != " " &&
+                i < premiseAndConclusion[0].length - 1
+            ) {
                 // Save level
                 i++;
                 if (premiseAndConclusion[0][i] != " ") {
@@ -615,17 +660,20 @@ function create(d3, saveAs, Blob) {
             }
 
             // Copy attribute after level
-            while (premiseAndConclusion[0][i] != "\"" && i < premiseAndConclusion[0].length - 1) {
+            while (
+                premiseAndConclusion[0][i] != '"' &&
+                i < premiseAndConclusion[0].length - 1
+            ) {
                 searchBooleanAttr += premiseAndConclusion[0][i];
                 i++;
             }
-        // Continue while there is another attribute
-        } while(i < premiseAndConclusion[0].length - 1);
+            // Continue while there is another attribute
+        } while (i < premiseAndConclusion[0].length - 1);
 
         searchBooleanAttr = fixSpaces(searchBooleanAttr);
         searchBooleanLevels = fixSpaces(searchBooleanLevels);
 
-        // Example: var string = "high Arousal" OR "low Frustration" OR 
+        // Example: var string = "high Arousal" OR "low Frustration" OR
         //                       "high ContextBias" AND "mediumLower Skill"
         // searchBooleanAttr = Arousal OR Frustration OR ContextBias AND Skill
         // searchBooleanLevels = high OR low OR high AND mediumLower
@@ -649,41 +697,56 @@ function create(d3, saveAs, Blob) {
 
         // Example: premises = [high, Arousal, low, Frustration,
         //                      high, ContextBias, mediumLower, Skill]
-        var activatedAttributes = [];
-        var activatedLevels = [];
+        // var activatedAttributes = [];
+        // var activatedLevels = [];
+        // Keep all activated attributes and respective levels in a dictionary.
+        // For example, allActivated[Arousal] = high.
+        let allActivated = {};
 
         // Find activated premisses
-        for(var premI = 0; premI < premises.length - 1; premI+=2){
-
+        for (var premI = 0; premI < premises.length - 1; premI += 2) {
             var level = premises[premI];
-            var attribute = premises[premI+1];
+            var attribute = premises[premI + 1];
 
             // Attribute not imported
-            //console.log("r:", row);
             if (row[attribute] == undefined || row[attribute] == "?") {
-                //node.activated = false;
-                //return false;
                 continue;
             }
 
             // Run through all attributes and their respective level in order
             // to find the activates premise's attributes
-            for (var attr = 0; attr < attributesByFeatureset_[currentFeatureset].length; attr++) {
+            for (
+                var attr = 0;
+                attr < attributesByFeatureset_[currentFeatureset].length;
+                attr++
+            ) {
+                var correctAttributeLevel =
+                    attributesByFeatureset_[currentFeatureset][attr]
+                        .attribute == attribute &&
+                    attributesByFeatureset_[currentFeatureset][attr].a_level ==
+                        level;
 
-                var correctAttributeLevel = attributesByFeatureset_[currentFeatureset][attr].attribute == attribute &&
-                                            attributesByFeatureset_[currentFeatureset][attr].a_level == level;
+                if (!correctAttributeLevel) {
+                    continue;
+                }
 
-                if (correctAttributeLevel) {
-                    // Check if table data is inside range
-                    var notInsideRange = parseFloat(row[attribute]) > parseFloat(attributesByFeatureset_[currentFeatureset][attr].a_to) ||
-                                         parseFloat(row[attribute]) < parseFloat(attributesByFeatureset_[currentFeatureset][attr].a_from);
+                // Check if table data is inside range
+                var notInsideRange =
+                    parseFloat(row[attribute]) >
+                        parseFloat(
+                            attributesByFeatureset_[currentFeatureset][attr]
+                                .a_to
+                        ) ||
+                    parseFloat(row[attribute]) <
+                        parseFloat(
+                            attributesByFeatureset_[currentFeatureset][attr]
+                                .a_from
+                        );
 
-                    if (notInsideRange) {
-                        continue;
-                    } else {
-                        activatedAttributes.push(attribute);
-                        activatedLevels.push(level);
-                    }
+                if (notInsideRange) {
+                    continue;
+                } else {
+                    allActivated[attribute] = level;
                 }
             }
         }
@@ -699,19 +762,31 @@ function create(d3, saveAs, Blob) {
             for (var j = 0; j < parsedQuery[i].length; j++) {
                 // If one of the attributes is not in the activated set go to
                 // the next set of possibilites
-                if (activatedAttributes.indexOf(parsedQuery[i][j]) == -1) {
+
+                if (allActivated[parsedQuery[i][j]] == undefined) {
                     break;
-                // If attribute is activated check if it is the correct level
-                } else if (activatedLevels[activatedAttributes.indexOf(parsedQuery[i][j])] != parsedQueryLevels[i][j]) {
+                }
+
+                if (
+                    allActivated[parsedQuery[i][j]] != parsedQueryLevels[i][j]
+                ) {
                     break;
                 }
 
                 // If here then all attributes in the set are activated and
                 // node can be activated
                 if (j == parsedQuery[i].length - 1) {
-                    //console.log(parsedQuery[i]);
-                    //console.log(parsedQueryLevels[i]);
                     node.activated = true;
+
+                    // Node is activated and the value is the conclusion. Can return here.
+                    if (
+                        noWeights &&
+                        Math.abs(conclusionFrom - conclusionTo) < 0.00001
+                    ) {
+                        node.value = conclusionTo;
+                        return true;
+                    }
+
                     trueSets.push(i);
                 }
             }
@@ -729,7 +804,7 @@ function create(d3, saveAs, Blob) {
 
         // If node has no conclusion there is no need to calculate its value
         // and the function can return true
-        if (! hasConclusion) {
+        if (!hasConclusion) {
             return true;
         }
 
@@ -744,36 +819,67 @@ function create(d3, saveAs, Blob) {
         //                            [max(minContextBias, minSkills), max(maxContextBias, maxSkill)]]
         // Example: trueSetsValues = [max(Arousal), max(Frustration), max(ContextBias, Skill)]
         // Example: trueSetsWeights = [max(Weight_Arousal), max(Weight_Frustration), max(Weight_ContextBias, Weight_Skill)]
-        for(var i = 0; i < trueSets.length; i++){
-
-            for (var trueAttr = 0; trueAttr < parsedQuery[trueSets[i]].length; trueAttr++) {
+        for (var i = 0; i < trueSets.length; i++) {
+            for (
+                var trueAttr = 0;
+                trueAttr < parsedQuery[trueSets[i]].length;
+                trueAttr++
+            ) {
                 var attribute = parsedQuery[trueSets[i]][trueAttr];
                 var level = parsedQueryLevels[trueSets[i]][trueAttr];
 
                 // Find attribute in dataset
-                for (var attr = 0; attr < attributesByFeatureset_[currentFeatureset].length; attr++) {
-
-                    if (attributesByFeatureset_[currentFeatureset][attr].attribute != attribute ||
-                        attributesByFeatureset_[currentFeatureset][attr].a_level != level) {
+                for (
+                    var attr = 0;
+                    attr < attributesByFeatureset_[currentFeatureset].length;
+                    attr++
+                ) {
+                    if (
+                        attributesByFeatureset_[currentFeatureset][attr]
+                            .attribute != attribute ||
+                        attributesByFeatureset_[currentFeatureset][attr]
+                            .a_level != level
+                    ) {
                         continue;
                     }
 
                     if (trueSetsMinMax[i] == undefined) {
-                        trueSetsMinMax.push([parseFloat(attributesByFeatureset_[currentFeatureset][attr].a_from),
-                                                        parseFloat(attributesByFeatureset_[currentFeatureset][attr].a_to)]);
+                        trueSetsMinMax.push([
+                            parseFloat(
+                                attributesByFeatureset_[currentFeatureset][attr]
+                                    .a_from
+                            ),
+                            parseFloat(
+                                attributesByFeatureset_[currentFeatureset][attr]
+                                    .a_to
+                            ),
+                        ]);
 
                         // Save associated value and weight to this range
                         trueSetsValues.push(parseFloat(row[attribute]));
 
-                        if (typeof row["Weight_" + attribute] !== 'undefined') {
-                            trueSetsWeights.push(parseFloat(row["Weight_" + attribute]));
+                        if (typeof row["Weight_" + attribute] !== "undefined") {
+                            trueSetsWeights.push(
+                                parseFloat(row["Weight_" + attribute])
+                            );
                         } else {
                             trueSetsWeights.push(1);
                         }
-
                     } else {
-                        var min = Math.max(trueSetsMinMax[i][0], parseFloat(attributesByFeatureset_[currentFeatureset][attr].a_from));
-                        var max = Math.max(trueSetsMinMax[i][1], parseFloat(attributesByFeatureset_[currentFeatureset][attr].a_to));
+                        var min = Math.max(
+                            trueSetsMinMax[i][0],
+                            parseFloat(
+                                attributesByFeatureset_[currentFeatureset][attr]
+                                    .a_from
+                            )
+                        );
+                        var max = Math.max(
+                            trueSetsMinMax[i][1],
+                            parseFloat(
+                                attributesByFeatureset_[currentFeatureset][attr]
+                                    .a_to
+                            )
+                        );
 
                         trueSetsMinMax[i][0] = min;
                         trueSetsMinMax[i][1] = max;
@@ -782,9 +888,17 @@ function create(d3, saveAs, Blob) {
                         if (parseFloat(row[attribute]) > trueSetsValues[i]) {
                             trueSetsValues[i] = parseFloat(row[attribute]);
                             // If one weight is defined all others are
-                            if (typeof row["Weight_" + attribute] !== 'undefined') {
-                                if (row["Weight_" + attribute] > trueSetsWeights[i]) {
-                                    trueSetsWeights[i] = parseFloat(row["Weight_" + attribute]);
+                            if (
+                                typeof row["Weight_" + attribute] !==
+                                "undefined"
+                            ) {
+                                if (
+                                    row["Weight_" + attribute] >
+                                    trueSetsWeights[i]
+                                ) {
+                                    trueSetsWeights[i] = parseFloat(
+                                        row["Weight_" + attribute]
+                                    );
                                 }
                             }
                         }
@@ -798,9 +912,15 @@ function create(d3, saveAs, Blob) {
         minimumPremisseValue = Number.MAX_VALUE;
         maximumPremisseValue = Number.MAX_VALUE;
         node.value = Number.MAX_VALUE;
-        for(var i = 0; i < trueSetsMinMax.length; i++){
-            minimumPremisseValue = Math.min(minimumPremisseValue, trueSetsMinMax[i][0]);
-            maximumPremisseValue = Math.min(maximumPremisseValue, trueSetsMinMax[i][1]);
+        for (var i = 0; i < trueSetsMinMax.length; i++) {
+            minimumPremisseValue = Math.min(
+                minimumPremisseValue,
+                trueSetsMinMax[i][0]
+            );
+            maximumPremisseValue = Math.min(
+                maximumPremisseValue,
+                trueSetsMinMax[i][1]
+            );
             // Choose the true set with maximum value
             if (trueSetsValues[i] < node.value) {
                 node.value = trueSetsValues[i];
@@ -808,9 +928,15 @@ function create(d3, saveAs, Blob) {
             }
         }
 
-        if (maximumPremisseValue - minimumPremisseValue != 0 && conclusionTo - conclusionFrom != 0) {
-            node.value = (conclusionTo - conclusionFrom) / (maximumPremisseValue - minimumPremisseValue) *
-                        (node.value - maximumPremisseValue) + conclusionTo;
+        if (
+            maximumPremisseValue - minimumPremisseValue != 0 &&
+            conclusionTo - conclusionFrom != 0
+        ) {
+            node.value =
+                ((conclusionTo - conclusionFrom) /
+                    (maximumPremisseValue - minimumPremisseValue)) *
+                    (node.value - maximumPremisseValue) +
+                conclusionTo;
         } else {
             // An example of this case is [1, 1] -> [8, 10] or [1, 10] -> [8, 8]
             // The first makes no sense so the max value of the conclusion
@@ -820,10 +946,9 @@ function create(d3, saveAs, Blob) {
         }
 
         return true;
-    }
+    };
 
-    GraphCreator.prototype.getActivatedJson = function() {
-
+    GraphCreator.prototype.getActivatedJson = function () {
         var thisGraph = graph,
             consts = thisGraph.consts,
             state = thisGraph.state;
@@ -833,7 +958,7 @@ function create(d3, saveAs, Blob) {
         var jsonActivated = "";
 
         // Include edges
-        thisGraph.circles.each(function(d) {
+        thisGraph.circles.each(function (d) {
             if (d.activated) {
                 jsonActivated += d.title + ",";
             }
@@ -843,42 +968,54 @@ function create(d3, saveAs, Blob) {
         jsonActivated = jsonActivated.substring(0, jsonActivated.length - 1);
 
         return jsonActivated;
-    }
-    
-    GraphCreator.prototype.isAttackValid = function (nodeSource, nodeTarget, toFile) {
+    };
 
+    GraphCreator.prototype.isAttackValid = function (
+        nodeSource,
+        nodeTarget,
+        toFile
+    ) {
         var premiseAndConclusion = String(nodeSource.tooltip).split(" -> ");
         // Only arguments with a conclusion will have a value
-        var hasConclusionSource = premiseAndConclusion.length == 2 && premiseAndConclusion[1] != "NULL";
+        var hasConclusionSource =
+            premiseAndConclusion.length == 2 &&
+            premiseAndConclusion[1] != "NULL";
 
         premiseAndConclusion = String(nodeTarget.tooltip).split(" -> ");
         // Only arguments with a conclusion will have a value
-        var hasConclusionTarget = premiseAndConclusion.length == 2 && premiseAndConclusion[1] != "NULL";
+        var hasConclusionTarget =
+            premiseAndConclusion.length == 2 &&
+            premiseAndConclusion[1] != "NULL";
 
         var strenthOfArguments;
-        if (! toFile) {
-            strenthOfArguments = document.getElementById("strengthCheckBox").checked;
+        if (!toFile) {
+            strenthOfArguments =
+                document.getElementById("strengthCheckBox").checked;
         } else {
-            strenthOfArguments = document.getElementById("strengthCheckBoxExport").checked;
+            strenthOfArguments = document.getElementById(
+                "strengthCheckBoxExport"
+            ).checked;
         }
 
-        // If target or souce have no conclusion the 
+        // If target or souce have no conclusion the
         // attack is activated regardless of weights.
         // If they both have conclusions the source weight
         // has to be greater than the target weight for
         // the attack to be activated.
-        if (! hasConclusionSource ||
-            ! hasConclusionTarget ||
-            (hasConclusionSource && hasConclusionTarget && (nodeSource.weight >= nodeTarget.weight || ! strenthOfArguments))) {
-
+        if (
+            !hasConclusionSource ||
+            !hasConclusionTarget ||
+            (hasConclusionSource &&
+                hasConclusionTarget &&
+                (nodeSource.weight >= nodeTarget.weight || !strenthOfArguments))
+        ) {
             return true;
         }
 
         return false;
-    }
+    };
 
-    GraphCreator.prototype.getStringGraph = function(toFile = false) {
-
+    GraphCreator.prototype.getStringGraph = function (toFile = false) {
         var thisGraph = graph,
             consts = thisGraph.consts,
             state = thisGraph.state;
@@ -888,15 +1025,14 @@ function create(d3, saveAs, Blob) {
         var stringGraph = "";
 
         // Include edges
-        thisGraph.circles.each(function(td) {
-            edges.forEach(function(val, i){
+        thisGraph.circles.each(function (td) {
+            edges.forEach(function (val, i) {
                 if (val.target.id == td.id && td.activated) {
+                    var sourceCircle = thisGraph.circles.filter(function (sd) {
+                        return sd.id === val.source.id;
+                    });
 
-                    var sourceCircle = thisGraph.circles.filter(function(sd){
-                                            return sd.id === val.source.id;
-                                        });
-
-                    sourceCircle.each(function(sd){
+                    sourceCircle.each(function (sd) {
                         if (sd.activated) {
                             if (graph.isAttackValid(sd, td, toFile)) {
                                 stringGraph += sd.title + "," + td.title + ",";
@@ -911,7 +1047,7 @@ function create(d3, saveAs, Blob) {
 
         // Include isolated nodes
         var first = true;
-        thisGraph.circles.each(function(d) {
+        thisGraph.circles.each(function (d) {
             if (d.degree == 0 && d.activated) {
                 if (first) {
                     stringGraph += ":" + d.title + ",";
@@ -923,17 +1059,21 @@ function create(d3, saveAs, Blob) {
         });
 
         // Remove last coma if an isolated node was inserted
-        if (! first) {
+        if (!first) {
             stringGraph = stringGraph.substring(0, stringGraph.length - 1);
         }
 
         //console.log(stringGraph);
 
         return stringGraph;
-    }
+    };
 
-    GraphCreator.prototype.activeAll = function(row, currentFeatureset, colors, toFile) {
-
+    GraphCreator.prototype.activeAll = function (
+        row,
+        currentFeatureset,
+        colors,
+        toFile
+    ) {
         if (colors == undefined) {
             colors = true;
         }
@@ -943,7 +1083,7 @@ function create(d3, saveAs, Blob) {
 
         var edges = thisGraph.edges;
 
-        thisGraph.circles.each(function(d) {
+        thisGraph.circles.each(function (d) {
             var currentNode = d3.select(this);
             if (colors) {
                 currentNode.classed(consts.circleGClass, true);
@@ -959,37 +1099,50 @@ function create(d3, saveAs, Blob) {
         var argumentsN = 0;
         var attacksN = 0;
 
-        thisGraph.circles.each(function(d) {
+        thisGraph.circles.each(function (d) {
             var currentNode = d3.select(this);
             if (d.activated) {
                 d.degree = 0;
 
                 var premiseAndConclusion = String(d.tooltip).split(" -> ");
-                var hasConclusion = premiseAndConclusion.length == 2 && premiseAndConclusion[1] != "NULL";
+                var hasConclusion =
+                    premiseAndConclusion.length == 2 &&
+                    premiseAndConclusion[1] != "NULL";
 
                 if (hasConclusion != "NULL") {
-                    htmlArgs += "<i>" + d.title + "</i>: " + 
-                    premiseAndConclusion[0] + " <b>&#8594;</b> " +
-                    premiseAndConclusion[1] + "<br>";
+                    htmlArgs +=
+                        "<i>" +
+                        d.title +
+                        "</i>: " +
+                        premiseAndConclusion[0] +
+                        " <b>&#8594;</b> " +
+                        premiseAndConclusion[1] +
+                        "<br>";
                 } else {
-                    htmlArgs += "<i>" + d.title + "</i>: " + 
-                    d.tooltip + "<br>";
+                    htmlArgs += "<i>" + d.title + "</i>: " + d.tooltip + "<br>";
                 }
 
                 argumentsN++;
 
-                edges.forEach(function(edge, i){
+                edges.forEach(function (edge, i) {
                     // Count edges in which d is the target
                     if (edge.target.id == d.id) {
-                        var sourceCircle = thisGraph.circles.filter(function(sd){
-                                                return sd.id === edge.source.id;
-                                            });
+                        var sourceCircle = thisGraph.circles.filter(function (
+                            sd
+                        ) {
+                            return sd.id === edge.source.id;
+                        });
 
-                        sourceCircle.each(function(sd){
+                        sourceCircle.each(function (sd) {
                             if (sd.activated) {
                                 if (graph.isAttackValid(sd, d, toFile)) {
-                                    htmlAttacks += "<i>" + sd.title + "</i>  &rArr; " + 
-                                                "<i>" + d.title + "</i><br>";
+                                    htmlAttacks +=
+                                        "<i>" +
+                                        sd.title +
+                                        "</i>  &rArr; " +
+                                        "<i>" +
+                                        d.title +
+                                        "</i><br>";
 
                                     attacksN++;
 
@@ -1001,16 +1154,22 @@ function create(d3, saveAs, Blob) {
 
                     // Count edges in which d is the source
                     if (edge.source.id == d.id) {
-                        var targetCircle = thisGraph.circles.filter(function(td){
-                                                return td.id === edge.target.id;
-                                            });
+                        var targetCircle = thisGraph.circles.filter(function (
+                            td
+                        ) {
+                            return td.id === edge.target.id;
+                        });
 
-                        targetCircle.each(function(td){
+                        targetCircle.each(function (td) {
                             if (td.activated) {
                                 if (graph.isAttackValid(d, td, toFile)) {
-
-                                    htmlAttacks += "<i>" + d.title + "</i>  &rArr; " + 
-                                                "<i>" + td.title + "</i><br>";
+                                    htmlAttacks +=
+                                        "<i>" +
+                                        d.title +
+                                        "</i>  &rArr; " +
+                                        "<i>" +
+                                        td.title +
+                                        "</i><br>";
 
                                     attacksN++;
 
@@ -1023,14 +1182,20 @@ function create(d3, saveAs, Blob) {
             }
         });
 
-        document.getElementById('listArgumentsFiltered').innerHTML = htmlArgs;
-        document.getElementById('listArgumentsNFiltered').innerHTML = " <b>(" + argumentsN.toString() + ")</b>";
-        document.getElementById('listAttacksFiltered').innerHTML = htmlAttacks;
-        document.getElementById('listAttacksNFiltered').innerHTML = " <b>(" + attacksN.toString() + ")</b>";
-    }
+        document.getElementById("listArgumentsFiltered").innerHTML = htmlArgs;
+        document.getElementById("listArgumentsNFiltered").innerHTML =
+            " <b>(" + argumentsN.toString() + ")</b>";
+        document.getElementById("listAttacksFiltered").innerHTML = htmlAttacks;
+        document.getElementById("listAttacksNFiltered").innerHTML =
+            " <b>(" + attacksN.toString() + ")</b>";
+    };
 
-    GraphCreator.prototype.semanticsPerRow = function(extension, toFile = false, onlyActivated = false, rankBased = false){
-
+    GraphCreator.prototype.semanticsPerRow = function (
+        extension,
+        toFile = false,
+        onlyActivated = false,
+        rankBased = false
+    ) {
         var thisGraph = this,
             consts = thisGraph.consts,
             state = thisGraph.state;
@@ -1038,14 +1203,14 @@ function create(d3, saveAs, Blob) {
         var edges = thisGraph.edges;
         var result;
 
-        // Set all paths as non activated. 
-        thisGraph.paths.each(function(d) {
+        // Set all paths as non activated.
+        thisGraph.paths.each(function (d) {
             d3.select(this).style("opacity", 0.15);
             //d3.select(this).style("opacity", 0.0);
         });
 
         // Set opacity of all nodes as activated
-        thisGraph.circles.each(function(d) {
+        thisGraph.circles.each(function (d) {
             d3.select(this).style("opacity", 1.0);
         });
 
@@ -1063,7 +1228,7 @@ function create(d3, saveAs, Blob) {
         // Arguments accepted for each conclusion
         var nConclusions = [];
         // Conclusion with the maximum right side range
-        var highestConclustion = Number.MIN_VALUE;;
+        var highestConclustion = Number.MIN_VALUE;
         // Sum of accepted arguments values for each conclusion
         var acceptedValue = [];
         var weights = [];
@@ -1071,65 +1236,86 @@ function create(d3, saveAs, Blob) {
         var overallWeighted = 0;
         var sumWeights = 0;
         // Vector of values accepted to calculate the median
-        var valuesAccepted = []
+        var valuesAccepted = [];
 
-        for (i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
+        for (
+            i = 0;
+            i < conclusionsByFeatureset_[currentFeatureset].length;
+            i++
+        ) {
             nConclusions[i] = 0;
             acceptedValue[i] = 0;
         }
 
-        $('#results').remove();
+        $("#results").remove();
 
         var strenthOfArguments;
 
-        if (! toFile) {
-            strenthOfArguments = document.getElementById("strengthCheckBox").checked;
+        if (!toFile) {
+            strenthOfArguments =
+                document.getElementById("strengthCheckBox").checked;
         } else {
-            strenthOfArguments = document.getElementById("strengthCheckBoxExport").checked;
+            strenthOfArguments = document.getElementById(
+                "strengthCheckBoxExport"
+            ).checked;
         }
 
         // Find activated edges and nodes and change their styles
-        thisGraph.circles.each(function(sd) {
+        thisGraph.circles.each(function (sd) {
             var currentNode = d3.select(this);
             if (sd.activated) {
-
                 console.log(sd.title + ": " + sd.value);
 
                 var premiseAndConclusion = String(sd.tooltip).split(" -> ");
                 // Only arguments with a conclusion will have a value
-                var hasConclusionSource = premiseAndConclusion.length == 2 && premiseAndConclusion[1] != "NULL";
+                var hasConclusionSource =
+                    premiseAndConclusion.length == 2 &&
+                    premiseAndConclusion[1] != "NULL";
 
                 // Nodes without conclusion might have their internal structure
                 // activated. However, at this point they will only be considered
                 // if they are the source of an attack
-                if (! hasConclusionSource) {
-//                     currentNode.style("opacity", 0.40);
+                if (!hasConclusionSource) {
+                    //                     currentNode.style("opacity", 0.40);
                 }
 
-                edges.forEach(function(edge, i){
+                edges.forEach(function (edge, i) {
                     if (edge.source.id == sd.id) {
-                        thisGraph.circles.each(function(td) {
+                        thisGraph.circles.each(function (td) {
                             if (td.activated && edge.target.id == td.id) {
-
-                                var premiseAndConclusion = String(td.tooltip).split(" -> ");
+                                var premiseAndConclusion = String(
+                                    td.tooltip
+                                ).split(" -> ");
                                 // Only arguments with a conclusion will have a value
-                                var hasConclusionTarget = premiseAndConclusion.length == 2 && premiseAndConclusion[1] != "NULL";
+                                var hasConclusionTarget =
+                                    premiseAndConclusion.length == 2 &&
+                                    premiseAndConclusion[1] != "NULL";
 
-                                // If target or souce have no conclusion the 
+                                // If target or souce have no conclusion the
                                 // attack is activated regardless of weights.
                                 // If they both have conclusions the source weight
                                 // has to be greater than the target weight for
                                 // the attack to be activated.
-                                if (! hasConclusionSource || 
-                                    ! hasConclusionTarget ||
-                                    (hasConclusionSource && hasConclusionTarget && (sd.weight >= td.weight || ! strenthOfArguments))) {
-                                    var path = thisGraph.paths.filter(function(pd){
-                                                    //console.log("s: " + sd.title + ", t: " + td.title);
-                                                    return pd.source.id == edge.source.id && pd.target.id == edge.target.id;
-                                                });
+                                if (
+                                    !hasConclusionSource ||
+                                    !hasConclusionTarget ||
+                                    (hasConclusionSource &&
+                                        hasConclusionTarget &&
+                                        (sd.weight >= td.weight ||
+                                            !strenthOfArguments))
+                                ) {
+                                    var path = thisGraph.paths.filter(function (
+                                        pd
+                                    ) {
+                                        //console.log("s: " + sd.title + ", t: " + td.title);
+                                        return (
+                                            pd.source.id == edge.source.id &&
+                                            pd.target.id == edge.target.id
+                                        );
+                                    });
                                     path.style("opacity", 1.0);
 
-                                    if (! hasConclusionSource) {
+                                    if (!hasConclusionSource) {
                                         currentNode.style("opacity", 1.0);
                                     }
                                 }
@@ -1138,7 +1324,7 @@ function create(d3, saveAs, Blob) {
                     }
                 });
             } else {
-                currentNode.style("opacity", 0.40);
+                currentNode.style("opacity", 0.4);
                 //currentNode.style("opacity", 0.00);
             }
         });
@@ -1146,40 +1332,39 @@ function create(d3, saveAs, Blob) {
         var original = extension;
         var onlyConclusions = ",";
 
-        
-        
         if (rankBased) {
-
             var i = 0;
             var previousValue;
             var allLabels = "";
             for (var prop in extension) {
-
                 allLabels += String(prop) + ",";
 
                 // First value is always inserted
                 var premiseAndConclusion;
 
-                thisGraph.circles.filter(function(d){
+                thisGraph.circles.filter(function (d) {
                     if (d.title == String(prop)) {
                         premiseAndConclusion = d.tooltip;
                     }
-                })
+                });
 
-                premiseAndConclusion = String(premiseAndConclusion).split(" -> ");
-                var hasConclusion = premiseAndConclusion.length == 2 && premiseAndConclusion[1] != "NULL";
+                premiseAndConclusion =
+                    String(premiseAndConclusion).split(" -> ");
+                var hasConclusion =
+                    premiseAndConclusion.length == 2 &&
+                    premiseAndConclusion[1] != "NULL";
 
-                if (! hasConclusion) {
+                if (!hasConclusion) {
                     continue;
                 }
 
                 if (i == 0) {
                     onlyConclusions += String(prop) + ",";
                     previousValue = extension[prop];
-                // If next value equal previous value it is also inserted
+                    // If next value equal previous value it is also inserted
                 } else if (previousValue == extension[prop]) {
                     onlyConclusions += "," + String(prop) + ",";
-                // If new greater value has been found restart extension
+                    // If new greater value has been found restart extension
                 } else if (previousValue < extension[prop]) {
                     onlyConclusions = "," + String(prop) + ",";
                     previousValue = extension[prop];
@@ -1192,20 +1377,24 @@ function create(d3, saveAs, Blob) {
             extension = allLabels;
         }
 
-
         extension = "," + extension + ",";
-        thisGraph.circles.each(function(d) {
+        thisGraph.circles.each(function (d) {
             var currentNode = d3.select(this);
 
             if (extension.indexOf("," + d.title + ",") != -1) {
                 var premiseAndConclusion = String(d.tooltip).split(" -> ");
                 // Only arguments with a conclusion will have a value
-                var hasConclusion = premiseAndConclusion.length == 2 && premiseAndConclusion[1] != "NULL";
+                var hasConclusion =
+                    premiseAndConclusion.length == 2 &&
+                    premiseAndConclusion[1] != "NULL";
 
                 // If it is rankBased not all nodes in the extension are accepted.
                 // Only the nodes with a conclusion and highest rank are accepted.
-                if ((hasConclusion && ! rankBased) || (rankBased && onlyConclusions.indexOf("," + d.title + ",") != -1)) {
-
+                if (
+                    (hasConclusion && !rankBased) ||
+                    (rankBased &&
+                        onlyConclusions.indexOf("," + d.title + ",") != -1)
+                ) {
                     valuesAccepted[nAccepted] = d.value;
                     nAccepted++;
 
@@ -1221,10 +1410,27 @@ function create(d3, saveAs, Blob) {
 
                     var indexConclusion = 0;
 
-                    for (var i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
-                        if (conclusionsByFeatureset_[currentFeatureset][i].conclusion == conclusionNoRange) {
-                            if (parseFloat(conclusionsByFeatureset_[currentFeatureset][i].c_to) > highestConclustion) {
-                                highestConclustion = parseFloat(conclusionsByFeatureset_[currentFeatureset][i].c_to);
+                    for (
+                        var i = 0;
+                        i < conclusionsByFeatureset_[currentFeatureset].length;
+                        i++
+                    ) {
+                        if (
+                            conclusionsByFeatureset_[currentFeatureset][i]
+                                .conclusion == conclusionNoRange
+                        ) {
+                            if (
+                                parseFloat(
+                                    conclusionsByFeatureset_[currentFeatureset][
+                                        i
+                                    ].c_to
+                                ) > highestConclustion
+                            ) {
+                                highestConclustion = parseFloat(
+                                    conclusionsByFeatureset_[currentFeatureset][
+                                        i
+                                    ].c_to
+                                );
                             }
                             indexConclusion = i;
                             break;
@@ -1241,44 +1447,58 @@ function create(d3, saveAs, Blob) {
                 currentNode.classed(consts.circleGClass, false);
                 currentNode.classed(consts.deniedGClass, false);
 
-                if (! hasConclusion) {
+                if (!hasConclusion) {
                     // If it has no conclusion the color will change only if there
                     // is an activated attack from this node
                     var hasTarget = false;
-                    edges.forEach(function(edge, i){
+                    edges.forEach(function (edge, i) {
                         if (edge.source.id == d.id) {
-                            thisGraph.circles.each(function(td) {
+                            thisGraph.circles.each(function (td) {
                                 if (td.activated && edge.target.id == td.id) {
-                                    currentNode.classed(consts.onlyActivatedGClass, true);
-                                    currentNode.classed(consts.acceptedGClass, false);
-                                    hasTarget = true
+                                    currentNode.classed(
+                                        consts.onlyActivatedGClass,
+                                        true
+                                    );
+                                    currentNode.classed(
+                                        consts.acceptedGClass,
+                                        false
+                                    );
+                                    hasTarget = true;
                                 }
                             });
                         }
                     });
 
-                    if (! hasTarget) {
+                    if (!hasTarget) {
                         currentNode.classed(consts.circleGClass, true);
                     }
                 } else if (onlyActivated) {
                     currentNode.classed(consts.onlyActivatedGClass, true);
                     currentNode.classed(consts.acceptedGClass, false);
                 } else {
-
-                    if (! rankBased || (rankBased && onlyConclusions.indexOf("," + d.title + ",") != -1)) { 
+                    if (
+                        !rankBased ||
+                        (rankBased &&
+                            onlyConclusions.indexOf("," + d.title + ",") != -1)
+                    ) {
                         currentNode.classed(consts.acceptedGClass, true);
                         currentNode.classed(consts.onlyActivatedGClass, false);
                     }
 
-                    if (rankBased && onlyConclusions.indexOf("," + d.title + ",") == -1) {
+                    if (
+                        rankBased &&
+                        onlyConclusions.indexOf("," + d.title + ",") == -1
+                    ) {
                         currentNode.classed(consts.circleGClass, false);
                         currentNode.classed(consts.deniedGClass, true);
                         currentNode.classed(consts.acceptedGClass, false);
                         currentNode.classed(consts.onlyActivatedGClass, false);
                     }
                 }
-            } else if (extension.indexOf("," + d.title + ",") == -1 && d.activated) {
-
+            } else if (
+                extension.indexOf("," + d.title + ",") == -1 &&
+                d.activated
+            ) {
                 currentNode.classed(consts.circleGClass, false);
                 currentNode.classed(consts.deniedGClass, true);
                 currentNode.classed(consts.acceptedGClass, false);
@@ -1286,26 +1506,41 @@ function create(d3, saveAs, Blob) {
             }
         });
 
-        var numberConclusions = ""
-        for (i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
-            numberConclusions += String(nConclusions[i]) + ":" + conclusionsByFeatureset_[currentFeatureset][i].conclusion;
+        var numberConclusions = "";
+        for (
+            i = 0;
+            i < conclusionsByFeatureset_[currentFeatureset].length;
+            i++
+        ) {
+            numberConclusions +=
+                String(nConclusions[i]) +
+                ":" +
+                conclusionsByFeatureset_[currentFeatureset][i].conclusion;
             if (i < conclusionsByFeatureset_[currentFeatureset].length - 1) {
                 numberConclusions += ";";
             }
         }
-        
+
         var iHighestCardConclusion = [];
         iHighestCardConclusion[0] = 0;
-        var overallHCC = acceptedValue[0]/nConclusions[0];
+        var overallHCC = acceptedValue[0] / nConclusions[0];
         var nHigh = 1;
-        for (i = 1; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
+        for (
+            i = 1;
+            i < conclusionsByFeatureset_[currentFeatureset].length;
+            i++
+        ) {
             if (nConclusions[i] > nConclusions[iHighestCardConclusion[0]]) {
                 iHighestCardConclusion = [];
                 iHighestCardConclusion[0] = i;
-                overallHCC = acceptedValue[i]/nConclusions[i];
+                overallHCC = acceptedValue[i] / nConclusions[i];
                 nHigh = 1;
-            } else if (nConclusions[i] == nConclusions[iHighestCardConclusion[0]]) {
-                overallHCC = (overallHCC * nHigh + acceptedValue[i]/nConclusions[i])/(nHigh + 1);
+            } else if (
+                nConclusions[i] == nConclusions[iHighestCardConclusion[0]]
+            ) {
+                overallHCC =
+                    (overallHCC * nHigh + acceptedValue[i] / nConclusions[i]) /
+                    (nHigh + 1);
                 iHighestCardConclusion[nHigh] = i;
                 nHigh++;
             }
@@ -1316,17 +1551,22 @@ function create(d3, saveAs, Blob) {
         var overallWeightedFiltered = 0;
         var sumWeightedFiltered = 0;
 
-        thisGraph.circles.each(function(d) {
+        thisGraph.circles.each(function (d) {
             var currentNode = d3.select(this);
             if (extension.indexOf("," + d.title + ",") != -1) {
                 var premiseAndConclusion = String(d.tooltip).split(" -> ");
                 // Only arguments with a conclusion will have a value
-                var hasConclusion = premiseAndConclusion.length == 2 && premiseAndConclusion[1] != "NULL";
+                var hasConclusion =
+                    premiseAndConclusion.length == 2 &&
+                    premiseAndConclusion[1] != "NULL";
 
                 // If it is rankBased not all nodes in the extension are accepted.
                 // Only the nodes with a conclusion and highest rank are accepted.
-                if ((hasConclusion && ! rankBased) || (rankBased && onlyConclusions.indexOf("," + d.title + ",") != -1)) {
-
+                if (
+                    (hasConclusion && !rankBased) ||
+                    (rankBased &&
+                        onlyConclusions.indexOf("," + d.title + ",") != -1)
+                ) {
                     var conclusionNoRange = "";
                     for (var i = 0; i < premiseAndConclusion[1].length; i++) {
                         if (premiseAndConclusion[1][i] != " ") {
@@ -1335,11 +1575,14 @@ function create(d3, saveAs, Blob) {
                             break;
                         }
                     }
-                    
+
                     console.log(conclusionNoRange);
 
                     for (i = 0; i < iHighestCardConclusion.length; i++) {
-                        var highestConclusion = conclusionsByFeatureset_[currentFeatureset][iHighestCardConclusion[i]].conclusion;
+                        var highestConclusion =
+                            conclusionsByFeatureset_[currentFeatureset][
+                                iHighestCardConclusion[i]
+                            ].conclusion;
                         if (conclusionNoRange == highestConclusion) {
                             overallWeightedFiltered += d.value * d.weight;
                             sumWeightedFiltered += d.weight;
@@ -1350,10 +1593,13 @@ function create(d3, saveAs, Blob) {
             }
         });
 
-
         // Find number of conclusions that are not in the highest cardinality set(s)
         var nNotHigh = 0;
-        for (i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
+        for (
+            i = 0;
+            i < conclusionsByFeatureset_[currentFeatureset].length;
+            i++
+        ) {
             if (nConclusions[i] < nConclusions[iHighestCardConclusion[0]]) {
                 nNotHigh += nConclusions[i];
             }
@@ -1361,32 +1607,46 @@ function create(d3, saveAs, Blob) {
 
         if (nAccepted > 0) {
             // Round index to two decimals
-            for (var i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
-
+            for (
+                var i = 0;
+                i < conclusionsByFeatureset_[currentFeatureset].length;
+                i++
+            ) {
                 if (i > 0) {
                     accrual += "<br>";
                 }
 
                 if (nConclusions[i] > 0) {
-
                     acceptedValue[i] /= nConclusions[i];
 
                     var numberParts = String(acceptedValue[i]).split(".");
                     if (numberParts.length > 1) {
-                        acceptedValue[i] = numberParts[0] + "." + numberParts[1].slice(0, 2);
+                        acceptedValue[i] =
+                            numberParts[0] + "." + numberParts[1].slice(0, 2);
                     }
 
-                    accrual += "Average arguments with <i>" + String(conclusionsByFeatureset_[currentFeatureset][i].conclusion) +
-                               "</i> (" + String(nConclusions[i]) + ") conclusion: " +
-                               String(acceptedValue[i]);
+                    accrual +=
+                        "Average arguments with <i>" +
+                        String(
+                            conclusionsByFeatureset_[currentFeatureset][i]
+                                .conclusion
+                        ) +
+                        "</i> (" +
+                        String(nConclusions[i]) +
+                        ") conclusion: " +
+                        String(acceptedValue[i]);
                 } else {
-                    accrual += "No arguments with <i>" + String(conclusionsByFeatureset_[currentFeatureset][i].conclusion) +
-                               "</i> conclusion.";
+                    accrual +=
+                        "No arguments with <i>" +
+                        String(
+                            conclusionsByFeatureset_[currentFeatureset][i]
+                                .conclusion
+                        ) +
+                        "</i> conclusion.";
                 }
             }
             if (rankBased) {
-
-                accrual += "<br><br>Argument ranking:<br>"
+                accrual += "<br><br>Argument ranking:<br>";
                 for (var key in original) {
                     accrual += "<i>" + key + "</i>: " + original[key] + "<br>";
                 }
@@ -1395,12 +1655,11 @@ function create(d3, saveAs, Blob) {
                 accrual = accrual.slice(0, -4);
             }
 
-            if (! toFile) {
-                
-                var select = document.getElementById('accrualVisualization'),
+            if (!toFile) {
+                var select = document.getElementById("accrualVisualization"),
                     i = select.selectedIndex,
                     currentAggregation = select.options[i].text;
-                
+
                 if (currentAggregation == "Average") {
                     overall /= nAccepted;
                 } else if (currentAggregation == "Highest cardinality") {
@@ -1409,14 +1668,19 @@ function create(d3, saveAs, Blob) {
                     valuesAccepted.sort((a, b) => a - b);
                     let lowMiddle = Math.floor((valuesAccepted.length - 1) / 2);
                     let highMiddle = Math.ceil((valuesAccepted.length - 1) / 2);
-                    overall = (valuesAccepted[lowMiddle] + valuesAccepted[highMiddle]) / 2;
+                    overall =
+                        (valuesAccepted[lowMiddle] +
+                            valuesAccepted[highMiddle]) /
+                        2;
                 } else if (currentAggregation == "Weighted average") {
                     overallWeighted /= sumWeights;
                     console.log("sum: " + sumWeights);
                     overall = overallWeighted;
                 } else if (currentAggregation == "Highest conclusion") {
                     overall = highestConclustion;
-                } else if (currentAggregation == "Absolute highest conclusion") {
+                } else if (
+                    currentAggregation == "Absolute highest conclusion"
+                ) {
                     overall = overallHCC - nNotHigh;
                 } else if (currentAggregation == "Highest and weighted") {
                     if (sumWeightedFiltered > 0) {
@@ -1428,21 +1692,32 @@ function create(d3, saveAs, Blob) {
             } else {
                 if (document.getElementById("accrualAverageExport").checked) {
                     overall /= nAccepted;
-                } else if (document.getElementById("cardinalityAverageExport").checked) {
+                } else if (
+                    document.getElementById("cardinalityAverageExport").checked
+                ) {
                     overall = overallHCC;
                 } else if (document.getElementById("medianExport").checked) {
                     valuesAccepted.sort((a, b) => a - b);
                     let lowMiddle = Math.floor((valuesAccepted.length - 1) / 2);
                     let highMiddle = Math.ceil((valuesAccepted.length - 1) / 2);
-                    overall = (valuesAccepted[lowMiddle] + valuesAccepted[highMiddle]) / 2;
+                    overall =
+                        (valuesAccepted[lowMiddle] +
+                            valuesAccepted[highMiddle]) /
+                        2;
                 } else if (document.getElementById("weightedExport").checked) {
                     overallWeighted /= sumWeights;
                     overall = overallWeighted;
-                } else if (document.getElementById("highestConclusionExport").checked) {
+                } else if (
+                    document.getElementById("highestConclusionExport").checked
+                ) {
                     overall = highestConclustion;
-                } else if (document.getElementById("absoluteConclusionExport").checked) {
+                } else if (
+                    document.getElementById("absoluteConclusionExport").checked
+                ) {
                     overall = overallHCC - nNotHigh;
-                } else if (document.getElementById("highestWeightedExport").checked) {
+                } else if (
+                    document.getElementById("highestWeightedExport").checked
+                ) {
                     if (sumWeightedFiltered > 0) {
                         overall = overallWeightedFiltered / sumWeightedFiltered;
                     } else {
@@ -1455,37 +1730,44 @@ function create(d3, saveAs, Blob) {
             if (numberParts.length > 1) {
                 overall = numberParts[0] + "." + numberParts[1].slice(0, 2);
             }
-            
-            var select = document.getElementById('accrualVisualization'),
+
+            var select = document.getElementById("accrualVisualization"),
                 i = select.selectedIndex,
                 currentAggregation = select.options[i].text;
-            
 
-            if (toFile && ! document.getElementById("nConclusionsExport").checked ||
-                ! toFile && currentAggregation != "# Conclusions") {
-                    result = String(overall);
+            if (
+                (toFile &&
+                    !document.getElementById("nConclusionsExport").checked) ||
+                (!toFile && currentAggregation != "# Conclusions")
+            ) {
+                result = String(overall);
             } else {
                 result = numberConclusions;
             }
 
             accrual += "<br><br>Average of all accepted arguments: " + result;
-
         } else {
             accrual += "<br>No argument was accepted";
         }
 
         thisGraph.circles.exit().remove();
         //$('#resultsColumn').append("<p id='results'>" + accrual + "</p>");
-        var popover = $('#resultsContent').attr('data-content', accrual).html(result).data('bs.popover');
+        var popover = $("#resultsContent")
+            .attr("data-content", accrual)
+            .html(result)
+            .data("bs.popover");
         popover.setContent();
         popover.$tip.addClass(popover.options.placement);
         //$('#resultsContent').html(accrual");
         //console.log("Visible: " + result);
         return result;
-    }
+    };
 
-    GraphCreator.prototype.semanticsPerRowInvisible = function(extension, accrual, rankBased = false){
-
+    GraphCreator.prototype.semanticsPerRowInvisible = function (
+        extension,
+        accrual,
+        rankBased = false
+    ) {
         var thisGraph = this,
             consts = thisGraph.consts,
             state = thisGraph.state;
@@ -1499,7 +1781,7 @@ function create(d3, saveAs, Blob) {
         // Arguments accepted for each conclusion
         var nConclusions = [];
         // Conclusion with the maximum right side range
-        var highestConclustion = Number.MIN_VALUE;;
+        var highestConclustion = Number.MIN_VALUE;
         // Sum of accepted arguments values for each conclusion
         var acceptedValue = [];
         var weights = [];
@@ -1507,9 +1789,13 @@ function create(d3, saveAs, Blob) {
         var overallWeighted = 0;
         var sumWeights = 0;
         // Vector of values accepted to calculate the median
-        var valuesAccepted = []
+        var valuesAccepted = [];
 
-        for (i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
+        for (
+            i = 0;
+            i < conclusionsByFeatureset_[currentFeatureset].length;
+            i++
+        ) {
             nConclusions[i] = 0;
             acceptedValue[i] = 0;
         }
@@ -1518,37 +1804,38 @@ function create(d3, saveAs, Blob) {
         var onlyConclusions = ",";
 
         if (rankBased) {
-
             var i = 0;
             var previousValue;
             var allLabels = "";
             for (var prop in extension) {
-
                 allLabels += String(prop) + ",";
 
                 // First value is always inserted
                 var premiseAndConclusion;
 
-                thisGraph.circles.filter(function(d){
+                thisGraph.circles.filter(function (d) {
                     if (d.title == String(prop)) {
                         premiseAndConclusion = d.tooltip;
                     }
-                })
+                });
 
-                premiseAndConclusion = String(premiseAndConclusion).split(" -> ");
-                var hasConclusion = premiseAndConclusion.length == 2 && premiseAndConclusion[1] != "NULL";
+                premiseAndConclusion =
+                    String(premiseAndConclusion).split(" -> ");
+                var hasConclusion =
+                    premiseAndConclusion.length == 2 &&
+                    premiseAndConclusion[1] != "NULL";
 
-                if (! hasConclusion) {
+                if (!hasConclusion) {
                     continue;
                 }
 
                 if (i == 0) {
                     onlyConclusions += String(prop) + ",";
                     previousValue = extension[prop];
-                // If next value equal previous value it is also inserted
+                    // If next value equal previous value it is also inserted
                 } else if (previousValue == extension[prop]) {
                     onlyConclusions += "," + String(prop) + ",";
-                // If new greater value has been found restart extension
+                    // If new greater value has been found restart extension
                 } else if (previousValue < extension[prop]) {
                     onlyConclusions = "," + String(prop) + ",";
                     previousValue = extension[prop];
@@ -1561,20 +1848,24 @@ function create(d3, saveAs, Blob) {
             extension = allLabels;
         }
 
-
         extension = "," + extension + ",";
-        thisGraph.circles.each(function(d) {
+        thisGraph.circles.each(function (d) {
             var currentNode = d3.select(this);
 
             if (extension.indexOf("," + d.title + ",") != -1) {
                 var premiseAndConclusion = String(d.tooltip).split(" -> ");
                 // Only arguments with a conclusion will have a value
-                var hasConclusion = premiseAndConclusion.length == 2 && premiseAndConclusion[1] != "NULL";
+                var hasConclusion =
+                    premiseAndConclusion.length == 2 &&
+                    premiseAndConclusion[1] != "NULL";
 
                 // If it is rankBased not all nodes in the extension are accepted.
                 // Only the nodes with a conclusion and highest rank are accepted.
-                if ((hasConclusion && ! rankBased) || (rankBased && onlyConclusions.indexOf("," + d.title + ",") != -1)) {
-
+                if (
+                    (hasConclusion && !rankBased) ||
+                    (rankBased &&
+                        onlyConclusions.indexOf("," + d.title + ",") != -1)
+                ) {
                     valuesAccepted[nAccepted] = d.value;
                     nAccepted++;
 
@@ -1591,11 +1882,28 @@ function create(d3, saveAs, Blob) {
                     var indexConclusion = 0;
                     //console.log("data");
                     //console.log(conclusionsByFeatureset_[currentFeatureset]);
-                    for (var i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
-                        if (conclusionsByFeatureset_[currentFeatureset][i].conclusion == conclusionNoRange) {
+                    for (
+                        var i = 0;
+                        i < conclusionsByFeatureset_[currentFeatureset].length;
+                        i++
+                    ) {
+                        if (
+                            conclusionsByFeatureset_[currentFeatureset][i]
+                                .conclusion == conclusionNoRange
+                        ) {
                             //console.log(conclusionsByFeatureset_[currentFeatureset][i].c_to);
-                            if (parseFloat(conclusionsByFeatureset_[currentFeatureset][i].c_to) > highestConclustion) {
-                                highestConclustion = parseFloat(conclusionsByFeatureset_[currentFeatureset][i].c_to);
+                            if (
+                                parseFloat(
+                                    conclusionsByFeatureset_[currentFeatureset][
+                                        i
+                                    ].c_to
+                                ) > highestConclustion
+                            ) {
+                                highestConclustion = parseFloat(
+                                    conclusionsByFeatureset_[currentFeatureset][
+                                        i
+                                    ].c_to
+                                );
                             }
                             //console.log("h: " + highestConclustion);
                             indexConclusion = i;
@@ -1613,29 +1921,43 @@ function create(d3, saveAs, Blob) {
         });
 
         // Define string with the number of arguments by conclusions
-        var numberConclusions = ""
-        for (i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
-            numberConclusions += String(nConclusions[i]) + ":" + conclusionsByFeatureset_[currentFeatureset][i].conclusion;
+        var numberConclusions = "";
+        for (
+            i = 0;
+            i < conclusionsByFeatureset_[currentFeatureset].length;
+            i++
+        ) {
+            numberConclusions +=
+                String(nConclusions[i]) +
+                ":" +
+                conclusionsByFeatureset_[currentFeatureset][i].conclusion;
             if (i < conclusionsByFeatureset_[currentFeatureset].length - 1) {
                 numberConclusions += ";";
             }
         }
 
-
         var iHighestCardConclusion = [];
         iHighestCardConclusion[0] = 0;
-        var overallHCC = acceptedValue[0]/nConclusions[0];
+        var overallHCC = acceptedValue[0] / nConclusions[0];
         var nHigh = 1;
-        for (i = 1; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
+        for (
+            i = 1;
+            i < conclusionsByFeatureset_[currentFeatureset].length;
+            i++
+        ) {
             if (nConclusions[i] > nConclusions[iHighestCardConclusion[0]]) {
                 iHighestCardConclusion = [];
                 iHighestCardConclusion[0] = i;
-                overallHCC = acceptedValue[i]/nConclusions[i];
+                overallHCC = acceptedValue[i] / nConclusions[i];
                 nHigh = 1;
-            } else if (nConclusions[i] == nConclusions[iHighestCardConclusion[0]]) {
-                overallHCC = (overallHCC * nHigh + acceptedValue[i]/nConclusions[i])/(nHigh + 1);
+            } else if (
+                nConclusions[i] == nConclusions[iHighestCardConclusion[0]]
+            ) {
+                overallHCC =
+                    (overallHCC * nHigh + acceptedValue[i] / nConclusions[i]) /
+                    (nHigh + 1);
                 iHighestCardConclusion[nHigh] = i;
-                nHigh++
+                nHigh++;
             }
         }
 
@@ -1644,17 +1966,22 @@ function create(d3, saveAs, Blob) {
         var overallWeightedFiltered = 0;
         var sumWeightedFiltered = 0;
 
-        thisGraph.circles.each(function(d) {
+        thisGraph.circles.each(function (d) {
             var currentNode = d3.select(this);
             if (extension.indexOf("," + d.title + ",") != -1) {
                 var premiseAndConclusion = String(d.tooltip).split(" -> ");
                 // Only arguments with a conclusion will have a value
-                var hasConclusion = premiseAndConclusion.length == 2 && premiseAndConclusion[1] != "NULL";
+                var hasConclusion =
+                    premiseAndConclusion.length == 2 &&
+                    premiseAndConclusion[1] != "NULL";
 
                 // If it is rankBased not all nodes in the extension are accepted.
                 // Only the nodes with a conclusion and highest rank are accepted.
-                if ((hasConclusion && ! rankBased) || (rankBased && onlyConclusions.indexOf("," + d.title + ",") != -1)) {
-
+                if (
+                    (hasConclusion && !rankBased) ||
+                    (rankBased &&
+                        onlyConclusions.indexOf("," + d.title + ",") != -1)
+                ) {
                     var conclusionNoRange = "";
                     for (var i = 0; i < premiseAndConclusion[1].length; i++) {
                         if (premiseAndConclusion[1][i] != " ") {
@@ -1665,7 +1992,10 @@ function create(d3, saveAs, Blob) {
                     }
 
                     for (i = 0; i < iHighestCardConclusion.length; i++) {
-                        var highestConclusion = conclusionsByFeatureset_[currentFeatureset][iHighestCardConclusion[i]].conclusion;
+                        var highestConclusion =
+                            conclusionsByFeatureset_[currentFeatureset][
+                                iHighestCardConclusion[i]
+                            ].conclusion;
                         if (conclusionNoRange == highestConclusion) {
                             overallWeightedFiltered += d.value * d.weight;
                             sumWeightedFiltered += d.weight;
@@ -1677,7 +2007,11 @@ function create(d3, saveAs, Blob) {
 
         // Find number of conclusions that are not in the highest cardinality set(s)
         var nNotHigh = 0;
-        for (i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
+        for (
+            i = 0;
+            i < conclusionsByFeatureset_[currentFeatureset].length;
+            i++
+        ) {
             if (nConclusions[i] < nConclusions[iHighestCardConclusion[0]]) {
                 nNotHigh += nConclusions[i];
             }
@@ -1685,20 +2019,22 @@ function create(d3, saveAs, Blob) {
 
         if (nAccepted > 0) {
             // Round index to two decimals
-            for (var i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
-
+            for (
+                var i = 0;
+                i < conclusionsByFeatureset_[currentFeatureset].length;
+                i++
+            ) {
                 if (nConclusions[i] > 0) {
-
                     acceptedValue[i] /= nConclusions[i];
 
                     var numberParts = String(acceptedValue[i]).split(".");
                     if (numberParts.length > 1) {
-                        acceptedValue[i] = numberParts[0] + "." + numberParts[1].slice(0, 2);
+                        acceptedValue[i] =
+                            numberParts[0] + "." + numberParts[1].slice(0, 2);
                     }
-
                 }
             }
-            
+
             /* result = "";
             
             var average = overall / nAccepted;
@@ -1716,144 +2052,162 @@ function create(d3, saveAs, Blob) {
             
             //h3 h1 h4 h2
             result += String(average) + "," + String(highestCardinality) + "," + String(weightedAverage) + "," + String(highestWeighted); */
-            
+
             for (var i = 0; i < accrual.length; i++) {
                 if (accrual[i] == "Sum") {
                     var numberParts = String(overall).split(".");
                     if (numberParts.length > 1) {
-                        overall = numberParts[0] + "." + numberParts[1].slice(0, 9);
+                        overall =
+                            numberParts[0] + "." + numberParts[1].slice(0, 9);
                     }
-                    
+
                     overallString += "," + String(overall);
                 }
-                
+
                 if (accrual[i] == "Average") {
                     var average = overall / nAccepted;
-                    
+
                     var numberParts = String(average).split(".");
                     if (numberParts.length > 1) {
-                        average = numberParts[0] + "." + numberParts[1].slice(0, 9);
+                        average =
+                            numberParts[0] + "." + numberParts[1].slice(0, 9);
                     }
-                    
+
                     overallString += "," + String(average);
                     continue;
                 }
-                
+
                 if (accrual[i] == "Highest cardinality") {
                     var numberParts = String(overallHCC).split(".");
                     if (numberParts.length > 1) {
-                        overallHCC = numberParts[0] + "." + numberParts[1].slice(0, 9);
+                        overallHCC =
+                            numberParts[0] + "." + numberParts[1].slice(0, 9);
                     }
-                    
+
                     overallString += "," + String(overallHCC);
                     continue;
                 }
-                
+
                 if (accrual[i] == "Median") {
                     valuesAccepted.sort((a, b) => a - b);
                     let lowMiddle = Math.floor((valuesAccepted.length - 1) / 2);
                     let highMiddle = Math.ceil((valuesAccepted.length - 1) / 2);
-                    var median = (valuesAccepted[lowMiddle] + valuesAccepted[highMiddle]) / 2;
-                    
+                    var median =
+                        (valuesAccepted[lowMiddle] +
+                            valuesAccepted[highMiddle]) /
+                        2;
+
                     var numberParts = String(median).split(".");
                     if (numberParts.length > 1) {
-                        median = numberParts[0] + "." + numberParts[1].slice(0, 9);
+                        median =
+                            numberParts[0] + "." + numberParts[1].slice(0, 9);
                     }
-                    
+
                     overallString += "," + String(median);
                     continue;
-                    
                 }
-                
+
                 if (accrual[i] == "Weighted average") {
                     overallWeighted /= sumWeights;
-                    
+
                     var numberParts = String(overallWeighted).split(".");
                     if (numberParts.length > 1) {
-                        overallWeighted = numberParts[0] + "." + numberParts[1].slice(0, 9);
+                        overallWeighted =
+                            numberParts[0] + "." + numberParts[1].slice(0, 9);
                     }
-                    
+
                     overallString += "," + String(overallWeighted);
                     continue;
                 }
-                
+
                 if (accrual[i] == "Highest conclusion") {
-                    
                     var numberParts = String(highestConclustion).split(".");
                     if (numberParts.length > 1) {
-                        highestConclustion = numberParts[0] + "." + numberParts[1].slice(0, 9);
+                        highestConclustion =
+                            numberParts[0] + "." + numberParts[1].slice(0, 9);
                     }
-                    
+
                     overallString += "," + String(highestConclustion);
                     continue;
                 }
-                
+
                 if (accrual[i] == "Highest and weighted") {
                     if (sumWeightedFiltered > 0) {
-                        overallWeightedFiltered = overallWeightedFiltered / sumWeightedFiltered;
-                        
-                        var numberParts = String(overallWeightedFiltered).split(".");
+                        overallWeightedFiltered =
+                            overallWeightedFiltered / sumWeightedFiltered;
+
+                        var numberParts = String(overallWeightedFiltered).split(
+                            "."
+                        );
                         if (numberParts.length > 1) {
-                            overallWeightedFiltered = numberParts[0] + "." + numberParts[1].slice(0, 9);
+                            overallWeightedFiltered =
+                                numberParts[0] +
+                                "." +
+                                numberParts[1].slice(0, 9);
                         }
-                        
                     } else {
                         overallWeightedFiltered = "None";
                     }
-                    
+
                     overallString += "," + String(overallWeightedFiltered);
-                    continue;  
+                    continue;
                 }
             }
-                
 
-//             if (document.getElementById("accrualAverageExport").checked) {
-//                 overall /= nAccepted;
-//             } else if (document.getElementById("cardinalityAverageExport").checked) {
-//                 overall = overallHCC;
-//             } else if (document.getElementById("medianExport").checked) {
-//                 valuesAccepted.sort((a, b) => a - b);
-//                 let lowMiddle = Math.floor((valuesAccepted.length - 1) / 2);
-//                 let highMiddle = Math.ceil((valuesAccepted.length - 1) / 2);
-//                 overall = (valuesAccepted[lowMiddle] + valuesAccepted[highMiddle]) / 2;
-//             } else if (document.getElementById("weightedExport").checked) {
-//                 overallWeighted /= sumWeights;
-//                 overall = overallWeighted;
-//             } else if (document.getElementById("highestConclusionExport").checked) {
-//                 overall = highestConclustion;
-//             } else if (document.getElementById("absoluteConclusionExport").checked) {
-//                 overall = overallHCC - nNotHigh;
-//             } else if (document.getElementById("highestWeightedExport").checked) {
-//                 if (sumWeightedFiltered > 0) {
-//                     overall = overallWeightedFiltered / sumWeightedFiltered;
-//                 } else {
-//                     overall = "None";
-//                 }
-//             }
-// 
-//             var numberParts = String(overall).split(".");
-//             if (numberParts.length > 1) {
-//                 overall = numberParts[0] + "." + numberParts[1].slice(0, 9);
-//             }
+            //             if (document.getElementById("accrualAverageExport").checked) {
+            //                 overall /= nAccepted;
+            //             } else if (document.getElementById("cardinalityAverageExport").checked) {
+            //                 overall = overallHCC;
+            //             } else if (document.getElementById("medianExport").checked) {
+            //                 valuesAccepted.sort((a, b) => a - b);
+            //                 let lowMiddle = Math.floor((valuesAccepted.length - 1) / 2);
+            //                 let highMiddle = Math.ceil((valuesAccepted.length - 1) / 2);
+            //                 overall = (valuesAccepted[lowMiddle] + valuesAccepted[highMiddle]) / 2;
+            //             } else if (document.getElementById("weightedExport").checked) {
+            //                 overallWeighted /= sumWeights;
+            //                 overall = overallWeighted;
+            //             } else if (document.getElementById("highestConclusionExport").checked) {
+            //                 overall = highestConclustion;
+            //             } else if (document.getElementById("absoluteConclusionExport").checked) {
+            //                 overall = overallHCC - nNotHigh;
+            //             } else if (document.getElementById("highestWeightedExport").checked) {
+            //                 if (sumWeightedFiltered > 0) {
+            //                     overall = overallWeightedFiltered / sumWeightedFiltered;
+            //                 } else {
+            //                     overall = "None";
+            //                 }
+            //             }
+            //
+            //             var numberParts = String(overall).split(".");
+            //             if (numberParts.length > 1) {
+            //                 overall = numberParts[0] + "." + numberParts[1].slice(0, 9);
+            //             }
 
-//             if (! document.getElementById("nConclusionsExport").checked) {
-//                 result = String(overall);
-//             } else {
-//                 result = numberConclusions;
-//             }
+            //             if (! document.getElementById("nConclusionsExport").checked) {
+            //                 result = String(overall);
+            //             } else {
+            //                 result = numberConclusions;
+            //             }
         }
 
         thisGraph.circles.exit().remove();
-        
+
         //console.log("Invisible: " + result);
-        
+
         //remove first comma;
         overallString = overallString.substring(1);
         return overallString;
-    }
+    };
 
-    GraphCreator.prototype.exportAllSql = function(currentFeatureset, semantics, timeLimit, invisible = false, savetoServer = false, parser = undefined, size = 0) {
-
+    GraphCreator.prototype.exportAllSql = function (
+        currentFeatureset,
+        semantics,
+        timeLimit,
+        invisible = false,
+        savetoServer = false,
+        parser = undefined,
+        size = 0
+    ) {
         //document.getElementById('progressRow').className = "col-md-12";
 
         var maxComputation = 1000;
@@ -1863,7 +2217,9 @@ function create(d3, saveAs, Blob) {
         var semanticsAndAccrual = String(semantics).split("-");
 
         // Remove first caracter
-        var semanticsVector = String(semanticsAndAccrual[0].slice(1)).split(",");
+        var semanticsVector = String(semanticsAndAccrual[0].slice(1)).split(
+            ","
+        );
         var accrualVector = String(semanticsAndAccrual[1]).split("*");
 
         var emptySemantics = "[";
@@ -1893,10 +2249,10 @@ function create(d3, saveAs, Blob) {
         emptySemantics = emptySemantics.slice(0, -1);
         emptySemantics += "]";
 
-        var url = addressCall_ + 'deleteComputations';
+        var url = addressCall_ + "deleteComputations";
         var request = new XMLHttpRequest();
         // When semantics has been computed on server
-        request.onreadystatechange = function() {
+        request.onreadystatechange = function () {
             if (request.readyState == 4 && request.status == 200) {
                 // Save computations from 0 until maxComputation records in SQL.
                 // If more than maxComputation records then recursive call
@@ -1904,7 +2260,7 @@ function create(d3, saveAs, Blob) {
             }
         };
 
-        request.open('GET', url);
+        request.open("GET", url);
         request.send();
 
         function saveComputations(from, to) {
@@ -1913,10 +2269,19 @@ function create(d3, saveAs, Blob) {
 
             var dataString = "";
             for (var i = from; i < Math.min(to, allData_.length); i++) {
-                graph.activeAll(allData_[i], currentFeatureset, !invisible, true);
+                graph.activeAll(
+                    allData_[i],
+                    currentFeatureset,
+                    !invisible,
+                    true
+                );
 
-                if (String(graph.getStringGraph(true) + semanticsAndAccrual[0]).length > 0) {
-                    dataString += graph.getStringGraph(true) + semanticsAndAccrual[0];
+                if (
+                    String(graph.getStringGraph(true) + semanticsAndAccrual[0])
+                        .length > 0
+                ) {
+                    dataString +=
+                        graph.getStringGraph(true) + semanticsAndAccrual[0];
                 } else {
                     dataString += emptySemantics;
                 }
@@ -1927,16 +2292,21 @@ function create(d3, saveAs, Blob) {
             }
 
             var dataPost = new FormData();
-            dataPost.append("data" , dataString);
-            var request = (window.XMLHttpRequest) ? new XMLHttpRequest() : new activeXObject("Microsoft.XMLHTTP");
-            request.open('post', addressCall_ + 'saveComputations', true);
+            dataPost.append("data", dataString);
+            var request = window.XMLHttpRequest
+                ? new XMLHttpRequest()
+                : new activeXObject("Microsoft.XMLHTTP");
+            request.open("post", addressCall_ + "saveComputations", true);
             request.send(dataPost);
 
             // When file has been saved on server
-            request.onreadystatechange = function() {//Call a function when the state changes.
-                if(request.readyState == 4 && request.status == 200) {
+            request.onreadystatechange = function () {
+                //Call a function when the state changes.
+                if (request.readyState == 4 && request.status == 200) {
                     if (savetoServer) {
-                        var percentage = parseFloat((to / allData_.length * 100) / 2).toFixed(2);
+                        var percentage = parseFloat(
+                            ((to / allData_.length) * 100) / 2
+                        ).toFixed(2);
                         console.log(percentage + "%");
                         //document.getElementById('exportControlPercentage').innerHTML = " (" + percentage + "%).";
                     }
@@ -1945,30 +2315,47 @@ function create(d3, saveAs, Blob) {
                         to += maxComputation;
                         saveComputations(from, to);
                     } else {
-                        var url = addressCall_ + 'getComputations';
+                        var url = addressCall_ + "getComputations";
                         var computationsRequest = new XMLHttpRequest();
                         // When semantics has been computed on server
-                        computationsRequest.onreadystatechange = function() {
-                            if (computationsRequest.readyState == 4 && computationsRequest.status == 200) {
+                        computationsRequest.onreadystatechange = function () {
+                            if (
+                                computationsRequest.readyState == 4 &&
+                                computationsRequest.status == 200
+                            ) {
                                 var data = [];
-                                var extensions = JSON.parse(computationsRequest.responseText);
+                                var extensions = JSON.parse(
+                                    computationsRequest.responseText
+                                );
 
                                 var from = 0;
                                 var to = maxComputation;
 
                                 for (var key in extensions) {
                                     // ???
-                                    extensions[key].extensions = "[" + extensions[key].extensions;
+                                    extensions[key].extensions =
+                                        "[" + extensions[key].extensions;
 
-                                    getSemanticsIndex(extensions[key].extensions, semanticsVector, accrualVector, from, to, data);
-
+                                    getSemanticsIndex(
+                                        extensions[key].extensions,
+                                        semanticsVector,
+                                        accrualVector,
+                                        from,
+                                        to,
+                                        data
+                                    );
 
                                     from = to;
                                     to += maxComputation;
 
                                     if (savetoServer) {
-                                        var percentage = Math.min((to / allData_.length * 100) / 2 + 50, 100);
-                                        percentage = parseFloat(percentage).toFixed(2);
+                                        var percentage = Math.min(
+                                            ((to / allData_.length) * 100) / 2 +
+                                                50,
+                                            100
+                                        );
+                                        percentage =
+                                            parseFloat(percentage).toFixed(2);
                                         console.log(percentage + "%");
                                     }
                                 }
@@ -1984,66 +2371,149 @@ function create(d3, saveAs, Blob) {
                                 }
 
                                 // Semantics header
-                                for (var i = 0; i < semanticsVector.length; i++) {
+                                for (
+                                    var i = 0;
+                                    i < semanticsVector.length;
+                                    i++
+                                ) {
                                     if (semanticsVector[i] == "expert") {
                                         //row.push("Expert System");
-                                        for (var j = 0; j < accrualVector.length; j++) {
-                                            row.push("Expert System - " + accrualVector[j]);
+                                        for (
+                                            var j = 0;
+                                            j < accrualVector.length;
+                                            j++
+                                        ) {
+                                            row.push(
+                                                "Expert System - " +
+                                                    accrualVector[j]
+                                            );
                                         }
-                                    } else if (semanticsVector[i] == "grounded") {
+                                    } else if (
+                                        semanticsVector[i] == "grounded"
+                                    ) {
                                         //row.push("Grounded Semantics");
-                                        for (var j = 0; j < accrualVector.length; j++) {
-                                            row.push("Grounded Semantics - " + accrualVector[j]);
+                                        for (
+                                            var j = 0;
+                                            j < accrualVector.length;
+                                            j++
+                                        ) {
+                                            row.push(
+                                                "Grounded Semantics - " +
+                                                    accrualVector[j]
+                                            );
                                         }
                                     } else if (semanticsVector[i] == "eager") {
                                         //row.push("Eager Semantics");
-                                        for (var j = 0; j < accrualVector.length; j++) {
-                                            row.push("Eager Semantics - " + accrualVector[j]);
+                                        for (
+                                            var j = 0;
+                                            j < accrualVector.length;
+                                            j++
+                                        ) {
+                                            row.push(
+                                                "Eager Semantics - " +
+                                                    accrualVector[j]
+                                            );
                                         }
                                     } else if (semanticsVector[i] == "ideal") {
                                         //row.push("Ideal Semantics");
-                                        for (var j = 0; j < accrualVector.length; j++) {
-                                            row.push("Ideal Semantics - " + accrualVector[j]);
+                                        for (
+                                            var j = 0;
+                                            j < accrualVector.length;
+                                            j++
+                                        ) {
+                                            row.push(
+                                                "Ideal Semantics - " +
+                                                    accrualVector[j]
+                                            );
                                         }
-                                    } else if (semanticsVector[i] == "preferred") {
+                                    } else if (
+                                        semanticsVector[i] == "preferred"
+                                    ) {
                                         //row.push("Preferred Semantics");
-                                        for (var j = 0; j < accrualVector.length; j++) {
+                                        for (
+                                            var j = 0;
+                                            j < accrualVector.length;
+                                            j++
+                                        ) {
                                             //console.log("Preferred Semantics - " + accrualVector[j]);
-                                            row.push("Preferred Semantics - " + accrualVector[j]);
+                                            row.push(
+                                                "Preferred Semantics - " +
+                                                    accrualVector[j]
+                                            );
                                         }
                                     } else if (semanticsVector[i] == "stable") {
                                         //row.push("Stable Semantics");
-                                        for (var j = 0; j < accrualVector.length; j++) {
-                                            row.push("Stable Semantics - " + accrualVector[j]);
+                                        for (
+                                            var j = 0;
+                                            j < accrualVector.length;
+                                            j++
+                                        ) {
+                                            row.push(
+                                                "Stable Semantics - " +
+                                                    accrualVector[j]
+                                            );
                                         }
-                                    } else if (semanticsVector[i] == "semistable") {
+                                    } else if (
+                                        semanticsVector[i] == "semistable"
+                                    ) {
                                         //row.push("Semi-stable Semantics");
-                                        for (var j = 0; j < accrualVector.length; j++) {
-                                            row.push("Semi-stable Semantics - " + accrualVector[j]);
+                                        for (
+                                            var j = 0;
+                                            j < accrualVector.length;
+                                            j++
+                                        ) {
+                                            row.push(
+                                                "Semi-stable Semantics - " +
+                                                    accrualVector[j]
+                                            );
                                         }
-                                    } else if (semanticsVector[i] == "admissible") {
+                                    } else if (
+                                        semanticsVector[i] == "admissible"
+                                    ) {
                                         //row.push("Admissible Semantics");
-                                        for (var j = 0; j < accrualVector.length; j++) {
-                                            row.push("Admissible Semantics - " + accrualVector[j]);
+                                        for (
+                                            var j = 0;
+                                            j < accrualVector.length;
+                                            j++
+                                        ) {
+                                            row.push(
+                                                "Admissible Semantics - " +
+                                                    accrualVector[j]
+                                            );
                                         }
-                                    } else if (semanticsVector[i] == "categoriser") {
+                                    } else if (
+                                        semanticsVector[i] == "categoriser"
+                                    ) {
                                         //row.push("Categoriser");
-                                        for (var j = 0; j < accrualVector.length; j++) {
-                                            row.push("Categoriser - " + accrualVector[j]);
+                                        for (
+                                            var j = 0;
+                                            j < accrualVector.length;
+                                            j++
+                                        ) {
+                                            row.push(
+                                                "Categoriser - " +
+                                                    accrualVector[j]
+                                            );
                                         }
                                     }
                                 }
 
-
-                                var url = addressCall_ + 'deleteComputations';
+                                var url = addressCall_ + "deleteComputations";
                                 var request = new XMLHttpRequest();
                                 // When semantics has been computed on server
-                                request.onreadystatechange = function() {
-                                    if (request.readyState == 4 && request.status == 200) {
+                                request.onreadystatechange = function () {
+                                    if (
+                                        request.readyState == 4 &&
+                                        request.status == 200
+                                    ) {
                                         // Header of the csv in the first row
                                         console.log(data);
 
-                                        if (! savetoServer || savetoServer && size <= Papa.LocalChunkSize) {
+                                        if (
+                                            !savetoServer ||
+                                            (savetoServer &&
+                                                size <= Papa.LocalChunkSize)
+                                        ) {
                                             data.unshift(row);
                                         }
 
@@ -2051,33 +2521,51 @@ function create(d3, saveAs, Blob) {
                                         // beginning of the data
                                         var csvContent = ""; //file_.name + "_" + String(size) + "*";//"data:text/csv;charset=utf-8,";
 
-                                        data.forEach(function(infoArray, i){
-
-                                            var dataString = infoArray.join(",");
-                                            csvContent += i < data.length ? dataString + "\n" : dataString;
-
+                                        data.forEach(function (infoArray, i) {
+                                            var dataString =
+                                                infoArray.join(",");
+                                            csvContent +=
+                                                i < data.length
+                                                    ? dataString + "\n"
+                                                    : dataString;
                                         });
 
-                                        var csvData = new Blob([csvContent], { type: 'text/csv' }); //new way
+                                        var csvData = new Blob([csvContent], {
+                                            type: "text/csv",
+                                        }); //new way
 
-                                        if (! savetoServer) {
-                                            var csvUrl = URL.createObjectURL(csvData);
+                                        if (!savetoServer) {
+                                            var csvUrl =
+                                                URL.createObjectURL(csvData);
 
-                                            var link = document.createElement("a");
+                                            var link =
+                                                document.createElement("a");
                                             link.setAttribute("href", csvUrl);
-                                            link.setAttribute("download", "my_data.csv");
+                                            link.setAttribute(
+                                                "download",
+                                                "my_data.csv"
+                                            );
                                             document.body.appendChild(link); // Required for FF
 
                                             link.click();
                                         } else {
-
-                                            var csvUrl = URL.createObjectURL(csvData);
-                                            var link = document.createElement("a");
+                                            var csvUrl =
+                                                URL.createObjectURL(csvData);
+                                            var link =
+                                                document.createElement("a");
                                             link.setAttribute("href", csvUrl);
-                                            var aux = size/1000000;
-                                            var zeroFilled = ('000' + aux).substr(-3)
+                                            var aux = size / 1000000;
+                                            var zeroFilled = (
+                                                "000" + aux
+                                            ).substr(-3);
 
-                                            link.setAttribute("download", file_.name + "_" + String(zeroFilled) + "mb.csv");
+                                            link.setAttribute(
+                                                "download",
+                                                file_.name +
+                                                    "_" +
+                                                    String(zeroFilled) +
+                                                    "mb.csv"
+                                            );
                                             document.body.appendChild(link); // Required for FF
 
                                             link.click();
@@ -2087,34 +2575,44 @@ function create(d3, saveAs, Blob) {
                                             }
                                         }
 
-                                        if (! savetoServer) {
-                                            console.log("File should be ready...");
+                                        if (!savetoServer) {
+                                            console.log(
+                                                "File should be ready..."
+                                            );
                                         }
                                     }
                                 };
 
-                                request.open('GET', url);
+                                request.open("GET", url);
                                 request.send();
                             }
                         };
 
-                        computationsRequest.open('GET', url);
+                        computationsRequest.open("GET", url);
                         computationsRequest.send();
                     }
                 }
-            }
-
+            };
         }
 
-        function getSemanticsIndex(extensions, semanticsVector, accrualVector, from, to, data) {
-
+        function getSemanticsIndex(
+            extensions,
+            semanticsVector,
+            accrualVector,
+            from,
+            to,
+            data
+        ) {
             var enxtensionVector = String(extensions.slice(1)).split(";;");
 
             // ???
             //enxtensionVector[0] = "[" + enxtensionVector[0];
 
-            for (var index = from; index < Math.min(to, allData_.length); index++) {
-
+            for (
+                var index = from;
+                index < Math.min(to, allData_.length);
+                index++
+            ) {
                 // Fill values that are not semantic indexes
                 var row = [];
                 //console.log(allData_[index]);
@@ -2124,33 +2622,43 @@ function create(d3, saveAs, Blob) {
                     }
                 }
 
-                graph.activeAll(allData_[index], currentFeatureset, !invisible, true);
+                graph.activeAll(
+                    allData_[index],
+                    currentFeatureset,
+                    !invisible,
+                    true
+                );
 
                 //console.log("a: ", enxtensionVector[index - from]);
                 var jsonExtension = JSON.parse(enxtensionVector[index - from]);
 
                 //console.log(semanticsVector);
                 for (var ei = 0; ei < semanticsVector.length; ei++) {
-
                     // Expert system, grounded, eager or ideal. Only one extension
-                    if (jsonExtension[ei].toString().search("Maximum execution time") != -1) {
-
-                        var timeLimit = ""
+                    if (
+                        jsonExtension[ei]
+                            .toString()
+                            .search("Maximum execution time") != -1
+                    ) {
+                        var timeLimit = "";
                         for (var i = 0; i < accrualVector.length; i++) {
                             timeLimit += "Time limit,";
-                        }                        
+                        }
                         timeLimit.slice(0, -1);
 
                         row.push(timeLimit);
                         continue;
                     }
 
-                    if (jsonExtension[ei].toString().search("Allowed memory size") != -1) {
-
-                        var memoryLimit = ""
+                    if (
+                        jsonExtension[ei]
+                            .toString()
+                            .search("Allowed memory size") != -1
+                    ) {
+                        var memoryLimit = "";
                         for (var i = 0; i < accrualVector.length; i++) {
                             memoryLimit += "Memory limit,";
-                        }                        
+                        }
                         memoryLimit.slice(0, -1);
 
                         row.push(memoryLimit);
@@ -2160,19 +2668,43 @@ function create(d3, saveAs, Blob) {
 
                     // Unique extension semantics
                     if (semanticsVector[ei] == "categoriser") {
-                        if (! invisible) {
-                            row.push(graph.semanticsPerRow(jsonExtension[ei][0], true, false, true));
+                        if (!invisible) {
+                            row.push(
+                                graph.semanticsPerRow(
+                                    jsonExtension[ei][0],
+                                    true,
+                                    false,
+                                    true
+                                )
+                            );
                         } else {
-                            row.push(graph.semanticsPerRowInvisible(jsonExtension[ei][0], accrualVector, true));
+                            row.push(
+                                graph.semanticsPerRowInvisible(
+                                    jsonExtension[ei][0],
+                                    accrualVector,
+                                    true
+                                )
+                            );
                         }
-                    } else if (semanticsVector[ei] == "grounded" || semanticsVector[ei] == "expert" ||
-                        semanticsVector[ei] == "eager" || semanticsVector[ei] == "ideal") {
-                        if (! invisible) {
-                            row.push(graph.semanticsPerRow(jsonExtension[ei], true));
+                    } else if (
+                        semanticsVector[ei] == "grounded" ||
+                        semanticsVector[ei] == "expert" ||
+                        semanticsVector[ei] == "eager" ||
+                        semanticsVector[ei] == "ideal"
+                    ) {
+                        if (!invisible) {
+                            row.push(
+                                graph.semanticsPerRow(jsonExtension[ei], true)
+                            );
                         } else {
-                            row.push(graph.semanticsPerRowInvisible(jsonExtension[ei], accrualVector));
+                            row.push(
+                                graph.semanticsPerRowInvisible(
+                                    jsonExtension[ei],
+                                    accrualVector
+                                )
+                            );
                         }
-                    // Not unique extension semantics
+                        // Not unique extension semantics
                     } else {
                         var sameSizeExtension = 0;
 
@@ -2182,22 +2714,40 @@ function create(d3, saveAs, Blob) {
                             finalIndex[i] = 0;
                         }
 
-                        if (jsonExtension[ei].length == 1 && jsonExtension[ei][0].length == 0) {
+                        if (
+                            jsonExtension[ei].length == 1 &&
+                            jsonExtension[ei][0].length == 0
+                        ) {
                             // There is no extension. Push undefined so it won't
                             // appear in the csv
-                            if (! invisible) {
-                                row.push(graph.semanticsPerRow(jsonExtension[ei][0], true));
+                            if (!invisible) {
+                                row.push(
+                                    graph.semanticsPerRow(
+                                        jsonExtension[ei][0],
+                                        true
+                                    )
+                                );
                             } else {
-                                row.push(graph.semanticsPerRowInvisible(jsonExtension[ei][0], accrualVector));
+                                row.push(
+                                    graph.semanticsPerRowInvisible(
+                                        jsonExtension[ei][0],
+                                        accrualVector
+                                    )
+                                );
                             }
                             break;
                         }
 
                         if (jsonExtension[ei][0] == undefined) {
-                            if (! invisible) {
+                            if (!invisible) {
                                 row.push(graph.semanticsPerRow("[]", true));
                             } else {
-                                row.push(graph.semanticsPerRowInvisible("[]", accrualVector));
+                                row.push(
+                                    graph.semanticsPerRowInvisible(
+                                        "[]",
+                                        accrualVector
+                                    )
+                                );
                             }
                             break;
                         }
@@ -2211,22 +2761,38 @@ function create(d3, saveAs, Blob) {
                         }
 
                         for (var ej = 0; ej < jsonExtension[ei].length; ej++) {
-
                             if (jsonExtension[ei][ej].length == maxSize) {
                                 sameSizeExtension++;
-                                if (! invisible) {
+                                if (!invisible) {
                                     // each index is correspondent to an accrual option selected
-                                    var indexes = graph.semanticsPerRow(jsonExtension[ei][ej], true).split(",");
-                                    for (var i = 0; i < accrualVector.length; i++) {
+                                    var indexes = graph
+                                        .semanticsPerRow(
+                                            jsonExtension[ei][ej],
+                                            true
+                                        )
+                                        .split(",");
+                                    for (
+                                        var i = 0;
+                                        i < accrualVector.length;
+                                        i++
+                                    ) {
                                         finalIndex[i] += parseFloat(indexes[i]);
-                                    } 
-
+                                    }
                                 } else {
                                     // each index is correspondent to an accrual option selected
-                                    var indexes = graph.semanticsPerRowInvisible(jsonExtension[ei][ej], accrualVector).split(",");
-                                    for (var i = 0; i < accrualVector.length; i++) {
+                                    var indexes = graph
+                                        .semanticsPerRowInvisible(
+                                            jsonExtension[ei][ej],
+                                            accrualVector
+                                        )
+                                        .split(",");
+                                    for (
+                                        var i = 0;
+                                        i < accrualVector.length;
+                                        i++
+                                    ) {
                                         finalIndex[i] += parseFloat(indexes[i]);
-                                    } 
+                                    }
                                 }
                             }
                         }
@@ -2246,10 +2812,13 @@ function create(d3, saveAs, Blob) {
 
             return data;
         }
-    }
-    
-    GraphCreator.prototype.overallMatches = function(currentFeatureset, semantics, timeLimit) {
+    };
 
+    GraphCreator.prototype.overallMatches = function (
+        currentFeatureset,
+        semantics,
+        timeLimit
+    ) {
         //document.getElementById('progressRow').className = "col-md-12";
 
         var thisGraph = this;
@@ -2294,38 +2863,104 @@ function create(d3, saveAs, Blob) {
         emptySemantics = emptySemantics.slice(0, -1);
         emptySemantics += "]";
 
-        pushExtensionIndexes(allGraphStrings, 0, allData_.length, data, emptySemantics, semanticsVector, semantics,  getSemanticsIndex);
+        pushExtensionIndexes(
+            allGraphStrings,
+            0,
+            allData_.length,
+            data,
+            emptySemantics,
+            semanticsVector,
+            semantics,
+            getSemanticsIndex
+        );
 
-        function pushExtensionIndexes(allGraphStrings, index, nRows, data, emptySemantics, semanticsVector, semantics,  callback) {
-            getExtensionRecursive(addressCall_ + 'allSemantics/' + allGraphStrings[index] + semantics,
-                                  index, nRows, data, allGraphStrings, emptySemantics, semanticsVector, semantics, callback);
+        function pushExtensionIndexes(
+            allGraphStrings,
+            index,
+            nRows,
+            data,
+            emptySemantics,
+            semanticsVector,
+            semantics,
+            callback
+        ) {
+            getExtensionRecursive(
+                addressCall_ +
+                    "allSemantics/" +
+                    allGraphStrings[index] +
+                    semantics,
+                index,
+                nRows,
+                data,
+                allGraphStrings,
+                emptySemantics,
+                semanticsVector,
+                semantics,
+                callback
+            );
         }
 
-        function getExtensionRecursive(url, index, nRows, data, allGraphStrings, emptySemantics, semanticsVector, semantics, callback) // How can I use this callback?
-        {
-            if (url.length > String(addressCall_ + 'allSemantics/').length) {
+        function getExtensionRecursive(
+            url,
+            index,
+            nRows,
+            data,
+            allGraphStrings,
+            emptySemantics,
+            semanticsVector,
+            semantics,
+            callback
+        ) {
+            // How can I use this callback?
+            if (url.length > String(addressCall_ + "allSemantics/").length) {
                 var request = new XMLHttpRequest();
-                request.onreadystatechange = function()
-                {
-                    if (request.readyState == 4 && request.status == 200)
-                    {
-                        return callback(request.responseText, index, nRows,
-                                        data, allGraphStrings, emptySemantics, semanticsVector, semantics, callback); // Another callback here
+                request.onreadystatechange = function () {
+                    if (request.readyState == 4 && request.status == 200) {
+                        return callback(
+                            request.responseText,
+                            index,
+                            nRows,
+                            data,
+                            allGraphStrings,
+                            emptySemantics,
+                            semanticsVector,
+                            semantics,
+                            callback
+                        ); // Another callback here
                     }
                 };
 
-                request.open('GET', url);
+                request.open("GET", url);
                 request.send();
             } else {
                 // Expert system, gounded, eager, ideal, preferred, stable, semi-stable, admissible, categoriser
                 // return callback("[[],[],[],[],[[]],[[]],[[]],[[]],[]]", index, nRows, data, allGraphStrings, callback); // Another callback here
                 // Expert system, gounded, eager, preferred
-                return callback(emptySemantics, index, nRows, data, allGraphStrings, emptySemantics, semanticsVector, semantics, callback); // Another callback here
+                return callback(
+                    emptySemantics,
+                    index,
+                    nRows,
+                    data,
+                    allGraphStrings,
+                    emptySemantics,
+                    semanticsVector,
+                    semantics,
+                    callback
+                ); // Another callback here
             }
         }
 
-        function getSemanticsIndex(extension, index, nRows, data, allGraphStrings, emptySemantics, semanticsVector, semantics, callback) {
-
+        function getSemanticsIndex(
+            extension,
+            index,
+            nRows,
+            data,
+            allGraphStrings,
+            emptySemantics,
+            semanticsVector,
+            semantics,
+            callback
+        ) {
             // Fill values that are not semantic indexes
             var row = [];
             //console.log(allData_[index]);
@@ -2342,42 +2977,75 @@ function create(d3, saveAs, Blob) {
             var jsonExtension = JSON.parse(extension);
 
             for (var ei = 0; ei < semanticsVector.length; ei++) {
-
                 // Expert system, grounded, eager or ideal. Only one extension
-                if (jsonExtension[ei].toString().search("Maximum execution time") != -1) {
+                if (
+                    jsonExtension[ei]
+                        .toString()
+                        .search("Maximum execution time") != -1
+                ) {
                     row.push("Time limit");
                     continue;
                 }
 
-                if (jsonExtension[ei].toString().search("Allowed memory size") != -1) {
+                if (
+                    jsonExtension[ei]
+                        .toString()
+                        .search("Allowed memory size") != -1
+                ) {
                     row.push("Memory limit");
                     continue;
                 }
 
-                var select = document.getElementById('accrualVisualization'),
+                var select = document.getElementById("accrualVisualization"),
                     i = select.selectedIndex,
                     currentAggregation = select.options[i].text;
 
                 // Unique extension semantics
                 if (semanticsVector[ei] == "categoriser") {
-                    row.push(graph.semanticsPerRowInvisible(jsonExtension[ei][0], [currentAggregation], true));
-                } else if (semanticsVector[ei] == "grounded" || semanticsVector[ei] == "expert" ||
-                    semanticsVector[ei] == "eager" || semanticsVector[ei] == "ideal") {
-                    row.push(graph.semanticsPerRowInvisible(jsonExtension[ei], [currentAggregation]));
-                // Not unique extension semantics
+                    row.push(
+                        graph.semanticsPerRowInvisible(
+                            jsonExtension[ei][0],
+                            [currentAggregation],
+                            true
+                        )
+                    );
+                } else if (
+                    semanticsVector[ei] == "grounded" ||
+                    semanticsVector[ei] == "expert" ||
+                    semanticsVector[ei] == "eager" ||
+                    semanticsVector[ei] == "ideal"
+                ) {
+                    row.push(
+                        graph.semanticsPerRowInvisible(jsonExtension[ei], [
+                            currentAggregation,
+                        ])
+                    );
+                    // Not unique extension semantics
                 } else {
                     var sameSizeExtension = 0;
                     var finalIndex = 0;
 
-                    if (jsonExtension[ei].length == 1 && jsonExtension[ei][0].length == 0) {
+                    if (
+                        jsonExtension[ei].length == 1 &&
+                        jsonExtension[ei][0].length == 0
+                    ) {
                         // There is no extension. Push undefined so it won't
                         // appear in the csv
-                        row.push(graph.semanticsPerRowInvisible(jsonExtension[ei][0], [currentAggregation]));
+                        row.push(
+                            graph.semanticsPerRowInvisible(
+                                jsonExtension[ei][0],
+                                [currentAggregation]
+                            )
+                        );
                         break;
                     }
 
                     if (jsonExtension[ei][0] == undefined) {
-                        row.push(graph.semanticsPerRowInvisible("[]", [currentAggregation]));
+                        row.push(
+                            graph.semanticsPerRowInvisible("[]", [
+                                currentAggregation,
+                            ])
+                        );
                         break;
                     }
 
@@ -2390,10 +3058,14 @@ function create(d3, saveAs, Blob) {
                     }
 
                     for (var ej = 0; ej < jsonExtension[ei].length; ej++) {
-
                         if (jsonExtension[ei][ej].length == maxSize) {
                             sameSizeExtension++;
-                            finalIndex += parseFloat(graph.semanticsPerRowInvisible(jsonExtension[ei][ej], [currentAggregation]));
+                            finalIndex += parseFloat(
+                                graph.semanticsPerRowInvisible(
+                                    jsonExtension[ei][ej],
+                                    [currentAggregation]
+                                )
+                            );
                         }
                     }
 
@@ -2406,17 +3078,29 @@ function create(d3, saveAs, Blob) {
             data.push(row);
 
             if (index + 1 < nRows) {
-                var progress = Math.ceil(index/nRows * 100) ;
+                var progress = Math.ceil((index / nRows) * 100);
                 //document.getElementById('progressBar').setAttribute("style", "width:" + progress.toString() + "%");
                 //document.getElementById('progressLabel').innerHTML = progress.toString() + "% (Complete)";
                 //console.log(semantics);
 
-                document.getElementById('overallResults').innerHTML = progress.toString() + "%";
+                document.getElementById("overallResults").innerHTML =
+                    progress.toString() + "%";
 
-                getExtensionRecursive(addressCall_ + 'allSemantics/' + allGraphStrings[index + 1] + semantics,
-                                      index + 1, nRows, data, allGraphStrings, emptySemantics, semanticsVector, semantics, callback);
+                getExtensionRecursive(
+                    addressCall_ +
+                        "allSemantics/" +
+                        allGraphStrings[index + 1] +
+                        semantics,
+                    index + 1,
+                    nRows,
+                    data,
+                    allGraphStrings,
+                    emptySemantics,
+                    semanticsVector,
+                    semantics,
+                    callback
+                );
             } else {
-
                 row = [];
 
                 // Push header in the first position
@@ -2473,157 +3157,227 @@ function create(d3, saveAs, Blob) {
                 }
 
                 for (var i = 1; i < data.length; i++) {
-                    if (Math.abs(data[i][groundTruth] - data[i][categoriser_i]) < 0.0001) {
+                    if (
+                        Math.abs(
+                            data[i][groundTruth] - data[i][categoriser_i]
+                        ) < 0.0001
+                    ) {
                         categoriser++;
                     }
 
-                    if (Math.abs(data[i][groundTruth] - data[i][preferred_i]) < 0.0001) {
+                    if (
+                        Math.abs(data[i][groundTruth] - data[i][preferred_i]) <
+                        0.0001
+                    ) {
                         preferred++;
                     }
 
-                    if (Math.abs(data[i][groundTruth] - data[i][grounded_i]) < 0.0001) {
+                    if (
+                        Math.abs(data[i][groundTruth] - data[i][grounded_i]) <
+                        0.0001
+                    ) {
                         grounded++;
                     }
                 }
 
-                categoriser = 100 * categoriser / (data.length - 1);
-                preferred = 100 * preferred / (data.length - 1);
-                grounded = 100 * grounded / (data.length - 1);
+                categoriser = (100 * categoriser) / (data.length - 1);
+                preferred = (100 * preferred) / (data.length - 1);
+                grounded = (100 * grounded) / (data.length - 1);
 
                 var numberParts = String(categoriser).split(".");
                 if (numberParts.length > 1) {
-                    categoriser = numberParts[0] + "." + numberParts[1].slice(0, 2);
+                    categoriser =
+                        numberParts[0] + "." + numberParts[1].slice(0, 2);
                 }
 
                 var numberParts = String(grounded).split(".");
                 if (numberParts.length > 1) {
-                    grounded = numberParts[0] + "." + numberParts[1].slice(0, 2);
+                    grounded =
+                        numberParts[0] + "." + numberParts[1].slice(0, 2);
                 }
 
                 var numberParts = String(preferred).split(".");
                 if (numberParts.length > 1) {
-                    preferred = numberParts[0] + "." + numberParts[1].slice(0, 2);
+                    preferred =
+                        numberParts[0] + "." + numberParts[1].slice(0, 2);
                 }
 
-                document.getElementById('overallResults').innerHTML = "Preferred: " + preferred.toString() + "%<br>" +
-                                                                      "Grounded: " + grounded.toString() + "%<br>" + 
-                                                                      "Categoriser: " + categoriser.toString() + "%";
+                document.getElementById("overallResults").innerHTML =
+                    "Preferred: " +
+                    preferred.toString() +
+                    "%<br>" +
+                    "Grounded: " +
+                    grounded.toString() +
+                    "%<br>" +
+                    "Categoriser: " +
+                    categoriser.toString() +
+                    "%";
             }
         }
-    }
+    };
 
     // call to propagate changes to graph
-    GraphCreator.prototype.updateGraph = function(){
-
+    GraphCreator.prototype.updateGraph = function () {
         var thisGraph = this,
             consts = thisGraph.consts,
             state = thisGraph.state;
 
-        thisGraph.paths = thisGraph.paths.data(thisGraph.edges, function(d){
+        thisGraph.paths = thisGraph.paths.data(thisGraph.edges, function (d) {
             return String(d.source.id) + "+" + String(d.target.id);
         });
 
         var paths = thisGraph.paths;
 
         // update existing paths
-        paths.style('marker-end', function(d){
-            if (d.type == "undermine") {
-               return 'url(#end-arrow-blue)';
-            } else if (d.type == "undercut") {
-                return 'url(#end-arrow-red)';
-            } else if (d.type == "rebuttal") {
-                return 'url(#end-arrow-green)';
-            } else {
-                return 'url(#end-arrow)';
-            }
-        })
-        .classed(consts.selectedClass, function(d){
-            return d === state.selectedEdge;
-        })
-        .attr("d", function(d){
-            
-            var operator1 = 1;
-            var operator2 = -1;
-            if (d.target.x < d.source.x) {
-                operator1 = -1;
-                operator2 = 1;
-            }
-        
-            // Find the points in the border of the circle given their origin
-            var angle = Math.atan((d.target.y - d.source.y)/(d.target.x - d.source.x))
-            var x_source = d.source.x + (operator1 * consts.nodeRadius * Math.cos(angle));
-            var y_source = d.source.y + (operator1 * consts.nodeRadius * Math.sin(angle));
-            
-            var x_target = d.target.x + (operator2 * consts.nodeRadius * Math.cos(angle));
-            var y_target = d.target.y + (operator2 * consts.nodeRadius * Math.sin(angle));
+        paths
+            .style("marker-end", function (d) {
+                if (d.type == "undermine") {
+                    return "url(#end-arrow-blue)";
+                } else if (d.type == "undercut") {
+                    return "url(#end-arrow-red)";
+                } else if (d.type == "rebuttal") {
+                    return "url(#end-arrow-green)";
+                } else {
+                    return "url(#end-arrow)";
+                }
+            })
+            .classed(consts.selectedClass, function (d) {
+                return d === state.selectedEdge;
+            })
+            .attr("d", function (d) {
+                var operator1 = 1;
+                var operator2 = -1;
+                if (d.target.x < d.source.x) {
+                    operator1 = -1;
+                    operator2 = 1;
+                }
 
-            return "M" + x_source + "," + y_source + "L" + x_target + "," + y_target;
-        });
+                // Find the points in the border of the circle given their origin
+                var angle = Math.atan(
+                    (d.target.y - d.source.y) / (d.target.x - d.source.x)
+                );
+                var x_source =
+                    d.source.x +
+                    operator1 * consts.nodeRadius * Math.cos(angle);
+                var y_source =
+                    d.source.y +
+                    operator1 * consts.nodeRadius * Math.sin(angle);
+
+                var x_target =
+                    d.target.x +
+                    operator2 * consts.nodeRadius * Math.cos(angle);
+                var y_target =
+                    d.target.y +
+                    operator2 * consts.nodeRadius * Math.sin(angle);
+
+                return (
+                    "M" +
+                    x_source +
+                    "," +
+                    y_source +
+                    "L" +
+                    x_target +
+                    "," +
+                    y_target
+                );
+            });
 
         // add new paths
-        paths.enter()
-        .append("path")
-        .style('marker-end', function(d){
-            if (d.type == "undermine") {
-               return 'url(#end-arrow-blue)';
-            } else if (d.type == "undercut") {
-                return 'url(#end-arrow-red)';
-            } else if (d.type == "rebuttal") {
-                return 'url(#end-arrow-green)';
-            } else {
-                return 'url(#end-arrow)';
-            }
-        })
-        .on("mouseover", function(d) {
-            if (thisGraph.state.selectedEdge != d) {
-                d3.select(this).style('marker-end', "url(#end-arrow-hover)");
-            } else {
-                d3.select(this).style('marker-end', "url(#end-arrow-selected)");
-            }
-        })
-        .on("mouseout", function(d) {
-            if (thisGraph.state.selectedEdge == d) {
-                d3.select(this).style('marker-end', "url(#end-arrow-selected)");
-            } else if (d.type == "undermine") {
-                d3.select(this).style('marker-end', "url(#end-arrow-blue)");
-            } else if (d.type == "undercut") {
-                d3.select(this).style('marker-end', "url(#end-arrow-red)");
-            } else if (d.type == "rebuttal") {
-                d3.select(this).style('marker-end', "url(#end-arrow-green)");
-            } else {
-                d3.select(this).style('marker-end', "url(#end-arrow)");
-            }
-        })
-        .classed("linkBlue", function(d){
-            return d.type == "undermine";
-        })
-        .classed("linkRed", function(d){
-            return d.type == "undercut";
-        })
-        .classed("linkGreen", function(d){
-            return d.type == "rebuttal";
-        })
-        .classed("link", function(d){
-            return d.type == "none";
-        })
-        .attr("d", function(d){
-            var operator1 = 1;
-            var operator2 = -1;
-            if (d.target.x < d.source.x) {
-                operator1 = -1;
-                operator2 = 1;
-            }
-        
-            // Find the points in the border of the circle given their origin
-            var angle = Math.atan((d.target.y - d.source.y)/(d.target.x - d.source.x))
-            var x_source = d.source.x + (operator1 * consts.nodeRadius * Math.cos(angle));
-            var y_source = d.source.y + (operator1 * consts.nodeRadius * Math.sin(angle));
-            
-            var x_target = d.target.x + (operator2 * consts.nodeRadius * Math.cos(angle));
-            var y_target = d.target.y + (operator2 * consts.nodeRadius * Math.sin(angle));
+        paths
+            .enter()
+            .append("path")
+            .style("marker-end", function (d) {
+                if (d.type == "undermine") {
+                    return "url(#end-arrow-blue)";
+                } else if (d.type == "undercut") {
+                    return "url(#end-arrow-red)";
+                } else if (d.type == "rebuttal") {
+                    return "url(#end-arrow-green)";
+                } else {
+                    return "url(#end-arrow)";
+                }
+            })
+            .on("mouseover", function (d) {
+                if (thisGraph.state.selectedEdge != d) {
+                    d3.select(this).style(
+                        "marker-end",
+                        "url(#end-arrow-hover)"
+                    );
+                } else {
+                    d3.select(this).style(
+                        "marker-end",
+                        "url(#end-arrow-selected)"
+                    );
+                }
+            })
+            .on("mouseout", function (d) {
+                if (thisGraph.state.selectedEdge == d) {
+                    d3.select(this).style(
+                        "marker-end",
+                        "url(#end-arrow-selected)"
+                    );
+                } else if (d.type == "undermine") {
+                    d3.select(this).style("marker-end", "url(#end-arrow-blue)");
+                } else if (d.type == "undercut") {
+                    d3.select(this).style("marker-end", "url(#end-arrow-red)");
+                } else if (d.type == "rebuttal") {
+                    d3.select(this).style(
+                        "marker-end",
+                        "url(#end-arrow-green)"
+                    );
+                } else {
+                    d3.select(this).style("marker-end", "url(#end-arrow)");
+                }
+            })
+            .classed("linkBlue", function (d) {
+                return d.type == "undermine";
+            })
+            .classed("linkRed", function (d) {
+                return d.type == "undercut";
+            })
+            .classed("linkGreen", function (d) {
+                return d.type == "rebuttal";
+            })
+            .classed("link", function (d) {
+                return d.type == "none";
+            })
+            .attr("d", function (d) {
+                var operator1 = 1;
+                var operator2 = -1;
+                if (d.target.x < d.source.x) {
+                    operator1 = -1;
+                    operator2 = 1;
+                }
 
-            return "M" + x_source + "," + y_source + "L" + x_target + "," + y_target;
-        });
+                // Find the points in the border of the circle given their origin
+                var angle = Math.atan(
+                    (d.target.y - d.source.y) / (d.target.x - d.source.x)
+                );
+                var x_source =
+                    d.source.x +
+                    operator1 * consts.nodeRadius * Math.cos(angle);
+                var y_source =
+                    d.source.y +
+                    operator1 * consts.nodeRadius * Math.sin(angle);
+
+                var x_target =
+                    d.target.x +
+                    operator2 * consts.nodeRadius * Math.cos(angle);
+                var y_target =
+                    d.target.y +
+                    operator2 * consts.nodeRadius * Math.sin(angle);
+
+                return (
+                    "M" +
+                    x_source +
+                    "," +
+                    y_source +
+                    "L" +
+                    x_target +
+                    "," +
+                    y_target
+                );
+            });
         /*.on("mousedown", function(d){
             thisGraph.pathMouseDown.call(thisGraph, d3.select(this), d);
         })
@@ -2636,49 +3390,49 @@ function create(d3, saveAs, Blob) {
             }
         });*/
 
-        edges.forEach(function(val, i){
-
-            var originalPath = thisGraph.paths.filter(function(d){
-                    return d.source.id == val.source.id &&
-                            d.target.id == val.target.id;
+        edges.forEach(function (val, i) {
+            var originalPath = thisGraph.paths.filter(function (d) {
+                return (
+                    d.source.id == val.source.id && d.target.id == val.target.id
+                );
             });
 
-            var reversePath = thisGraph.paths.filter(function(d){
-                    return d.source.id == val.target.id &&
-                            d.target.id == val.source.id;
+            var reversePath = thisGraph.paths.filter(function (d) {
+                return (
+                    d.source.id == val.target.id && d.target.id == val.source.id
+                );
             });
-
-            
 
             if (reversePath[0].length > 0) {
-               
                 // Translate path to distantiate from other attack in the rebuttal
-                originalPath.attr("transform", "translate(0, 8)")
-                .style('marker-end', function(d){
-                    if (d.type == "undermine") {
-                        return 'url(#end-arrow-blue)';
-                    } else if (d.type == "undercut") {
-                        return 'url(#end-arrow-red)';
-                    } else if (d.type == "rebuttal") {
-                        return 'url(#end-arrow-green)';
-                    } else {
-                        return 'url(#end-arrow)';
-                    }
-                });
+                originalPath
+                    .attr("transform", "translate(0, 8)")
+                    .style("marker-end", function (d) {
+                        if (d.type == "undermine") {
+                            return "url(#end-arrow-blue)";
+                        } else if (d.type == "undercut") {
+                            return "url(#end-arrow-red)";
+                        } else if (d.type == "rebuttal") {
+                            return "url(#end-arrow-green)";
+                        } else {
+                            return "url(#end-arrow)";
+                        }
+                    });
 
                 // Translate path to distantiate from other attack in the rebuttal
-                reversePath.attr("transform","translate(0, -8)")               
-                .style('marker-end',function(d){
-                    if (d.type == "undermine") {
-                        return 'url(#end-arrow-blue)';
-                    } else if (d.type == "undercut") {
-                        return 'url(#end-arrow-red)';
-                    } else if (d.type == "rebuttal") {
-                        return 'url(#end-arrow-green)';
-                    } else {
-                        return 'url(#end-arrow)';
-                    }
-                });
+                reversePath
+                    .attr("transform", "translate(0, -8)")
+                    .style("marker-end", function (d) {
+                        if (d.type == "undermine") {
+                            return "url(#end-arrow-blue)";
+                        } else if (d.type == "undercut") {
+                            return "url(#end-arrow-red)";
+                        } else if (d.type == "rebuttal") {
+                            return "url(#end-arrow-green)";
+                        } else {
+                            return "url(#end-arrow)";
+                        }
+                    });
             }
         });
 
@@ -2686,143 +3440,182 @@ function create(d3, saveAs, Blob) {
         paths.exit().remove();
 
         // update existing nodes
-        thisGraph.circles = thisGraph.circles.data(thisGraph.nodes, function(d){ return d.id;});
-        thisGraph.circles.attr("transform", function(d){return "translate(" + d.x + "," + d.y + ")";})
-        .style("stroke-dasharray", function(d){
-            var premiseAndConclusion = String(d.tooltip).split(" -> ");
-            if (premiseAndConclusion.length != 2) {
-                return "10 10";
-            } else {
-               return "0 0"
+        thisGraph.circles = thisGraph.circles.data(
+            thisGraph.nodes,
+            function (d) {
+                return d.id;
             }
-        });
-
-        // add new nodes
-        var newGs= thisGraph.circles.enter()
-            .append("g");
-
-        var tooltip = d3.select("body")
-                            .append("div")
-                            .style("position", "absolute")
-                            .style("z-index", "10")
-                            .style("background-color", "white")
-                            .style("border", "1px solid black")
-                            .style("border-radius", "4px")
-                            .style("opacity", "0.85")
-                            .style("visibility", "hidden")
-                            .style("padding", "4px");
-
-        newGs.classed(consts.circleGClass, true)
-        .attr("transform", function(d){return "translate(" + d.x + "," + d.y + ")";})
-        .style("stroke-dasharray", function(d){
-            var premiseAndConclusion = String(d.tooltip).split(" -> ");
-            if (premiseAndConclusion.length != 2) {
-                return "10 10";
-            } else {
-               return "0 0"
-            }
-        })
-        .on("mouseover", function(d){
-            if (state.shiftNodeDrag){
-                d3.select(this).classed(consts.connectClass, true);
-            }
-
-            var nSourceActive = 0;
-            var sourceActive = "";
-            var nTargetActive = 0;
-            var targetActive = "";
-            var nSourceOriginal = 0;
-            var sourceOriginal = "";
-            var nTargetOriginal = 0;
-            var targetOriginal = "";
-            edges.forEach(function(val, i){
-                if (val.target.id == d.id) {
-
-                    var sourceCircle = thisGraph.circles.filter(function(sd){
-                                            return sd.id === val.source.id;
-                                        });
-                    
-                    nSourceOriginal++;
-
-                    sourceCircle.each(function(sd){
-                        
-                        sourceOriginal += sd.title + ", ";
-
-                        if (sd.activated && graph.isAttackValid(sd, d, false)) {
-                            nTargetActive++;
-                            targetActive += sd.title + ", ";
-                        }
-                    });
-                }
-
-               
-                if (val.source.id == d.id) {
-
-                    var targetCircle = thisGraph.circles.filter(function(td){
-                                            return td.id === val.target.id;
-                                        });
-                    
-                    nTargetOriginal++;
-
-                    targetCircle.each(function(td){
-
-                        targetOriginal += td.title + ", ";
-
-                        if (td.activated && graph.isAttackValid(d, td, false)) {
-                            nSourceActive++;
-                            sourceActive += td.title + ", ";
-                        }
-                    });
-
+        );
+        thisGraph.circles
+            .attr("transform", function (d) {
+                return "translate(" + d.x + "," + d.y + ")";
+            })
+            .style("stroke-dasharray", function (d) {
+                var premiseAndConclusion = String(d.tooltip).split(" -> ");
+                if (premiseAndConclusion.length != 2) {
+                    return "10 10";
+                } else {
+                    return "0 0";
                 }
             });
-            
-            // Remove commas
-            if (sourceOriginal.length > 0) {
-                sourceOriginal = sourceOriginal.slice(0, -2);
-            }
 
-            if (targetActive.length > 0) {
-                targetActive.slice(0, -2);
-            }
+        // add new nodes
+        var newGs = thisGraph.circles.enter().append("g");
 
-            if (targetOriginal.length > 0) {
-                targetOriginal = targetOriginal.slice(0, -2);
-            }
+        var tooltip = d3
+            .select("body")
+            .append("div")
+            .style("position", "absolute")
+            .style("z-index", "10")
+            .style("background-color", "white")
+            .style("border", "1px solid black")
+            .style("border-radius", "4px")
+            .style("opacity", "0.85")
+            .style("visibility", "hidden")
+            .style("padding", "4px");
 
-            if (sourceActive.length > 0) {
-                sourceActive.slice(0, -2)
-            }
+        newGs
+            .classed(consts.circleGClass, true)
+            .attr("transform", function (d) {
+                return "translate(" + d.x + "," + d.y + ")";
+            })
+            .style("stroke-dasharray", function (d) {
+                var premiseAndConclusion = String(d.tooltip).split(" -> ");
+                if (premiseAndConclusion.length != 2) {
+                    return "10 10";
+                } else {
+                    return "0 0";
+                }
+            })
+            .on("mouseover", function (d) {
+                if (state.shiftNodeDrag) {
+                    d3.select(this).classed(consts.connectClass, true);
+                }
 
+                var nSourceActive = 0;
+                var sourceActive = "";
+                var nTargetActive = 0;
+                var targetActive = "";
+                var nSourceOriginal = 0;
+                var sourceOriginal = "";
+                var nTargetOriginal = 0;
+                var targetOriginal = "";
+                edges.forEach(function (val, i) {
+                    if (val.target.id == d.id) {
+                        var sourceCircle = thisGraph.circles.filter(function (
+                            sd
+                        ) {
+                            return sd.id === val.source.id;
+                        });
 
-            tooltip.selectAll("text").remove();
-            tooltip.append("text");
+                        nSourceOriginal++;
 
-            tooltip.selectAll("text").html("<b>" + d.title + "</b>: " + d.tooltip + "<br/><br/>" + 
-                                           "<i>Source attack activated:</i> " + String(nSourceActive) + ". " + sourceActive + "<br/><i>Target attack activated:</i> " + String(nTargetActive) + ". " + targetActive + "<br/><br/>" +
-                                           "<i>All source attacks:</i> " + String(nSourceOriginal) + ". " + sourceOriginal + "<br/><i>All target attacks:</i> " + String(nTargetOriginal) + ". " + targetOriginal + "<br/><br/>");
+                        sourceCircle.each(function (sd) {
+                            sourceOriginal += sd.title + ", ";
 
-            tooltip.style("visibility", "visible");
-        })
-        .on("mousemove", function(d){
-            return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");
-        })
-        .on("mouseout", function(d){
-            d3.select(this).classed(consts.connectClass, false);
-            return tooltip.style("visibility", "hidden");
-        })
-        .on("mousedown", function(d){
-            thisGraph.circleMouseDown.call(thisGraph, d3.select(this), d);
-        })
-        .on("mouseup", function(d){
-            thisGraph.circleMouseUp.call(thisGraph, d3.select(this), d);
-        })
-        .call(thisGraph.drag);
+                            if (
+                                sd.activated &&
+                                graph.isAttackValid(sd, d, false)
+                            ) {
+                                nTargetActive++;
+                                targetActive += sd.title + ", ";
+                            }
+                        });
+                    }
 
-        newGs.append("circle")
-        .attr("r", String(consts.nodeRadius));
+                    if (val.source.id == d.id) {
+                        var targetCircle = thisGraph.circles.filter(function (
+                            td
+                        ) {
+                            return td.id === val.target.id;
+                        });
 
-        newGs.each(function(d){
+                        nTargetOriginal++;
+
+                        targetCircle.each(function (td) {
+                            targetOriginal += td.title + ", ";
+
+                            if (
+                                td.activated &&
+                                graph.isAttackValid(d, td, false)
+                            ) {
+                                nSourceActive++;
+                                sourceActive += td.title + ", ";
+                            }
+                        });
+                    }
+                });
+
+                // Remove commas
+                if (sourceOriginal.length > 0) {
+                    sourceOriginal = sourceOriginal.slice(0, -2);
+                }
+
+                if (targetActive.length > 0) {
+                    targetActive.slice(0, -2);
+                }
+
+                if (targetOriginal.length > 0) {
+                    targetOriginal = targetOriginal.slice(0, -2);
+                }
+
+                if (sourceActive.length > 0) {
+                    sourceActive.slice(0, -2);
+                }
+
+                tooltip.selectAll("text").remove();
+                tooltip.append("text");
+
+                tooltip
+                    .selectAll("text")
+                    .html(
+                        "<b>" +
+                            d.title +
+                            "</b>: " +
+                            d.tooltip +
+                            "<br/><br/>" +
+                            "<i>Source attack activated:</i> " +
+                            String(nSourceActive) +
+                            ". " +
+                            sourceActive +
+                            "<br/><i>Target attack activated:</i> " +
+                            String(nTargetActive) +
+                            ". " +
+                            targetActive +
+                            "<br/><br/>" +
+                            "<i>All source attacks:</i> " +
+                            String(nSourceOriginal) +
+                            ". " +
+                            sourceOriginal +
+                            "<br/><i>All target attacks:</i> " +
+                            String(nTargetOriginal) +
+                            ". " +
+                            targetOriginal +
+                            "<br/><br/>"
+                    );
+
+                tooltip.style("visibility", "visible");
+            })
+            .on("mousemove", function (d) {
+                return tooltip
+                    .style("top", event.pageY - 10 + "px")
+                    .style("left", event.pageX + 10 + "px");
+            })
+            .on("mouseout", function (d) {
+                d3.select(this).classed(consts.connectClass, false);
+                return tooltip.style("visibility", "hidden");
+            })
+            .on("mousedown", function (d) {
+                thisGraph.circleMouseDown.call(thisGraph, d3.select(this), d);
+            })
+            .on("mouseup", function (d) {
+                thisGraph.circleMouseUp.call(thisGraph, d3.select(this), d);
+            })
+            .call(thisGraph.drag);
+
+        newGs.append("circle").attr("r", String(consts.nodeRadius));
+
+        newGs.each(function (d) {
             //thisGraph.insertTitleLinebreaks(d3.select(this), d.title);
             thisGraph.styleTitle(d3.select(this), d.title);
         });
@@ -2831,23 +3624,29 @@ function create(d3, saveAs, Blob) {
         thisGraph.circles.exit().remove();
     };
 
-    GraphCreator.prototype.zoomed = function(){
+    GraphCreator.prototype.zoomed = function () {
         this.state.justScaleTransGraph = true;
-        d3.select("." + this.consts.graphClass)
-        .attr("transform", "translate(" + d3.event.translate + ") scale(" + d3.event.scale + ")");
+        d3.select("." + this.consts.graphClass).attr(
+            "transform",
+            "translate(" +
+                d3.event.translate +
+                ") scale(" +
+                d3.event.scale +
+                ")"
+        );
 
         this.zoomScale = d3.event.scale;
     };
 
     GraphCreator.prototype.setFontSize = function (gEl, title, fontSize) {
-        gEl.select("tspan").attr('font-size', fontSize + "px");
+        gEl.select("tspan").attr("font-size", fontSize + "px");
     };
 
-    GraphCreator.prototype.updateWindow = function(svg){
+    GraphCreator.prototype.updateWindow = function (svg) {
         var docEl = document.documentElement,
-            bodyEl = document.getElementById('left-side');
+            bodyEl = document.getElementById("left-side");
         var x = bodyEl.offsetWidth * 0.95; //Size of div column
-        var y = window.innerHeight|| docEl.clientHeight|| bodyEl.clientHeight;
+        var y = window.innerHeight || docEl.clientHeight || bodyEl.clientHeight;
         y = y * 0.73;
         svg.attr("width", x).attr("height", y);
     };
@@ -2855,10 +3654,11 @@ function create(d3, saveAs, Blob) {
     /**** MAIN ****/
 
     var docEl = document.documentElement,
-        bodyEl = document.getElementById('left-side');
+        bodyEl = document.getElementById("left-side");
 
     var width = bodyEl.offsetWidth * 0.95, //Size of div column
-        height =  window.innerHeight || docEl.clientHeight|| bodyEl.clientHeight;
+        height =
+            window.innerHeight || docEl.clientHeight || bodyEl.clientHeight;
 
     height = height * 0.73;
 
@@ -2874,36 +3674,38 @@ function create(d3, saveAs, Blob) {
         viewWidth = width,
         viewHeight = height;
 
-    var select = document.getElementById('featureset'),
+    var select = document.getElementById("featureset"),
         i = select.selectedIndex;
-    
+
     var currentFeatureset = null;
     if (i != -1) {
         currentFeatureset = select.options[i].text;
     }
 
-    var select = document.getElementById('featuresetgraph'),
+    var select = document.getElementById("featuresetgraph"),
         i = select.selectedIndex;
 
-    var mostLeftNode,
-        mostRightNode,
-        mostUpNode,
-        mostBottomNode;
+    var mostLeftNode, mostRightNode, mostUpNode, mostBottomNode;
 
     if (i != -1 && currentFeatureset != null) {
         var currentGraph = select.options[i].text;
 
         // Get semantic and edges
         for (var i = 0; i < graphs_.length; i++) {
-            if (graphs_[i].featureset == currentFeatureset && graphs_[i].name == currentGraph) {
+            if (
+                graphs_[i].featureset == currentFeatureset &&
+                graphs_[i].name == currentGraph
+            ) {
                 jsonEdges = JSON.parse(graphs_[i].edges);
                 semantic = graphs_[i].semantic;
             }
         }
 
         for (var i = 0; i < args_.length; i++) {
-            if (args_[i].featureset == currentFeatureset && args_[i].graph == currentGraph) {
-
+            if (
+                args_[i].featureset == currentFeatureset &&
+                args_[i].graph == currentGraph
+            ) {
                 var tooltip;
                 if (args_[i].conclusion && args_[i].conclusion != "NULL") {
                     tooltip = args_[i].argument + " -> " + args_[i].conclusion;
@@ -2912,7 +3714,13 @@ function create(d3, saveAs, Blob) {
                     tooltip = args_[i].argument;
                 }
 
-                nodes.push({id: id, title: args_[i].label, x: parseFloat(args_[i].x), y: parseFloat(args_[i].y), tooltip: tooltip})
+                nodes.push({
+                    id: id,
+                    title: args_[i].label,
+                    x: parseFloat(args_[i].x),
+                    y: parseFloat(args_[i].y),
+                    tooltip: tooltip,
+                });
                 indexNode.push(args_[i].label);
 
                 if (id == 0) {
@@ -2945,8 +3753,8 @@ function create(d3, saveAs, Blob) {
         viewX = mostLeftNode - 100;
         viewY = mostBottomNode - 100;
 
-        viewWidth = (mostRightNode - mostLeftNode) + 400;
-        viewHeight = (mostUpNode - mostBottomNode) + 400;
+        viewWidth = mostRightNode - mostLeftNode + 400;
+        viewHeight = mostUpNode - mostBottomNode + 400;
 
         for (var i = 0; i < jsonEdges.length; i++) {
             //FIXME: find a more intelligent way of getting the indexes by the labels
@@ -2968,38 +3776,58 @@ function create(d3, saveAs, Blob) {
             }
 
             if (jsonEdges[i].type != undefined) {
-                edges.push({source: nodes[indexSource], target: nodes[indexTarget], type: jsonEdges[i].type});
+                edges.push({
+                    source: nodes[indexSource],
+                    target: nodes[indexTarget],
+                    type: jsonEdges[i].type,
+                });
             } else {
-                edges.push({source: nodes[indexSource], target: nodes[indexTarget], type: "none"});
+                edges.push({
+                    source: nodes[indexSource],
+                    target: nodes[indexTarget],
+                    type: "none",
+                });
             }
         }
     }
 
     /** MAIN SVG **/
-    var svg = d3.select("#left-side").append("svg")
-            .attr("width", width)
-            .attr("height", height)
-            .attr("id", "G")
-            .attr('viewBox', viewX + ' ' + viewY + ' ' + viewWidth + ' ' + viewHeight);
+    var svg = d3
+        .select("#left-side")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("id", "G")
+        .attr(
+            "viewBox",
+            viewX + " " + viewY + " " + viewWidth + " " + viewHeight
+        );
     var graph = new GraphCreator(svg, nodes, edges);
     graph.setIdCt(id);
     graph.updateGraph();
 
     var fontSize;
-    var currentGraph = document.getElementById('featuresetgraph').value;
-    var select = document.getElementById('featureset'),
-    i = select.selectedIndex;
-    
+    var currentGraph = document.getElementById("featuresetgraph").value;
+    var select = document.getElementById("featureset"),
+        i = select.selectedIndex;
+
     if (i == -1) {
         return graph;
     }
-    
+
     var currentFeatureset = select.options[i].text;
     for (var i = 0; i < graphs_.length; i++) {
-        if (graphs_[i].featureset == currentFeatureset && graphs_[i].name == currentGraph) {
+        if (
+            graphs_[i].featureset == currentFeatureset &&
+            graphs_[i].name == currentGraph
+        ) {
             var thisGraph = graph;
-            thisGraph.circles.each(function(d) {
-                thisGraph.setFontSize(d3.select(this), d.title, graphs_[i].font_size);
+            thisGraph.circles.each(function (d) {
+                thisGraph.setFontSize(
+                    d3.select(this),
+                    d.title,
+                    graphs_[i].font_size
+                );
             });
             break;
         }
@@ -3010,46 +3838,43 @@ function create(d3, saveAs, Blob) {
 
 var graph = create(window.d3, window.saveAs, window.Blob);
 
-d3.select("#featuresetgraph").on("change", function() {
+d3.select("#featuresetgraph").on("change", function () {
     d3.event.preventDefault();
     d3.select("#G").remove();
     graph = create(window.d3, window.saveAs, window.Blob);
     document.getElementById("overallResults").innerHTML = "";
-    document.querySelectorAll('.check1')[0].checked = false;
+    document.querySelectorAll(".check1")[0].checked = false;
 });
 
-
-d3.select("#export").on("click", function() {
+d3.select("#export").on("click", function () {
     d3.event.preventDefault();
-    $('#modalExport').modal('show');
+    $("#modalExport").modal("show");
 });
 
-d3.select("#exportFile").on("click", function() {
+d3.select("#exportFile").on("click", function () {
     d3.event.preventDefault();
 
     if (file_.size <= Papa.LocalChunkSize) {
-
         var checkboxes = document.getElementsByName("semanticsExport");
         var accrualCheckboxes = document.getElementsByName("accrualExport");
-        var timeLimit = "1";//document.getElementById("timeLimit").value;
+        var timeLimit = "1"; //document.getElementById("timeLimit").value;
         var semantics = ";";
-        
+
         var accruals = "-";
-         // loop over all accruals
-        for (var i=0; i<accrualCheckboxes.length; i++) {
+        // loop over all accruals
+        for (var i = 0; i < accrualCheckboxes.length; i++) {
             // And stick the checked ones onto an array...
             if (accrualCheckboxes[i].checked) {
                 accruals += accrualCheckboxes[i].value + "*";
             }
         }
-        
+
         accruals = accruals.slice(0, -1);
 
         // loop over them all
-        for (var i=0; i<checkboxes.length; i++) {
+        for (var i = 0; i < checkboxes.length; i++) {
             // And stick the checked ones onto an array...
             if (checkboxes[i].checked) {
-
                 if (checkboxes[i].value == "Expert System") {
                     semantics += "expert,";
                 } else if (checkboxes[i].value == "Preferred") {
@@ -3072,24 +3897,23 @@ d3.select("#exportFile").on("click", function() {
             }
         }
 
-        var select = document.getElementById('featureset'),
+        var select = document.getElementById("featureset"),
             i = select.selectedIndex,
             currentFeatureset = select.options[i].text;
 
         // Remove last coma
         semantics = semantics.slice(0, -1);
         semantics += accruals;
-        
+
         //final semantics example
         // ;expert,ideal,preferred-sum*average*median
-        
-        $('#modalExport').modal('hide');
+
+        $("#modalExport").modal("hide");
         //graph.exportAll(currentFeatureset, semantics, timeLimit, true);
         //graph.exportAllQuick(currentFeatureset, semantics, timeLimit, true);
         graph.exportAllSql(currentFeatureset, semantics, timeLimit, true);
     } else {
-
-        $('#modalExport').modal('hide');
+        $("#modalExport").modal("hide");
 
         var firstRow;
         var size = 0;
@@ -3098,13 +3922,13 @@ d3.select("#exportFile").on("click", function() {
 
         var url = absoluteCall_ + "deleteCsv.php";
         var request = new XMLHttpRequest();
-        request.open('GET', url);
+        request.open("GET", url);
         request.send();
 
         Papa.parse(file_, {
             header: true,
             skipEmptyLines: true,
-            chunk: function(results, parser) {
+            chunk: function (results, parser) {
                 //console.log("Row data:", results.data);
                 //console.log("Row errors:", results.errors);
 
@@ -3120,22 +3944,29 @@ d3.select("#exportFile").on("click", function() {
 
                 size += Papa.LocalChunkSize;
 
-                console.log(size/1000000 + "mb of " + file_.size/1000000 + "mb.")
+                console.log(
+                    size / 1000000 + "mb of " + file_.size / 1000000 + "mb."
+                );
 
                 var exportControl = document.getElementById("exportControl");
-                exportControl.style.visibility = 'visible';
-                document.getElementById('exportControl').innerHTML = "<br>" + size/1000000 + "mb of " + file_.size/1000000 + "mb being computed.";
+                exportControl.style.visibility = "visible";
+                document.getElementById("exportControl").innerHTML =
+                    "<br>" +
+                    size / 1000000 +
+                    "mb of " +
+                    file_.size / 1000000 +
+                    "mb being computed.";
 
                 /*var exportControlPercentage = document.getElementById("exportControlPercentage");
                 exportControlPercentage.style.visibility = 'visible';
                 document.getElementById('exportControlPercentage').innerHTML = " (0%)";*/
 
-                var select = document.getElementById('featureset'),
+                var select = document.getElementById("featureset"),
                     i = select.selectedIndex,
                     currentFeatureset = select.options[i].text;
 
                 var ignoredColumns = "";
-                var removeColumns = []
+                var removeColumns = [];
                 var nColumns = 0;
 
                 // New columns of the table
@@ -3151,7 +3982,6 @@ d3.select("#exportFile").on("click", function() {
 
                 // Find columns that do not have an associate feature and remove them
                 for (var key in allData_[0]) {
-
                     if (key.indexOf("Weight_") !== -1) {
                         // Remove prefix Weight_ to ease comparisons
                         weightsImported.push(key.slice(7));
@@ -3161,7 +3991,6 @@ d3.select("#exportFile").on("click", function() {
                     }
 
                     for (var iAttr = 0; iAttr < attributes_.length; iAttr++) {
-
                         // Check whether header is a weight for an existing attribute
                         var column = key;
                         if (key.indexOf("Weight_") !== -1) {
@@ -3169,15 +3998,20 @@ d3.select("#exportFile").on("click", function() {
                         }
 
                         // Check if header has a relative attribute in the featureset
-                        var inFeatureset = attributes_[iAttr].featureset == currentFeatureset && 
-                                        (attributes_[iAttr].attribute === column ||
-                                        key.toUpperCase() === "ID" ||
-                                        key === "GroundTruth");
-
+                        var inFeatureset =
+                            attributes_[iAttr].featureset ==
+                                currentFeatureset &&
+                            (attributes_[iAttr].attribute === column ||
+                                key.toUpperCase() === "ID" ||
+                                key === "GroundTruth");
 
                         if (inFeatureset) {
                             // Create json columns according to the required fields of the table plugin
-                            columns.push({sTitle: key, mData: key, aTargets: [nColumns]});
+                            columns.push({
+                                sTitle: key,
+                                mData: key,
+                                aTargets: [nColumns],
+                            });
                             nColumns++;
                             // Save which columns of the csv file will be imported
                             //iColumns.push(iHeader);
@@ -3200,29 +4034,29 @@ d3.select("#exportFile").on("click", function() {
                     for (var row = 0; row < allData_.length; row++) {
                         delete allData_[row][removeColumns[i]];
                     }
-                }                                                                                
+                }
 
                 var checkboxes = document.getElementsByName("semanticsExport");
-                var accrualCheckboxes = document.getElementsByName("accrualExport");
+                var accrualCheckboxes =
+                    document.getElementsByName("accrualExport");
                 var timeLimit = "1"; //document.getElementById("timeLimit").value;
                 var semantics = ";";
-                
+
                 var accruals = "-";
                 // loop over all accruals
-                for (var i=0; i<accrualCheckboxes.length; i++) {
+                for (var i = 0; i < accrualCheckboxes.length; i++) {
                     // And stick the checked ones onto an array...
                     if (accrualCheckboxes[i].checked) {
                         accruals += accrualCheckboxes[i].value + "*";
                     }
                 }
-                
+
                 accruals = accruals.slice(0, -1);
 
                 // loop over them all
-                for (var i=0; i<checkboxes.length; i++) {
+                for (var i = 0; i < checkboxes.length; i++) {
                     // And stick the checked ones onto an array...
                     if (checkboxes[i].checked) {
-
                         if (checkboxes[i].value == "Expert System") {
                             semantics += "expert,";
                         } else if (checkboxes[i].value == "Preferred") {
@@ -3245,15 +4079,23 @@ d3.select("#exportFile").on("click", function() {
                     }
                 }
 
-                var select = document.getElementById('featureset'),
+                var select = document.getElementById("featureset"),
                     i = select.selectedIndex,
                     currentFeatureset = select.options[i].text;
 
-                 // Remove last coma
+                // Remove last coma
                 semantics = semantics.slice(0, -1);
                 semantics += accruals;
-                
-                graph.exportAllSql(currentFeatureset, semantics, timeLimit, true, true, parser, size);
+
+                graph.exportAllSql(
+                    currentFeatureset,
+                    semantics,
+                    timeLimit,
+                    true,
+                    true,
+                    parser,
+                    size
+                );
 
                 //parser.resume();
                 if (size >= file_.size) {
@@ -3286,17 +4128,16 @@ d3.select("#exportFile").on("click", function() {
 
                     }, 30000);*/
                 }
-            }
+            },
         });
     }
 });
 
-d3.select('#overallCheckBox').on('change', function () {
-
+d3.select("#overallCheckBox").on("change", function () {
     // This option is implemented for the hardcoded semantics, which are almost always the used ones.
     // To call other semantics it will be necessary to redo the output.
 
-    if(! $(this).is(':checked')){
+    if (!$(this).is(":checked")) {
         return;
     }
 
@@ -3307,7 +4148,7 @@ d3.select('#overallCheckBox').on('change', function () {
     semantics += "grounded,";
     semantics += "categoriser,";
 
-    var select = document.getElementById('featureset'),
+    var select = document.getElementById("featureset"),
         i = select.selectedIndex,
         currentFeatureset = select.options[i].text;
 
@@ -3321,14 +4162,15 @@ d3.select('#overallCheckBox').on('change', function () {
         }
     }
 
-    if (! hasTruth) {
-        document.getElementById('overallResults').innerHTML = "<b>No GroundTruth column</b>";
+    if (!hasTruth) {
+        document.getElementById("overallResults").innerHTML =
+            "<b>No GroundTruth column</b>";
     }
 });
 
-d3.select('#strengthCheckBox').on('change', function () {
-    if (document.getElementById('row_input').value != "") {
-        row = JSON.parse(document.getElementById('row_input').value);
+d3.select("#strengthCheckBox").on("change", function () {
+    if (document.getElementById("row_input").value != "") {
+        row = JSON.parse(document.getElementById("row_input").value);
         var hasWeight = false;
         for (key in row) {
             if (key.indexOf("Weight_") !== -1) {
@@ -3338,17 +4180,19 @@ d3.select('#strengthCheckBox').on('change', function () {
         }
 
         if (hasWeight) {
-            var event = new Event('change');
-            document.getElementById('row_input').dispatchEvent(event);
+            var event = new Event("change");
+            document.getElementById("row_input").dispatchEvent(event);
         } else {
-            window.alert("No weights imported for any column. Strength of arguments can't be used. Import colum \"Weigh_<Column>\" to define feature strenghts.", "No weights error.");
+            window.alert(
+                'No weights imported for any column. Strength of arguments can\'t be used. Import colum "Weigh_<Column>" to define feature strenghts.',
+                "No weights error."
+            );
             document.getElementById("strengthCheckBox").checked = false;
         }
     }
 });
 
-d3.select('#strengthCheckBoxExport').on('change', function () {
-
+d3.select("#strengthCheckBoxExport").on("change", function () {
     var hasWeight = false;
     for (key in allData_[0]) {
         if (key.indexOf("Weight_") !== -1) {
@@ -3357,26 +4201,27 @@ d3.select('#strengthCheckBoxExport').on('change', function () {
         }
     }
 
-    if (! hasWeight) {
-        window.alert("No weights imported for any column. Strength of arguments can't be used. Import colum \"Weigh_<Column>\" to define feature strenghts.", "No weights error.");
+    if (!hasWeight) {
+        window.alert(
+            'No weights imported for any column. Strength of arguments can\'t be used. Import colum "Weigh_<Column>" to define feature strenghts.',
+            "No weights error."
+        );
         document.getElementById("strengthCheckBoxExport").checked = false;
     }
 });
 
-
 // Call semantics in selection table row input
-d3.select('#row_input').on('change', function () {
-
+d3.select("#row_input").on("change", function () {
     var row = JSON.parse(this.value);
 
-    var select = document.getElementById('semanticsVisualization'),
+    var select = document.getElementById("semanticsVisualization"),
         i = select.selectedIndex,
         semantic = select.options[i].text;
 
     // Active all nodes, compute its degree and define initial css class
     // based on the current row.
 
-    var select = document.getElementById('featureset'),
+    var select = document.getElementById("featureset"),
         i = select.selectedIndex,
         currentFeatureset = select.options[i].text;
 
@@ -3384,9 +4229,9 @@ d3.select('#row_input').on('change', function () {
 
     var api;
     if (semantic == "Grounded") {
-        api = "grounded"
+        api = "grounded";
     } else if (semantic == "Preferred") {
-        api = "preferred"
+        api = "preferred";
     } else if (semantic == "Expert System") {
         api = "expert";
     } else if (semantic == "Admissible") {
@@ -3409,13 +4254,12 @@ d3.select('#row_input').on('change', function () {
 
     // Include the first extension in the extension list.
     var extensionDiv = document.getElementById("extensions");
-    extensionDiv.style.visibility = 'visible';
+    extensionDiv.style.visibility = "visible";
     var extensionList = document.getElementById("extensionNumber");
 
     // Remove previous options in the list
     if (extensionList.options.length > 0) {
-        for(var i = extensionList.options.length - 1 ; i >= 0 ; i--)
-        {
+        for (var i = extensionList.options.length - 1; i >= 0; i--) {
             extensionList.remove(i);
         }
     }
@@ -3435,7 +4279,11 @@ d3.select('#row_input').on('change', function () {
             extensionTotal.innerHTML = "of <b>" + 1 + "</b>";
             graph.semanticsPerRow(jsonExtension, false, true);
         } else {
-            getExtension(addressCall_ + api + '/' + graph.getStringGraph(), api, callsemantics);
+            getExtension(
+                addressCall_ + api + "/" + graph.getStringGraph(),
+                api,
+                callsemantics
+            );
         }
     } else {
         extensionTotal.innerHTML = "of <b>" + 1 + "</b>";
@@ -3460,7 +4308,12 @@ d3.select('#row_input').on('change', function () {
         var jsonExtension = JSON.parse(extension);
         //console.log(jsonExtension);
 
-        if (api == "preferred" || api == "admissible" || api == "stable" || api == "semistable") {
+        if (
+            api == "preferred" ||
+            api == "admissible" ||
+            api == "stable" ||
+            api == "semistable"
+        ) {
             var nExtensions = jsonExtension.length;
 
             // Add the extension options
@@ -3478,7 +4331,12 @@ d3.select('#row_input').on('change', function () {
             // The other exensions are computed through the extensionList
             // options
             graph.semanticsPerRow(jsonExtension[0]);
-        } else if (api == "grounded" || api == "expert" || api == "eager" || api == "ideal") {
+        } else if (
+            api == "grounded" ||
+            api == "expert" ||
+            api == "eager" ||
+            api == "ideal"
+        ) {
             // Grounded semantics only have 1 extension
             extensionTotal.innerHTML = "of <b>" + 1 + "</b>";
             graph.semanticsPerRow(jsonExtension);
@@ -3491,16 +4349,16 @@ d3.select('#row_input').on('change', function () {
 });
 
 // Call semantics in the extension list option
-d3.select("#extensionNumber").on("change", function() {
-    var select = document.getElementById('semanticsVisualization'),
+d3.select("#extensionNumber").on("change", function () {
+    var select = document.getElementById("semanticsVisualization"),
         i = select.selectedIndex,
         semantic = select.options[i].text;
 
     var api;
     if (semantic == "Grounded") {
-        api = "grounded"
+        api = "grounded";
     } else if (semantic == "Preferred") {
-        api = "preferred"
+        api = "preferred";
     } else if (semantic == "Expert System") {
         api = "expert";
     } else if (semantic == "Admissible") {
@@ -3520,7 +4378,11 @@ d3.select("#extensionNumber").on("change", function() {
     var graphString = "" + graph.getStringGraph();
 
     if (graphString.length > 0) {
-        getExtension(addressCall_ + api + '/' + graph.getStringGraph(), api, callsemantics);
+        getExtension(
+            addressCall_ + api + "/" + graph.getStringGraph(),
+            api,
+            callsemantics
+        );
     } else {
         graph.semanticsPerRow("");
     }
@@ -3528,13 +4390,23 @@ d3.select("#extensionNumber").on("change", function() {
     function callsemantics(extension, api) {
         var jsonExtension = JSON.parse(extension);
 
-        if (api == "preferred" || api == "admissible" || api == "stable" || api == "semistable") {
+        if (
+            api == "preferred" ||
+            api == "admissible" ||
+            api == "stable" ||
+            api == "semistable"
+        ) {
             var extensionList = document.getElementById("extensionNumber");
             // Getting only the first preferred extension.
             // The other exensions are computed through the extensionList
             // options
             graph.semanticsPerRow(jsonExtension[extensionList.selectedIndex]);
-        } else if (api == "grounded" || api == "expert" || api == "eager" || api == "ideal") {
+        } else if (
+            api == "grounded" ||
+            api == "expert" ||
+            api == "eager" ||
+            api == "ideal"
+        ) {
             // Grounded semantics only have 1 extension
             extensionTotal.innerHTML = "of <b>" + 1 + "</b>";
             graph.semanticsPerRow(jsonExtension);
@@ -3542,25 +4414,21 @@ d3.select("#extensionNumber").on("change", function() {
     }
 });
 
-function getExtension(url, api, callback) // How can I use this callback?
-{
+function getExtension(url, api, callback) {
+    // How can I use this callback?
     var request = new XMLHttpRequest();
-    request.onreadystatechange = function()
-    {
-        if (request.readyState == 4 && request.status == 200)
-        {
+    request.onreadystatechange = function () {
+        if (request.readyState == 4 && request.status == 200) {
             return callback(request.responseText, api); // Another callback here
         }
     };
 
-    request.open('GET', url);
+    request.open("GET", url);
     request.send();
 }
 
-d3.select("#zoomin").on("click", function(event){
-
-    var zoom = d3.behavior.zoom()
-    .on('zoom', function(){
+d3.select("#zoomin").on("click", function (event) {
+    var zoom = d3.behavior.zoom().on("zoom", function () {
         graph.zoomed.call(graph);
     });
 
@@ -3571,10 +4439,8 @@ d3.select("#zoomin").on("click", function(event){
     zoom.event(graph.svg);
 });
 
-d3.select("#zoomout").on("click", function(event){
-
-    var zoom = d3.behavior.zoom()
-    .on('zoom', function(){
+d3.select("#zoomout").on("click", function (event) {
+    var zoom = d3.behavior.zoom().on("zoom", function () {
         graph.zoomed.call(graph);
     });
 
@@ -3584,12 +4450,3 @@ d3.select("#zoomout").on("click", function(event){
     zoom.scale(graph.zoomScale);
     zoom.event(graph.svg);
 });
-
-
-
-
-
-
-
-
-
