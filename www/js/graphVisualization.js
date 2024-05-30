@@ -1362,7 +1362,7 @@ function create(d3, saveAs, Blob) {
                     onlyConclusions += String(prop) + ",";
                     previousValue = extension[prop];
                     // If next value equal previous value it is also inserted
-                } else if (previousValue == extension[prop]) {
+                } else if (Math.abs(previousValue - extension[prop]) < 0.000001) {
                     onlyConclusions += "," + String(prop) + ",";
                     // If new greater value has been found restart extension
                 } else if (previousValue < extension[prop]) {
@@ -1390,11 +1390,7 @@ function create(d3, saveAs, Blob) {
 
                 // If it is rankBased not all nodes in the extension are accepted.
                 // Only the nodes with a conclusion and highest rank are accepted.
-                if (
-                    (hasConclusion && !rankBased) ||
-                    (rankBased &&
-                        onlyConclusions.indexOf("," + d.title + ",") != -1)
-                ) {
+                if ((hasConclusion && !rankBased) || (rankBased && onlyConclusions.indexOf("," + d.title + ",") != -1)) {
                     valuesAccepted[nAccepted] = d.value;
                     nAccepted++;
 
@@ -1410,27 +1406,10 @@ function create(d3, saveAs, Blob) {
 
                     var indexConclusion = 0;
 
-                    for (
-                        var i = 0;
-                        i < conclusionsByFeatureset_[currentFeatureset].length;
-                        i++
-                    ) {
-                        if (
-                            conclusionsByFeatureset_[currentFeatureset][i]
-                                .conclusion == conclusionNoRange
-                        ) {
-                            if (
-                                parseFloat(
-                                    conclusionsByFeatureset_[currentFeatureset][
-                                        i
-                                    ].c_to
-                                ) > highestConclustion
-                            ) {
-                                highestConclustion = parseFloat(
-                                    conclusionsByFeatureset_[currentFeatureset][
-                                        i
-                                    ].c_to
-                                );
+                    for (var i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
+                        if (conclusionsByFeatureset_[currentFeatureset][i].conclusion == conclusionNoRange) {
+                            if (parseFloat(conclusionsByFeatureset_[currentFeatureset][i].c_to) > highestConclustion) {
+                                highestConclustion = parseFloat(conclusionsByFeatureset_[currentFeatureset][i].c_to);
                             }
                             indexConclusion = i;
                             break;
@@ -1476,19 +1455,12 @@ function create(d3, saveAs, Blob) {
                     currentNode.classed(consts.onlyActivatedGClass, true);
                     currentNode.classed(consts.acceptedGClass, false);
                 } else {
-                    if (
-                        !rankBased ||
-                        (rankBased &&
-                            onlyConclusions.indexOf("," + d.title + ",") != -1)
-                    ) {
+                    if (!rankBased ||(rankBased && onlyConclusions.indexOf("," + d.title + ",") != -1)) {
                         currentNode.classed(consts.acceptedGClass, true);
                         currentNode.classed(consts.onlyActivatedGClass, false);
                     }
 
-                    if (
-                        rankBased &&
-                        onlyConclusions.indexOf("," + d.title + ",") == -1
-                    ) {
+                    if (rankBased && onlyConclusions.indexOf("," + d.title + ",") == -1) {
                         currentNode.classed(consts.circleGClass, false);
                         currentNode.classed(consts.deniedGClass, true);
                         currentNode.classed(consts.acceptedGClass, false);
@@ -1507,15 +1479,8 @@ function create(d3, saveAs, Blob) {
         });
 
         var numberConclusions = "";
-        for (
-            i = 0;
-            i < conclusionsByFeatureset_[currentFeatureset].length;
-            i++
-        ) {
-            numberConclusions +=
-                String(nConclusions[i]) +
-                ":" +
-                conclusionsByFeatureset_[currentFeatureset][i].conclusion;
+        for (i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
+            numberConclusions += String(nConclusions[i]) + ":" + conclusionsByFeatureset_[currentFeatureset][i].conclusion;
             if (i < conclusionsByFeatureset_[currentFeatureset].length - 1) {
                 numberConclusions += ";";
             }
@@ -1525,11 +1490,7 @@ function create(d3, saveAs, Blob) {
         iHighestCardConclusion[0] = 0;
         var overallHCC = acceptedValue[0] / nConclusions[0];
         var nHigh = 1;
-        for (
-            i = 1;
-            i < conclusionsByFeatureset_[currentFeatureset].length;
-            i++
-        ) {
+        for (i = 1; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
             if (nConclusions[i] > nConclusions[iHighestCardConclusion[0]]) {
                 iHighestCardConclusion = [];
                 iHighestCardConclusion[0] = i;
@@ -1562,11 +1523,7 @@ function create(d3, saveAs, Blob) {
 
                 // If it is rankBased not all nodes in the extension are accepted.
                 // Only the nodes with a conclusion and highest rank are accepted.
-                if (
-                    (hasConclusion && !rankBased) ||
-                    (rankBased &&
-                        onlyConclusions.indexOf("," + d.title + ",") != -1)
-                ) {
+                if ((hasConclusion && !rankBased) || (rankBased && onlyConclusions.indexOf("," + d.title + ",") != -1)) {
                     var conclusionNoRange = "";
                     for (var i = 0; i < premiseAndConclusion[1].length; i++) {
                         if (premiseAndConclusion[1][i] != " ") {
@@ -1576,7 +1533,7 @@ function create(d3, saveAs, Blob) {
                         }
                     }
 
-                    console.log(conclusionNoRange);
+                    console.log("Is there range? " + conclusionNoRange);
 
                     for (i = 0; i < iHighestCardConclusion.length; i++) {
                         var highestConclusion =
@@ -1595,11 +1552,7 @@ function create(d3, saveAs, Blob) {
 
         // Find number of conclusions that are not in the highest cardinality set(s)
         var nNotHigh = 0;
-        for (
-            i = 0;
-            i < conclusionsByFeatureset_[currentFeatureset].length;
-            i++
-        ) {
+        for (i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
             if (nConclusions[i] < nConclusions[iHighestCardConclusion[0]]) {
                 nNotHigh += nConclusions[i];
             }
@@ -1607,11 +1560,7 @@ function create(d3, saveAs, Blob) {
 
         if (nAccepted > 0) {
             // Round index to two decimals
-            for (
-                var i = 0;
-                i < conclusionsByFeatureset_[currentFeatureset].length;
-                i++
-            ) {
+            for (var i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
                 if (i > 0) {
                     accrual += "<br>";
                 }
@@ -1791,11 +1740,7 @@ function create(d3, saveAs, Blob) {
         // Vector of values accepted to calculate the median
         var valuesAccepted = [];
 
-        for (
-            i = 0;
-            i < conclusionsByFeatureset_[currentFeatureset].length;
-            i++
-        ) {
+        for (i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
             nConclusions[i] = 0;
             acceptedValue[i] = 0;
         }
@@ -1833,7 +1778,7 @@ function create(d3, saveAs, Blob) {
                     onlyConclusions += String(prop) + ",";
                     previousValue = extension[prop];
                     // If next value equal previous value it is also inserted
-                } else if (previousValue == extension[prop]) {
+                } else if (Math.abs(previousValue - extension[prop]) < 0.000001) {
                     onlyConclusions += "," + String(prop) + ",";
                     // If new greater value has been found restart extension
                 } else if (previousValue < extension[prop]) {
@@ -1861,15 +1806,12 @@ function create(d3, saveAs, Blob) {
 
                 // If it is rankBased not all nodes in the extension are accepted.
                 // Only the nodes with a conclusion and highest rank are accepted.
-                if (
-                    (hasConclusion && !rankBased) ||
-                    (rankBased &&
-                        onlyConclusions.indexOf("," + d.title + ",") != -1)
-                ) {
+                if ((hasConclusion && !rankBased) || (rankBased && onlyConclusions.indexOf("," + d.title + ",") != -1)) {
+
                     valuesAccepted[nAccepted] = d.value;
                     nAccepted++;
 
-                    var conclusionNoRange = "";
+                    var conclusionNoRange = ""; // Conclusion level
 
                     for (var i = 0; i < premiseAndConclusion[1].length; i++) {
                         if (premiseAndConclusion[1][i] != " ") {
@@ -1882,28 +1824,11 @@ function create(d3, saveAs, Blob) {
                     var indexConclusion = 0;
                     //console.log("data");
                     //console.log(conclusionsByFeatureset_[currentFeatureset]);
-                    for (
-                        var i = 0;
-                        i < conclusionsByFeatureset_[currentFeatureset].length;
-                        i++
-                    ) {
-                        if (
-                            conclusionsByFeatureset_[currentFeatureset][i]
-                                .conclusion == conclusionNoRange
-                        ) {
+                    for (var i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
+                        if (conclusionsByFeatureset_[currentFeatureset][i].conclusion == conclusionNoRange) {
                             //console.log(conclusionsByFeatureset_[currentFeatureset][i].c_to);
-                            if (
-                                parseFloat(
-                                    conclusionsByFeatureset_[currentFeatureset][
-                                        i
-                                    ].c_to
-                                ) > highestConclustion
-                            ) {
-                                highestConclustion = parseFloat(
-                                    conclusionsByFeatureset_[currentFeatureset][
-                                        i
-                                    ].c_to
-                                );
+                            if (parseFloat(conclusionsByFeatureset_[currentFeatureset][i].c_to) > highestConclustion) {
+                                highestConclustion = parseFloat(conclusionsByFeatureset_[currentFeatureset][i].c_to);
                             }
                             //console.log("h: " + highestConclustion);
                             indexConclusion = i;
@@ -1922,11 +1847,7 @@ function create(d3, saveAs, Blob) {
 
         // Define string with the number of arguments by conclusions
         var numberConclusions = "";
-        for (
-            i = 0;
-            i < conclusionsByFeatureset_[currentFeatureset].length;
-            i++
-        ) {
+        for (i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
             numberConclusions +=
                 String(nConclusions[i]) +
                 ":" +
@@ -2541,9 +2462,26 @@ function create(d3, saveAs, Blob) {
                                             var link =
                                                 document.createElement("a");
                                             link.setAttribute("href", csvUrl);
+
+                                            var currentGraph =
+                                                document.getElementById(
+                                                    "featuresetgraph"
+                                                ).value;
+                                            var select =
+                                                    document.getElementById(
+                                                        "featureset"
+                                                    ),
+                                                i = select.selectedIndex;
+
+                                            var currentFeatureset =
+                                                select.options[i].text;
+
                                             link.setAttribute(
                                                 "download",
-                                                "my_data.csv"
+                                                currentFeatureset +
+                                                    "_" +
+                                                    currentGraph +
+                                                    ".csv"
                                             );
                                             document.body.appendChild(link); // Required for FF
 
@@ -2704,7 +2642,7 @@ function create(d3, saveAs, Blob) {
                                 )
                             );
                         }
-                        // Not unique extension semantics
+                    // Not unique extension semantics
                     } else {
                         var sameSizeExtension = 0;
 
@@ -2714,12 +2652,8 @@ function create(d3, saveAs, Blob) {
                             finalIndex[i] = 0;
                         }
 
-                        if (
-                            jsonExtension[ei].length == 1 &&
-                            jsonExtension[ei][0].length == 0
-                        ) {
-                            // There is no extension. Push undefined so it won't
-                            // appear in the csv
+                        if (jsonExtension[ei].length == 1 && jsonExtension[ei][0].length == 0) {
+                            // There is no extension. Push undefined so it won't appear in the csv
                             if (!invisible) {
                                 row.push(
                                     graph.semanticsPerRow(
@@ -2806,7 +2740,8 @@ function create(d3, saveAs, Blob) {
                         row.push(finalIndexString.toString());
                     }
                 }
-
+                
+                //console.log(row);
                 data.push(row);
             }
 
