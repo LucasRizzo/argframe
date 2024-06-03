@@ -89,9 +89,9 @@ function create(d3, saveAs, Blob) {
             .attr("markerHeight", 3.5)
             .attr("orient", "auto")
             .append("svg:path")
-            .attr("d", "M0,-5L10,0L0,5");
-        //.attr("fill", "#FF5733");
-        //.attr("fill", "#000000");
+            .attr("d", "M0,-5L10,0L0,5")
+            .attr("fill", "#FF5733");
+            //.attr("fill", "#000000");
 
         // Hovered
         defs.append("svg:marker")
@@ -3509,24 +3509,22 @@ function create(d3, saveAs, Blob) {
                             "</b>: " +
                             d.tooltip +
                             "<br/><br/>" +
-                            "<i>Source attack activated:</i> " +
+                            "<b>Attacks info</b><br><i># Source attack activated:</i> " +
                             String(nSourceActive) +
                             ". " +
                             sourceActive +
-                            "<br/><i>Target attack activated:</i> " +
+                            "<br/><i># Target attack activated:</i> " +
                             String(nTargetActive) +
                             ". " +
                             targetActive +
                             "<br/><br/>" +
-                            "<i>All source attacks:</i> " +
-                            String(nSourceOriginal) +
-                            ". " +
+                            "<i>All source attacks (" + String(nSourceOriginal) + "):</i> " +
                             sourceOriginal +
-                            "<br/><i>All target attacks:</i> " +
-                            String(nTargetOriginal) +
-                            ". " +
+                            "<br/><i>All target attacks(" + String(nTargetOriginal) + "):</i> " +
                             targetOriginal +
-                            "<br/><br/>"
+                            "<br/>" +
+                            thisGraph.getLevelsDescription(d.tooltip) +
+                            "<br/>"
                     );
 
                 tooltip.style("visibility", "visible");
@@ -3558,6 +3556,102 @@ function create(d3, saveAs, Blob) {
         // remove old nodes
         thisGraph.circles.exit().remove();
     };
+
+    GraphCreator.prototype.get_from_to = function(level, attribute) {
+        // Given a level-attribute pair, find the corresponding numeric range
+        // of the level for the current feature set selected.
+        var select = document.getElementById('featureset'),
+        i = select.selectedIndex;
+
+        if (i == -1) {
+            return;
+        }
+
+        currentFeatureset = select.options[i].text;
+
+        // Run through all attributes and their respective level in order
+        // to find the current premise's range
+        for (var attr = 0; attr < attributesByFeatureset_[currentFeatureset].length; attr++) {
+
+            var correctAttributeLevel = attributesByFeatureset_[currentFeatureset][attr].attribute == attribute &&
+                                        attributesByFeatureset_[currentFeatureset][attr].a_level == level;
+
+            if (correctAttributeLevel) {
+
+                var from = attributesByFeatureset_[currentFeatureset][attr].a_from;
+                var to = attributesByFeatureset_[currentFeatureset][attr].a_to;
+
+                return [from, to];
+            }
+        }
+    }
+
+
+    GraphCreator.prototype.getLevelsDescription = function(argument) {
+
+        var result = "<br><b>Attributes used</b><br>";
+        
+        // Remove conclusion
+        var premiseAndConclusion = String(argument).split(" -> ");
+        argument = premiseAndConclusion[0];
+
+        // Run through all premises of the node's argument
+        var premises = argument.split(" AND ");
+
+        // Each premise can have zero or many OR clauses. For example "('low fatigue' OR 'high fatigue')"
+        for(let premise of premises){
+
+            // Remove parathesis and quotes from the premise
+            premise = premise.replace("(", "").replace(")", "").replace(/"/g, "");
+
+            // Check if premise has OR operator
+            if (premise.includes(" OR ")) {
+
+                // Break the premise in all the level-attribute pairs
+                var allLevelandAttributes = premise.split(" OR ");
+
+                // Get the attribute of the premise (it should be the same attribute for all level-attribute pairs)
+                var attribute = allLevelandAttributes[1].split(" ")[1];
+
+                // Concatenate attribute to the tooltip
+                result += "<i>" + attribute + "</i>: "
+
+                // Concatenate all the levels (as ranges) of this attribute to the tooltip
+                for (let levelAndAttribute of allLevelandAttributes) {
+
+                    // Split level-attribute pairs
+                    levelAndAttribute = levelAndAttribute.split(" ")
+
+                    // Get the min-max of the level of the attribtue
+                    var from_to = graph.get_from_to(levelAndAttribute[0], levelAndAttribute[1]);
+                    
+                    // From and to are the same. Categorical level
+                    if (Math.abs(from_to[0] - from_to[1]) < 0.00001) {
+                        result += from_to[0] + ", ";
+                    } else {
+                        result += "(" + from_to[0] + ", " + from_to[1] + "), ";
+                    }
+                }
+
+                // Remove last ", "
+                result = result.slice(0, -2);
+            } else {  // There is no " OR " operator. It is a single level-attribute pair
+                var level = premise.split(" ")[0];
+                var attribute = premise.split(" ")[1];
+                var from_to = graph.get_from_to(level, attribute);
+
+                if (Math.abs(from_to[0] - from_to[1]) < 0.00001) {
+                    result += "<i>" + attribute + "</i>: " + from_to[0];
+                } else {
+                    result += "<i>" + attribute + "</i>: (" + from_to[0] + ", " + from_to[1] + ")";
+                }
+            }
+
+            result += "<br>";
+        }
+
+        return result;
+    }
 
     GraphCreator.prototype.zoomed = function () {
         this.state.justScaleTransGraph = true;
