@@ -928,6 +928,9 @@ function createEditionGraph(d3, saveAs, Blob) {
         // Run through all premises of the node's argument
         var premises = argument.split(" AND ");
 
+        // Dictionary to be built with attributes as keys, and numeric levels as values
+        var attribute_values = {};
+
         // Each premise can have zero or many OR clauses. For example "('low fatigue' OR 'high fatigue')"
         for(let premise of premises){
 
@@ -943,42 +946,61 @@ function createEditionGraph(d3, saveAs, Blob) {
                 // Get the attribute of the premise (it should be the same attribute for all level-attribute pairs)
                 var attribute = allLevelandAttributes[1].split(" ")[1];
 
-                // Concatenate attribute to the tooltip
-                result += "<i>" + attribute + "</i>: "
-
                 // Concatenate all the levels (as ranges) of this attribute to the tooltip
                 for (let levelAndAttribute of allLevelandAttributes) {
 
                     // Split level-attribute pairs
                     levelAndAttribute = levelAndAttribute.split(" ")
+                    
+                    if (! attribute_values[levelAndAttribute[1]]) {
+                        attribute_values[levelAndAttribute[1]] = []
+                    }
 
                     // Get the min-max of the level of the attribtue
                     var from_to = graph.get_from_to(levelAndAttribute[0], levelAndAttribute[1]);
                     
                     // From and to are the same. Categorical level
                     if (Math.abs(from_to[0] - from_to[1]) < 0.00001) {
-                        result += from_to[0] + ", ";
+                        attribute_values[levelAndAttribute[1]].push(from_to[0])
                     } else {
-                        result += "(" + from_to[0] + ", " + from_to[1] + "), ";
+                        attribute_values[levelAndAttribute[1]].push(from_to)
                     }
                 }
 
-                // Remove last ", "
-                result = result.slice(0, -2);
             } else {  // There is no " OR " operator. It is a single level-attribute pair
                 var level = premise.split(" ")[0];
                 var attribute = premise.split(" ")[1];
                 var from_to = graph.get_from_to(level, attribute);
 
+                if (! attribute_values[attribute]) {
+                    attribute_values[attribute] = []
+                }
+
                 if (Math.abs(from_to[0] - from_to[1]) < 0.00001) {
-                    result += "<i>" + attribute + "</i>: " + from_to[0];
+                    attribute_values[attribute].push(from_to[0]);
                 } else {
-                    result += "<i>" + attribute + "</i>: (" + from_to[0] + ", " + from_to[1] + ")";
+                    attribute_values[attribute].push(from_to);
+                }
+            }
+        }
+
+        // Go over the dictionary and add it to the correspoding resulting html
+        Object.keys(attribute_values).forEach(key => {
+            result += "<i>" + key + "</i>: ";
+
+            for (let level of attribute_values[key]) {
+                if (Array.isArray(level) ) {
+                    result += "(" + level[0] + ", " + level[1] + "), ";
+                } else {
+                    result += level + ", ";
                 }
             }
 
+            // Remove last ", "
+            result = result.slice(0, -2);
             result += "<br>";
-        }
+
+        });
 
         return result;
     }
