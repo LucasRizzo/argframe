@@ -410,7 +410,7 @@ class DataSetDAO {
     }
 
     public function featuresetArguments() {
-        $sql = 'SELECT argument, conclusion, x, y, label, graph, featureset FROM arguments WHERE featureset '  .
+        $sql = 'SELECT argument, conclusion, x, y, label, graph, featureset, weight FROM arguments WHERE featureset '  .
                'IN (SELECT DISTINCT featureset FROM user_featureset WHERE email = "' . $_SESSION["username"] . '");';
         $stmt = $this->dbManager->prepareQuery ($sql);
         $this->dbManager->executeQuery ($stmt);
@@ -903,8 +903,8 @@ class DataSetDAO {
             // The last position of argument is empty because it is the template filled by
             // the javascript
             if($value != "") {
-                $sql .= " INSERT INTO arguments (argument, conclusion, x, y, label, graph, featureset) VALUES ";
-                $sql .= "(?, ?, ?, ?, ?, ?, ?);";
+                $sql .= " INSERT INTO arguments (argument, conclusion, x, y, label, graph, featureset, weight) VALUES ";
+                $sql .= "(?, ?, ?, ?, ?, ?, ?, ?);";
             }
         }
 
@@ -927,6 +927,12 @@ class DataSetDAO {
                 $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editGraphName"], $this->dbManager->STRING_TYPE);
                 $bindPosition++;
                 $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
+                $bindPosition++;
+                if ($_POST["editWeight"][$key] == "NULL") {
+                    $this->dbManager->bindValue($stmt, $bindPosition, null, $this->dbManager->STRING_TYPE);
+                } else {
+                    $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editWeight"][$key], $this->dbManager->STRING_TYPE);
+                }
                 $bindPosition++;
             }
         }
@@ -954,8 +960,8 @@ class DataSetDAO {
             // The last position of argument is empty because it is the template filled by
             // the javascript
             if($value != "") {
-                $sql .= " INSERT INTO arguments (argument, conclusion, x, y, label, graph, featureset) VALUES ";
-                $sql .= "(?, ?, ?, ?, ?, ?, ?);";
+                $sql .= " INSERT INTO arguments (argument, conclusion, x, y, label, graph, featureset, weight) VALUES ";
+                $sql .= "(?, ?, ?, ?, ?, ?, ?, ?);";
             }
         }
 
@@ -979,6 +985,11 @@ class DataSetDAO {
                 $bindPosition++;
                 $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
                 $bindPosition++;
+                if ($_POST["editWeight"][$key] == "NULL") {
+                    $this->dbManager->bindValue($stmt, $bindPosition, null, $this->dbManager->STRING_TYPE);
+                } else {
+                    $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editWeight"][$key], $this->dbManager->STRING_TYPE);
+                }
             }
         }
 

@@ -730,6 +730,13 @@ function createEditionGraph(d3, saveAs, Blob) {
                     var conclusionsList = document.getElementById('editConclusions');
                     var premiseAndConclusion = String(d.tooltip).split(" -> ");
 
+                    var weight = "None";
+                    if (d.weight != "NULL") {
+                        weight = d.weight;
+                    }
+
+                    document.getElementById("editWeight").value = weight;
+                    
                     validateArgument(premiseAndConclusion[0]);
 
                     if (premiseAndConclusion.length == 2) {
@@ -781,6 +788,7 @@ function createEditionGraph(d3, saveAs, Blob) {
                         document.getElementById("editConclusionFrom").innerHTML = from;
                         document.getElementById("editConclusionTo").innerHTML = to;
                         document.getElementById('editInvertRange').disabled = false;
+
                     } else {
                         // Check if there is a premise before adding any conclusion
                         for (var i = 0; i < conclusionsList.options.length; i++) {
@@ -804,7 +812,9 @@ function createEditionGraph(d3, saveAs, Blob) {
 
                         document.getElementById('editCurrentArgument').value = "";
 
-                        document.getElementById('editLabel'). value = "";
+                        document.getElementById('editLabel').value = "";
+
+                        document.getElementById("editWeight").value = "None";
 
                         document.getElementById("editAddArgument").disabled = true;
 
@@ -959,6 +969,7 @@ function createEditionGraph(d3, saveAs, Blob) {
                     // Get the min-max of the level of the attribtue
                     var from_to = graph.get_from_to(levelAndAttribute[0], levelAndAttribute[1]);
                     
+                    
                     // From and to are the same. Categorical level
                     if (Math.abs(from_to[0] - from_to[1]) < 0.00001) {
                         attribute_values[levelAndAttribute[1]].push(from_to[0])
@@ -1087,8 +1098,6 @@ function createEditionGraph(d3, saveAs, Blob) {
             state = thisGraph.state;
 
         thisGraph.paths = thisGraph.paths.data(thisGraph.edges, function(d){
-            //console.log("D");
-            //console.log(d);
             return String(d.source.id) + "+" + String(d.target.id);
         });
 
@@ -1300,10 +1309,15 @@ function createEditionGraph(d3, saveAs, Blob) {
 
             var levelDescription = thisGraph.getLevelsDescription(d.tooltip);
 
+            var weight = "None"
+            if (d.weight != "NULL") {
+                weight = d.weight;
+            }
+
             if (levelDescription.length < 30) { //Greater than <br><b>Attributes used<b><br>
-                tooltip.selectAll("text").html("<b>" + d.title + "</b>: " + d.tooltip + "<br/><br/><b>Source attacks:</b> " + String(source) + "<br /><b>Target attacks:</b> " + String(target));
+                tooltip.selectAll("text").html("<b>" + d.title + "</b>: " + d.tooltip + "<br/>Weight: " + weight + "<br/><b>Source attacks:</b> " + String(source) + "<br /><b>Target attacks:</b> " + String(target));
             } else {
-                tooltip.selectAll("text").html("<b>" + d.title + "</b>: " + d.tooltip + "<br>" + levelDescription + "<br><b>Source attacks:</b> " + String(source) + "<br /><b>Target attacks:</b> " + String(target));
+                tooltip.selectAll("text").html("<b>" + d.title + "</b>: " + d.tooltip  + "<br/>Weight: " + weight + "<br>" + levelDescription + "<br><b>Source attacks:</b> " + String(source) + "<br /><b>Target attacks:</b> " + String(target));
             }
 
             tooltip.style("visibility", "visible");
@@ -1374,6 +1388,7 @@ function createEditionGraph(d3, saveAs, Blob) {
                        "<input type=\"hidden\" maxlength=\"2000\" name=\"editArgument[]\">" +
                        "<input type=\"hidden\" maxlength=\"40\" name=\"editLabel[]\">" +
                        "<input type=\"hidden\" maxlength=\"40\" name=\"editConclusion[]\">" +
+                       "<input type=\"hidden\" maxlength=\"40\" name=\"editWeight[]\">" +
                        "</div>" +
                        "<div class=\"edit-form-graph\">" +
                        "<input type=\"hidden\" maxlength=\"40\" name=\"editSourceLabel[]\">" +
@@ -1414,6 +1429,8 @@ function createEditionGraph(d3, saveAs, Blob) {
                 $('input[name^="editConclusion"]').last().attr("value", "NULL");
             }
             $('input[name^="editLabel"]').last().attr("value", d.title);
+
+            $('input[name^="editWeight"]').last().attr("value", d.weight);
 
             var controlForm = $('.controlsEdit'),
             currentEntry = $('.edit-form-position:first'),
@@ -1467,10 +1484,12 @@ function createEditionGraph(d3, saveAs, Blob) {
             if (thisGraph.state.selectedNode != null) {
                 var newLabel = document.getElementById('editLabel').value;
                 var newToolTip = document.getElementById('editCurrentArgument').value;
+                var newWeight = document.getElementById('editWeight').value;
 
                 if(d.id == thisGraph.state.selectedNode.id) {
                     d.title = newLabel;
                     d.tooltip = newToolTip;
+                    d.weight = newWeight;
 
                     thisGraph.styleTitle(d3.select(this), d.title);
                     d3.select(this).classed(thisGraph.consts.selectedClass, false);
@@ -1619,8 +1638,8 @@ function createEditionGraph(d3, saveAs, Blob) {
                 } else {
                     tooltip = args_[i].argument;
                 }
-
-                nodes.push({id: id, title: args_[i].label, x: parseFloat(args_[i].x), y: parseFloat(args_[i].y), tooltip: tooltip})
+                
+                nodes.push({id: id, title: args_[i].label, x: parseFloat(args_[i].x), y: parseFloat(args_[i].y), tooltip: tooltip, weight: args_[i].weight})
 
                 indexNode.push(args_[i].label);
 
@@ -1777,7 +1796,6 @@ $("#modalAttackType").on("hidden.bs.modal", function () {
         
 d3.select("#rebuttals-input").on("click", function(){
     d3.event.preventDefault();
-    //console.log("clicou");
     graph.addRebuttals();
 });
 

@@ -17,6 +17,7 @@
                 <input type="hidden" maxlength="2000" name="editArgument[]">
                 <input type="hidden" maxlength="40" name="editLabel[]">
                 <input type="hidden" maxlength="40" name="editConclusion[]">
+                <input type="hidden" maxlength="40" name="editWeight[]">
             </div>
             <div class="edit-form-graph">
                 <input type="hidden" maxlength="40" name="editSourceLabel[]">
@@ -73,6 +74,15 @@
                     <br><br>&nbsp
                     <button class="btn btn-danger" disabled="true" type="submit" id="editDeletePremise" ><span class="glyphicon glyphicon-erase"></span> Remove last inclusion</button>
                     </fieldset>
+                </form>
+                </div>
+
+                <div class="well">
+                <form class="form-inline">
+
+                    <label for="sel1">&nbsp Set weight: &nbsp</label>
+                    <input type="number" class="form-control" id="editWeight" placeholder="None">
+
                 </form>
                 </div>
 
