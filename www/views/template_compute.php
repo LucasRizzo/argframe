@@ -125,12 +125,19 @@ ini_set('php_max_size', '100M');
             <div class="modal-body">
                 <form class="form-inline" id="formSemantics">
                     
-                    <div class="form-group">
+                    <!-- 
+                    This is a legacy option, which allows the import of weights for features. The weight of each feature
+                    is used to calculate the weight of the arguments employing them. Consequently, arguments with lower 
+                    weight cannot attack arguments with higher weight, and such attacks are removed. This option does not
+                    work very well if a single argument employs multiple features. There is now a new option to import 
+                    argument weights directly and use the concept of an inconsistency budget to determine which attacks 
+                    should be kept. -->
+                    <div class="form-group" style="display: none;">
                         <label class="checkbox-inline"><input id="strengthCheckBoxExport" name="strengthCheckBoxExport" type="checkbox" value="Empty" class="check2">Strength of arguments</label></br>
                         _______________________
-                    </div>
-                    <br>
-                    <br>
+                        <br>
+                        <br>
+                    </div>                   
                     <b>Semantics</b></br></br>
                     <div class="form-group">
                         <label class="checkbox-inline"><input name="semanticsExport" type="checkbox" value="Expert System">Expert System</label></br>
@@ -201,12 +208,20 @@ ini_set('php_max_size', '100M');
         <div class="well well-lg">
             <span id="maxTableWarning"></span>
             <form class="form-inline" id="formOverall">
-                <div class="form-group">
-                    <label class="checkbox-inline"><input id="strengthCheckBox" name="strengthCheckBox" type="checkbox" disabled="true" value="Empty" class="check2">Strength of arguments</label></br>
+                <!-- 
+                This is a legacy option, which allows the import of weights for features in the dataset.
+                The weight of each feature is used to calculate the weight of the arguments employing them. 
+                Consequently, arguments with lower weight cannot attack arguments with higher weight, and such attacks 
+                are removed. This option does not work very well if a single argument employs multiple features. There 
+                is now a new option to import argument weights directly and use the concept of an inconsistency budget 
+                to determine which attacks should be kept.  -->
+                <div class="form-group" style="display: none;">
+                    <label class="checkbox-inline"><input id="strengthCheckBox" name="strengthCheckBox" type="checkbox" value="Empty" class="check2">Strength of arguments</label></br>
                     _______________________
+                    <br>
+                    <br>
                 </div>
             </form>
-            <br>
             
             <div class='form-inline'>
                 <label for="sel1">Select accrual: &nbsp</label>
@@ -299,7 +314,93 @@ ini_set('php_max_size', '100M');
                 <option>Admissible</option>
             </select>
         </div>
-        <div class='form-inline' style="visibility: hidden" id="extensions">
+
+        <style>
+            /* Style of the range used for the inconsistency budget. Very weird. */
+            input[type="range"] {
+                -webkit-appearance: none;
+                width: 100%;
+                height: 8px;
+                background: #ddd;
+                outline: none;
+                opacity: 0.7;
+                transition: opacity .2s;
+            }
+
+            input[type="range"]:hover {
+                opacity: 1;
+            }
+
+            input[type="range"]::-webkit-slider-runnable-track {
+                width: 100%;
+                height: 8px;
+                cursor: pointer;
+                background: darkgrey;
+                border-radius: 4px;
+            }
+
+            input[type="range"]::-webkit-slider-thumb {
+                height: 16px;
+                width: 16px;
+                border-radius: 50%;
+                background: #555; /* Darker shade of grey for the thumb */
+                cursor: pointer;
+                -webkit-appearance: none;
+                margin-top: -4px; /* Adjust the margin to align the thumb with the track */
+            }
+
+            input[type="range"]::-moz-range-track {
+                width: 100%;
+                height: 8px;
+                cursor: pointer;
+                background: darkgrey;
+                border-radius: 4px;
+            }
+
+            input[type="range"]::-moz-range-thumb {
+                height: 16px;
+                width: 16px;
+                border-radius: 50%;
+                background: #555; /* Darker shade of grey for the thumb */
+                cursor: pointer;
+            }
+
+            input[type="range"]::-ms-track {
+                width: 100%;
+                height: 8px;
+                cursor: pointer;
+                background: transparent;
+                border-color: transparent;
+                color: transparent;
+            }
+
+            input[type="range"]::-ms-fill-lower {
+                background: darkgrey;
+                border-radius: 4px;
+            }
+
+            input[type="range"]::-ms-fill-upper {
+                background: darkgrey;
+                border-radius: 4px;
+            }
+
+            input[type="range"]::-ms-thumb {
+                height: 16px;
+                width: 16px;
+                border-radius: 50%;
+                background: #555; /* Darker shade of grey for the thumb */
+                cursor: pointer;
+                margin-top: -4px; /* Adjust the margin to align the thumb with the track */
+            }
+        </style>
+
+        <div class="form-inline" id="inconsistency-div" style="margin-top: 5px;">
+            <label for="sel1" class="mr-2">Inconsistency budget: &nbsp </label>0
+            <input type="range" id="inconsistencyRange" name="points2" style="box-shadow: none !important; display: inline-block; width: auto; vertical-align: middle;" class="form-range">
+            <span id="total-inconsistency"></span> (<span id="current-inconsistency"></span>)
+        </div>
+
+        <div class='form-inline' style="visibility: hidden; margin-top: 5px;" id="extensions">
 
             <label for="sel1">Extension: &nbsp</label>
             <select class="form-control" id="extensionNumber">
@@ -309,6 +410,8 @@ ini_set('php_max_size', '100M');
     </div>
 
     <div id="toolboxtopleft">
+        <br>
+        <br>
         <br>
         <br>
         <br>

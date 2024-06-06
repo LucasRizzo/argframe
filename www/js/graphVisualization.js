@@ -550,7 +550,7 @@ function create(d3, saveAs, Blob) {
         // In case more operators are included this method has to be updated
         node.value = 0;
         // Argument weight according to premises weight (if they exist)
-        node.weight = 1;
+        node.premise_weight = 1;
         // Calculate minimum and maximum premisse value in order to normalize
         // it with conclusion range
         // http://stats.stackexchange.com/questions/70801/how-to-normalize-data-to-0-1-range
@@ -568,10 +568,10 @@ function create(d3, saveAs, Blob) {
         var conclusionTo = "";
 
         // Check if there are weight columns in the data (important for calculating nodes values)
-        var noWeights = true;
+        var noPremiseWeights = true;
         for (var key in row) {
             if (key.startsWith("Weight_")) {
-                noWeights = false;
+                noPremiseWeights = false;
                 break;
             }
         }
@@ -623,10 +623,7 @@ function create(d3, saveAs, Blob) {
         do {
             i++;
             // Find first level
-            while (
-                i < premiseAndConclusion[0].length &&
-                premiseAndConclusion[0][i] != '"'
-            ) {
+            while (i < premiseAndConclusion[0].length && premiseAndConclusion[0][i] != '"') {
                 searchBooleanAttr += premiseAndConclusion[0][i];
                 searchBooleanLevels += premiseAndConclusion[0][i];
                 i++;
@@ -637,10 +634,7 @@ function create(d3, saveAs, Blob) {
             }
 
             // find where level ends
-            while (
-                premiseAndConclusion[0][i] != " " &&
-                i < premiseAndConclusion[0].length - 1
-            ) {
+            while (premiseAndConclusion[0][i] != " " && i < premiseAndConclusion[0].length - 1) {
                 // Save level
                 i++;
                 if (premiseAndConclusion[0][i] != " ") {
@@ -660,10 +654,7 @@ function create(d3, saveAs, Blob) {
             }
 
             // Copy attribute after level
-            while (
-                premiseAndConclusion[0][i] != '"' &&
-                i < premiseAndConclusion[0].length - 1
-            ) {
+            while (premiseAndConclusion[0][i] != '"' && i < premiseAndConclusion[0].length - 1) {
                 searchBooleanAttr += premiseAndConclusion[0][i];
                 i++;
             }
@@ -715,34 +706,19 @@ function create(d3, saveAs, Blob) {
 
             // Run through all attributes and their respective level in order
             // to find the activates premise's attributes
-            for (
-                var attr = 0;
-                attr < attributesByFeatureset_[currentFeatureset].length;
-                attr++
-            ) {
-                var correctAttributeLevel =
-                    attributesByFeatureset_[currentFeatureset][attr]
-                        .attribute == attribute &&
-                    attributesByFeatureset_[currentFeatureset][attr].a_level ==
-                        level;
+            for (var attr = 0; attr < attributesByFeatureset_[currentFeatureset].length; attr++) {
+                var correctAttributeLevel = 
+                    attributesByFeatureset_[currentFeatureset][attr].attribute == attribute &&
+                    attributesByFeatureset_[currentFeatureset][attr].a_level == level;
 
-                if (!correctAttributeLevel) {
+                if (! correctAttributeLevel) {
                     continue;
                 }
 
                 // Check if table data is inside range
                 var notInsideRange =
-                    parseFloat(row[attribute]) >
-                        parseFloat(
-                            attributesByFeatureset_[currentFeatureset][attr]
-                                .a_to
-                        ) ||
-                    parseFloat(row[attribute]) <
-                        parseFloat(
-                            attributesByFeatureset_[currentFeatureset][attr]
-                                .a_from
-                        );
-
+                    parseFloat(row[attribute]) > parseFloat(attributesByFeatureset_[currentFeatureset][attr].a_to) ||
+                    parseFloat(row[attribute]) < parseFloat(attributesByFeatureset_[currentFeatureset][attr] .a_from);
                 if (notInsideRange) {
                     continue;
                 } else {
@@ -779,10 +755,7 @@ function create(d3, saveAs, Blob) {
                     node.activated = true;
 
                     // Node is activated and the value is the conclusion. Can return here.
-                    if (
-                        noWeights &&
-                        Math.abs(conclusionFrom - conclusionTo) < 0.00001
-                    ) {
+                    if (noPremiseWeights && Math.abs(conclusionFrom - conclusionTo) < 0.00001) {
                         node.value = conclusionTo;
                         return true;
                     }
@@ -804,7 +777,7 @@ function create(d3, saveAs, Blob) {
 
         // If node has no conclusion there is no need to calculate its value
         // and the function can return true
-        if (!hasConclusion) {
+        if (! hasConclusion) {
             return true;
         }
 
@@ -820,65 +793,38 @@ function create(d3, saveAs, Blob) {
         // Example: trueSetsValues = [max(Arousal), max(Frustration), max(ContextBias, Skill)]
         // Example: trueSetsWeights = [max(Weight_Arousal), max(Weight_Frustration), max(Weight_ContextBias, Weight_Skill)]
         for (var i = 0; i < trueSets.length; i++) {
-            for (
-                var trueAttr = 0;
-                trueAttr < parsedQuery[trueSets[i]].length;
-                trueAttr++
-            ) {
+            for (var trueAttr = 0; trueAttr < parsedQuery[trueSets[i]].length; trueAttr++) {
                 var attribute = parsedQuery[trueSets[i]][trueAttr];
                 var level = parsedQueryLevels[trueSets[i]][trueAttr];
 
                 // Find attribute in dataset
-                for (
-                    var attr = 0;
-                    attr < attributesByFeatureset_[currentFeatureset].length;
-                    attr++
-                ) {
-                    if (
-                        attributesByFeatureset_[currentFeatureset][attr]
-                            .attribute != attribute ||
-                        attributesByFeatureset_[currentFeatureset][attr]
-                            .a_level != level
-                    ) {
+                for (var attr = 0; attr < attributesByFeatureset_[currentFeatureset].length; attr++) {
+                    if (attributesByFeatureset_[currentFeatureset][attr].attribute != attribute ||
+                        attributesByFeatureset_[currentFeatureset][attr].a_level != level) {
                         continue;
                     }
 
                     if (trueSetsMinMax[i] == undefined) {
-                        trueSetsMinMax.push([
-                            parseFloat(
-                                attributesByFeatureset_[currentFeatureset][attr]
-                                    .a_from
-                            ),
-                            parseFloat(
-                                attributesByFeatureset_[currentFeatureset][attr]
-                                    .a_to
-                            ),
+                        trueSetsMinMax.push([parseFloat(attributesByFeatureset_[currentFeatureset][attr].a_from),
+                            parseFloat(attributesByFeatureset_[currentFeatureset][attr].a_to),
                         ]);
 
                         // Save associated value and weight to this range
                         trueSetsValues.push(parseFloat(row[attribute]));
 
                         if (typeof row["Weight_" + attribute] !== "undefined") {
-                            trueSetsWeights.push(
-                                parseFloat(row["Weight_" + attribute])
-                            );
+                            trueSetsWeights.push(parseFloat(row["Weight_" + attribute]));
                         } else {
                             trueSetsWeights.push(1);
                         }
                     } else {
                         var min = Math.max(
                             trueSetsMinMax[i][0],
-                            parseFloat(
-                                attributesByFeatureset_[currentFeatureset][attr]
-                                    .a_from
-                            )
+                            parseFloat(attributesByFeatureset_[currentFeatureset][attr].a_from)
                         );
                         var max = Math.max(
                             trueSetsMinMax[i][1],
-                            parseFloat(
-                                attributesByFeatureset_[currentFeatureset][attr]
-                                    .a_to
-                            )
+                            parseFloat(attributesByFeatureset_[currentFeatureset][attr].a_to)
                         );
 
                         trueSetsMinMax[i][0] = min;
@@ -888,17 +834,9 @@ function create(d3, saveAs, Blob) {
                         if (parseFloat(row[attribute]) > trueSetsValues[i]) {
                             trueSetsValues[i] = parseFloat(row[attribute]);
                             // If one weight is defined all others are
-                            if (
-                                typeof row["Weight_" + attribute] !==
-                                "undefined"
-                            ) {
-                                if (
-                                    row["Weight_" + attribute] >
-                                    trueSetsWeights[i]
-                                ) {
-                                    trueSetsWeights[i] = parseFloat(
-                                        row["Weight_" + attribute]
-                                    );
+                            if (typeof row["Weight_" + attribute] !== "undefined") {
+                                if (row["Weight_" + attribute] > trueSetsWeights[i]) {
+                                    trueSetsWeights[i] = parseFloat(row["Weight_" + attribute]);
                                 }
                             }
                         }
@@ -924,7 +862,7 @@ function create(d3, saveAs, Blob) {
             // Choose the true set with maximum value
             if (trueSetsValues[i] < node.value) {
                 node.value = trueSetsValues[i];
-                node.weight = trueSetsWeights[i];
+                node.premise_weight = trueSetsWeights[i];
             }
         }
 
@@ -970,11 +908,9 @@ function create(d3, saveAs, Blob) {
         return jsonActivated;
     };
 
-    GraphCreator.prototype.isAttackValid = function (
-        nodeSource,
-        nodeTarget,
-        toFile
-    ) {
+    GraphCreator.prototype.isAttackValid = function (nodeSource, nodeTarget, toFile) {
+        // Check if attack is valid based if there are conclusions and weight of premises.
+        // It DOES NOT check if attack is in budget.
         var premiseAndConclusion = String(nodeSource.tooltip).split(" -> ");
         // Only arguments with a conclusion will have a value
         var hasConclusionSource =
@@ -989,12 +925,9 @@ function create(d3, saveAs, Blob) {
 
         var strenthOfArguments;
         if (!toFile) {
-            strenthOfArguments =
-                document.getElementById("strengthCheckBox").checked;
+            strenthOfArguments = document.getElementById("strengthCheckBox").checked;
         } else {
-            strenthOfArguments = document.getElementById(
-                "strengthCheckBoxExport"
-            ).checked;
+            strenthOfArguments = document.getElementById("strengthCheckBoxExport").checked;
         }
 
         // If target or souce have no conclusion the
@@ -1002,13 +935,10 @@ function create(d3, saveAs, Blob) {
         // If they both have conclusions the source weight
         // has to be greater than the target weight for
         // the attack to be activated.
-        if (
-            !hasConclusionSource ||
-            !hasConclusionTarget ||
-            (hasConclusionSource &&
-                hasConclusionTarget &&
-                (nodeSource.weight >= nodeTarget.weight || !strenthOfArguments))
-        ) {
+        if (! hasConclusionSource ||
+            ! hasConclusionTarget ||
+            (hasConclusionSource && hasConclusionTarget &&
+                (nodeSource.premise_weight >= nodeTarget.premise_weight || ! strenthOfArguments))) {
             return true;
         }
 
@@ -1034,7 +964,7 @@ function create(d3, saveAs, Blob) {
 
                     sourceCircle.each(function (sd) {
                         if (sd.activated) {
-                            if (graph.isAttackValid(sd, td, toFile)) {
+                            if (graph.isAttackValid(sd, td, toFile) && val.in_budget) {
                                 stringGraph += sd.title + "," + td.title + ",";
                             }
                         }
@@ -1068,12 +998,7 @@ function create(d3, saveAs, Blob) {
         return stringGraph;
     };
 
-    GraphCreator.prototype.activeAll = function (
-        row,
-        currentFeatureset,
-        colors,
-        toFile
-    ) {
+    GraphCreator.prototype.activeAll = function (row, currentFeatureset, colors, toFile) {
         if (colors == undefined) {
             colors = true;
         }
@@ -1091,16 +1016,17 @@ function create(d3, saveAs, Blob) {
                 currentNode.classed(consts.acceptedGClass, false);
                 currentNode.classed(consts.onlyActivatedGClass, false);
             }
+
+            // Set node as active or not based on the row
             thisGraph.active(d, row, currentFeatureset);
         });
 
-        var htmlArgs = "";
-        var htmlAttacks = "";
+        var htmlArgs = ""; // To list them all in a modal
+        var htmlAttacks = ""; // To list themm all in a modal
         var argumentsN = 0;
         var attacksN = 0;
 
         thisGraph.circles.each(function (d) {
-            var currentNode = d3.select(this);
             if (d.activated) {
                 d.degree = 0;
 
@@ -1110,14 +1036,7 @@ function create(d3, saveAs, Blob) {
                     premiseAndConclusion[1] != "NULL";
 
                 if (hasConclusion != "NULL") {
-                    htmlArgs +=
-                        "<i>" +
-                        d.title +
-                        "</i>: " +
-                        premiseAndConclusion[0] +
-                        " <b>&#8594;</b> " +
-                        premiseAndConclusion[1] +
-                        "<br>";
+                    htmlArgs += "<i>" + d.title + "</i>: " + premiseAndConclusion[0] + " <b>&#8594;</b> " + premiseAndConclusion[1] + "<br>";
                 } else {
                     htmlArgs += "<i>" + d.title + "</i>: " + d.tooltip + "<br>";
                 }
@@ -1127,25 +1046,15 @@ function create(d3, saveAs, Blob) {
                 edges.forEach(function (edge, i) {
                     // Count edges in which d is the target
                     if (edge.target.id == d.id) {
-                        var sourceCircle = thisGraph.circles.filter(function (
-                            sd
-                        ) {
+                        var sourceCircle = thisGraph.circles.filter(function (sd) {
                             return sd.id === edge.source.id;
                         });
 
                         sourceCircle.each(function (sd) {
                             if (sd.activated) {
-                                if (graph.isAttackValid(sd, d, toFile)) {
-                                    htmlAttacks +=
-                                        "<i>" +
-                                        sd.title +
-                                        "</i>  &rArr; " +
-                                        "<i>" +
-                                        d.title +
-                                        "</i><br>";
-
+                                if (graph.isAttackValid(sd, d, toFile) && edge.in_budget) {
+                                    htmlAttacks += "<i>" + sd.title + "</i>  &rArr; <i>" + d.title + "</i><br>";
                                     attacksN++;
-
                                     d.degree++;
                                 }
                             }
@@ -1154,25 +1063,15 @@ function create(d3, saveAs, Blob) {
 
                     // Count edges in which d is the source
                     if (edge.source.id == d.id) {
-                        var targetCircle = thisGraph.circles.filter(function (
-                            td
-                        ) {
+                        var targetCircle = thisGraph.circles.filter(function (td) {
                             return td.id === edge.target.id;
                         });
 
                         targetCircle.each(function (td) {
                             if (td.activated) {
-                                if (graph.isAttackValid(d, td, toFile)) {
-                                    htmlAttacks +=
-                                        "<i>" +
-                                        d.title +
-                                        "</i>  &rArr; " +
-                                        "<i>" +
-                                        td.title +
-                                        "</i><br>";
-
+                                if (graph.isAttackValid(d, td, toFile) && edge.in_budget) {
+                                    htmlAttacks += "<i>" + d.title + "</i>  &rArr; <i>" + td.title + "</i><br>";
                                     attacksN++;
-
                                     d.degree++;
                                 }
                             }
@@ -1183,11 +1082,9 @@ function create(d3, saveAs, Blob) {
         });
 
         document.getElementById("listArgumentsFiltered").innerHTML = htmlArgs;
-        document.getElementById("listArgumentsNFiltered").innerHTML =
-            " <b>(" + argumentsN.toString() + ")</b>";
+        document.getElementById("listArgumentsNFiltered").innerHTML = " <b>(" + argumentsN.toString() + ")</b>";
         document.getElementById("listAttacksFiltered").innerHTML = htmlAttacks;
-        document.getElementById("listAttacksNFiltered").innerHTML =
-            " <b>(" + attacksN.toString() + ")</b>";
+        document.getElementById("listAttacksNFiltered").innerHTML = " <b>(" + attacksN.toString() + ")</b>";
     };
 
     GraphCreator.prototype.semanticsPerRow = function (
@@ -1206,7 +1103,6 @@ function create(d3, saveAs, Blob) {
         // Set all paths as non activated.
         thisGraph.paths.each(function (d) {
             d3.select(this).style("opacity", 0.15);
-            //d3.select(this).style("opacity", 0.0);
         });
 
         // Set opacity of all nodes as activated
@@ -1238,11 +1134,7 @@ function create(d3, saveAs, Blob) {
         // Vector of values accepted to calculate the median
         var valuesAccepted = [];
 
-        for (
-            i = 0;
-            i < conclusionsByFeatureset_[currentFeatureset].length;
-            i++
-        ) {
+        for (i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
             nConclusions[i] = 0;
             acceptedValue[i] = 0;
         }
@@ -1251,13 +1143,10 @@ function create(d3, saveAs, Blob) {
 
         var strenthOfArguments;
 
-        if (!toFile) {
-            strenthOfArguments =
-                document.getElementById("strengthCheckBox").checked;
+        if (! toFile) {
+            strenthOfArguments = document.getElementById("strengthCheckBox").checked;
         } else {
-            strenthOfArguments = document.getElementById(
-                "strengthCheckBoxExport"
-            ).checked;
+            strenthOfArguments = document.getElementById("strengthCheckBoxExport").checked;
         }
 
         // Find activated edges and nodes and change their styles
@@ -1276,16 +1165,14 @@ function create(d3, saveAs, Blob) {
                 // activated. However, at this point they will only be considered
                 // if they are the source of an attack
                 if (!hasConclusionSource) {
-                    //                     currentNode.style("opacity", 0.40);
+                    //currentNode.style("opacity", 0.40);
                 }
 
-                edges.forEach(function (edge, i) {
+                edges.forEach(function (edge) {
                     if (edge.source.id == sd.id) {
                         thisGraph.circles.each(function (td) {
                             if (td.activated && edge.target.id == td.id) {
-                                var premiseAndConclusion = String(
-                                    td.tooltip
-                                ).split(" -> ");
+                                var premiseAndConclusion = String(td.tooltip).split(" -> ");
                                 // Only arguments with a conclusion will have a value
                                 var hasConclusionTarget =
                                     premiseAndConclusion.length == 2 &&
@@ -1296,26 +1183,21 @@ function create(d3, saveAs, Blob) {
                                 // If they both have conclusions the source weight
                                 // has to be greater than the target weight for
                                 // the attack to be activated.
-                                if (
-                                    !hasConclusionSource ||
-                                    !hasConclusionTarget ||
-                                    (hasConclusionSource &&
-                                        hasConclusionTarget &&
-                                        (sd.weight >= td.weight ||
-                                            !strenthOfArguments))
-                                ) {
-                                    var path = thisGraph.paths.filter(function (
-                                        pd
-                                    ) {
+                                if (! hasConclusionSource || 
+                                    ! hasConclusionTarget ||
+                                     (hasConclusionSource && hasConclusionTarget && (sd.premise_weight >= td.premise_weight || ! strenthOfArguments))) {
+
+                                    var path = thisGraph.paths.filter(function (pd) {
                                         //console.log("s: " + sd.title + ", t: " + td.title);
-                                        return (
-                                            pd.source.id == edge.source.id &&
-                                            pd.target.id == edge.target.id
+                                        return (pd.source.id == edge.source.id && pd.target.id == edge.target.id
                                         );
                                     });
-                                    path.style("opacity", 1.0);
+                                    
+                                    if (edge.in_budget) {
+                                        path.style("opacity", 1.0);
+                                    }
 
-                                    if (!hasConclusionSource) {
+                                    if (! hasConclusionSource) {
                                         currentNode.style("opacity", 1.0);
                                     }
                                 }
@@ -3205,16 +3087,7 @@ function create(d3, saveAs, Blob) {
                     d.target.y +
                     operator2 * consts.nodeRadius * Math.sin(angle);
 
-                return (
-                    "M" +
-                    x_source +
-                    "," +
-                    y_source +
-                    "L" +
-                    x_target +
-                    "," +
-                    y_target
-                );
+                return ("M" + x_source + "," + y_source + "L" + x_target + "," + y_target);
             });
 
         // add new paths
@@ -3302,16 +3175,7 @@ function create(d3, saveAs, Blob) {
                     d.target.y +
                     operator2 * consts.nodeRadius * Math.sin(angle);
 
-                return (
-                    "M" +
-                    x_source +
-                    "," +
-                    y_source +
-                    "L" +
-                    x_target +
-                    "," +
-                    y_target
-                );
+                return ("M" + x_source + "," + y_source + "L" + x_target + "," + y_target);
             });
         /*.on("mousedown", function(d){
             thisGraph.pathMouseDown.call(thisGraph, d3.select(this), d);
@@ -3325,12 +3189,19 @@ function create(d3, saveAs, Blob) {
             }
         });*/
 
+        // Split rebuttals and change opacity if not in budget
         edges.forEach(function (val, i) {
             var originalPath = thisGraph.paths.filter(function (d) {
                 return (
                     d.source.id == val.source.id && d.target.id == val.target.id
                 );
             });
+
+            if (! val.in_budget) {
+                originalPath.style("opacity", 0.15);
+            } else {
+                originalPath.style("opacity", 1);
+            }
 
             var reversePath = thisGraph.paths.filter(function (d) {
                 return (
@@ -3448,10 +3319,7 @@ function create(d3, saveAs, Blob) {
                         sourceCircle.each(function (sd) {
                             sourceOriginal += sd.title + ", ";
 
-                            if (
-                                sd.activated &&
-                                graph.isAttackValid(sd, d, false)
-                            ) {
+                            if (sd.activated && graph.isAttackValid(sd, d, false) && val.in_budget) {
                                 nTargetActive++;
                                 targetActive += sd.title + ", ";
                             }
@@ -3459,9 +3327,7 @@ function create(d3, saveAs, Blob) {
                     }
 
                     if (val.source.id == d.id) {
-                        var targetCircle = thisGraph.circles.filter(function (
-                            td
-                        ) {
+                        var targetCircle = thisGraph.circles.filter(function (td) {
                             return td.id === val.target.id;
                         });
 
@@ -3470,10 +3336,7 @@ function create(d3, saveAs, Blob) {
                         targetCircle.each(function (td) {
                             targetOriginal += td.title + ", ";
 
-                            if (
-                                td.activated &&
-                                graph.isAttackValid(d, td, false)
-                            ) {
+                            if (td.activated && graph.isAttackValid(d, td, false) && val.in_budget) {
                                 nSourceActive++;
                                 sourceActive += td.title + ", ";
                             }
@@ -3498,6 +3361,13 @@ function create(d3, saveAs, Blob) {
                     sourceActive.slice(0, -2);
                 }
 
+                var weight = "None"
+                if (!isNaN(d.weight)) {
+                    weight = d.weight;
+                }
+
+                tooltip.style("visibility", "visible");
+
                 tooltip.selectAll("text").remove();
                 tooltip.append("text");
 
@@ -3508,7 +3378,8 @@ function create(d3, saveAs, Blob) {
                             d.title +
                             "</b>: " +
                             d.tooltip +
-                            "<br/><br/>" +
+                            "<br/>" + 
+                            "<b>Weight</b>: " + weight + "<br/><br/>" +
                             "<b>Attacks info</b><br><i># Source attack activated:</i> " +
                             String(nSourceActive) +
                             ". " +
@@ -3702,6 +3573,29 @@ function create(d3, saveAs, Blob) {
         svg.attr("width", x).attr("height", y);
     };
 
+    GraphCreator.prototype.updateInconsistencyBudget = function(new_budget) {
+        console.log("Here!");
+        var current_budget = 0;
+        thisGraph.edges.some(function(val) {
+            val.in_budget = false;
+            // Keep adding while the budget allows
+            if (current_budget + val.inconsistency <= new_budget) {
+                current_budget += val.inconsistency;
+                val.in_budget = true;
+            }
+        });
+
+        // Update graph with new attacks in budget
+        thisGraph.updateGraph();
+
+        // Trigger a new calculation if the row in the data is selected
+        var element = document.querySelector('#featuresetTable tbody tr');
+        if (element.classList.contains('selected')) {
+            var event = new Event("change");
+            document.getElementById("row_input").dispatchEvent(event);
+        }
+    }
+
     /**** MAIN ****/
 
     var docEl = document.documentElement,
@@ -3771,7 +3665,9 @@ function create(d3, saveAs, Blob) {
                     x: parseFloat(args_[i].x),
                     y: parseFloat(args_[i].y),
                     tooltip: tooltip,
+                    weight: parseFloat(args_[i].weight),
                 });
+
                 indexNode.push(args_[i].label);
 
                 if (id == 0) {
@@ -3807,10 +3703,17 @@ function create(d3, saveAs, Blob) {
         viewWidth = mostRightNode - mostLeftNode + 400;
         viewHeight = mostUpNode - mostBottomNode + 400;
 
+        // Calculate total inconsistency (if there are node weigths)
+        // The inconsistency is the sum of weights of an argument attacking the other.
+        // The total inconsistency is the sum of all inconsistency between all the attacks
+        var total_inconsistency = 0; 
+
         for (var i = 0; i < jsonEdges.length; i++) {
             //FIXME: find a more intelligent way of getting the indexes by the labels
             var indexSource = 0,
                 indexTarget = 0;
+
+            var inconsistency = NaN;
 
             for (var j = 0; j < indexNode.length; j++) {
                 if (indexNode[j] == jsonEdges[i].source) {
@@ -3826,19 +3729,61 @@ function create(d3, saveAs, Blob) {
                 }
             }
 
+            if (!isNaN(nodes[indexSource].weight) && !isNaN(nodes[indexTarget].weight)) { // Both have weigths
+                inconsistency = nodes[indexSource].weight + nodes[indexTarget].weight;                
+            } else if (!isNaN(nodes[indexSource].weight)) { // Only source has a weigth
+                inconsistency = nodes[indexSource].weight;
+            } else if (!isNaN(nodes[indexTarget].weight)) { // Only index has a weigth
+                inconsistency = nodes[indexTarget].weight;
+            }
+
+            if (!isNaN(inconsistency)) {
+                total_inconsistency += inconsistency
+            }
+
             if (jsonEdges[i].type != undefined) {
                 edges.push({
                     source: nodes[indexSource],
                     target: nodes[indexTarget],
                     type: jsonEdges[i].type,
+                    inconsistency: inconsistency,
+                    in_budget: true,
                 });
             } else {
                 edges.push({
                     source: nodes[indexSource],
                     target: nodes[indexTarget],
                     type: "none",
+                    inconsistency: inconsistency,
+                    in_budget: true,
                 });
             }
+        }
+
+        // Sort edges by inconsistency in ascending order.
+        // If tied, untie by the weigth of the soruce.
+        edges.sort(function(a, b) {
+            if (Math.abs(a.inconsistency - b.inconsistency) < 0.00001) {
+                // Compare source_weight if inconsistency is the same
+                // b - a means descending order (a - b would be ascending)
+                return b.source.weight - a.source.weight; 
+            } else {
+                // Compare inconsistency first
+                // b - a means descending order (a - b would be ascending)
+                return b.inconsistency - a.inconsistency; 
+            }
+        });
+
+        var rangeInput = document.getElementById("inconsistencyRange");
+        rangeInput.setAttribute("max", total_inconsistency);
+        rangeInput.value = total_inconsistency;
+        document.getElementById("total-inconsistency").innerHTML = String(total_inconsistency);
+        document.getElementById("current-inconsistency").innerHTML = String(total_inconsistency);
+
+        if (total_inconsistency == 0) {
+            document.getElementById("inconsistency-div").style.display = "none";   
+        } else {
+            document.getElementById("inconsistency-div").style.display = "inline-block";            
         }
     }
 
@@ -3900,6 +3845,13 @@ d3.select("#featuresetgraph").on("change", function () {
 d3.select("#export").on("click", function () {
     d3.event.preventDefault();
     $("#modalExport").modal("show");
+});
+
+d3.select("#inconsistencyRange").on("change", function () {
+    d3.event.preventDefault();
+    var new_budget = document.getElementById("inconsistencyRange").value
+    document.getElementById("current-inconsistency").innerHTML = new_budget;
+    graph.updateInconsistencyBudget(new_budget);
 });
 
 d3.select("#exportFile").on("click", function () {
@@ -4330,11 +4282,7 @@ d3.select("#row_input").on("change", function () {
             extensionTotal.innerHTML = "of <b>" + 1 + "</b>";
             graph.semanticsPerRow(jsonExtension, false, true);
         } else {
-            getExtension(
-                addressCall_ + api + "/" + graph.getStringGraph(),
-                api,
-                callsemantics
-            );
+            getExtension(addressCall_ + api + "/" + graph.getStringGraph(), api, callsemantics);
         }
     } else {
         extensionTotal.innerHTML = "of <b>" + 1 + "</b>";
@@ -4342,7 +4290,6 @@ d3.select("#row_input").on("change", function () {
     }
 
     function callsemantics(extension) {
-        //console.log(extension);
 
         if (extension.search("Maximum execution time") != -1) {
             alert("Maximum execution time exceeded!");
@@ -4354,17 +4301,10 @@ d3.select("#row_input").on("change", function () {
             return;
         }
 
-        console.log(extension);
-
         var jsonExtension = JSON.parse(extension);
         //console.log(jsonExtension);
 
-        if (
-            api == "preferred" ||
-            api == "admissible" ||
-            api == "stable" ||
-            api == "semistable"
-        ) {
+        if (api == "preferred" || api == "admissible" || api == "stable" || api == "semistable") {
             var nExtensions = jsonExtension.length;
 
             // Add the extension options
@@ -4382,12 +4322,7 @@ d3.select("#row_input").on("change", function () {
             // The other exensions are computed through the extensionList
             // options
             graph.semanticsPerRow(jsonExtension[0]);
-        } else if (
-            api == "grounded" ||
-            api == "expert" ||
-            api == "eager" ||
-            api == "ideal"
-        ) {
+        } else if ( api == "grounded" || api == "expert" || api == "eager" || api == "ideal") {
             // Grounded semantics only have 1 extension
             extensionTotal.innerHTML = "of <b>" + 1 + "</b>";
             graph.semanticsPerRow(jsonExtension);

@@ -568,24 +568,28 @@ function createEditionGraph(d3, saveAs, Blob) {
 
         var thisGraph = this;
 
-        var docEl = document.documentElement,
-        bodyEl = document.getElementsByTagName('body')[0];
-        var x = window.innerWidth || docEl.clientWidth || bodyEl.clientWidth;
-        var y = window.innerHeight|| docEl.clientHeight|| bodyEl.clientHeight;
-
-        var select = document.getElementById('editLabel');
-
-        var argument = document.getElementById('editCurrentArgument').value;
-
-        var title = select.value;
+        var title = document.getElementById('editLabel').value;
 
         if (thisGraph.nodes.filter(function(n){return n.title == title;}).length > 0) {
             // return false if label is already being used
             return false;
         }
 
+        var docEl = document.documentElement,
+        bodyEl = document.getElementsByTagName('body')[0];
+        var x = window.innerWidth || docEl.clientWidth || bodyEl.clientWidth;
+        var y = window.innerHeight|| docEl.clientHeight|| bodyEl.clientHeight;
+
+        var argument = document.getElementById('editCurrentArgument').value;
+
+        var weight = document.getElementById('editWeight').value;
+
+        if (weight == "None") {
+            weight = null;
+        }
+
         var xycoords = d3.mouse(thisGraph.svgG.node()),
-            d = {id: thisGraph.idct++, title: title, x: x / 2.0, y: y / 2.0, tooltip: argument};
+            d = {id: thisGraph.idct++, title: title, x: x / 2.0, y: y / 2.0, tooltip: argument, weight: weight};
         thisGraph.nodes.push(d);
 
         thisGraph.updateGraph();
@@ -731,7 +735,7 @@ function createEditionGraph(d3, saveAs, Blob) {
                     var premiseAndConclusion = String(d.tooltip).split(" -> ");
 
                     var weight = "None";
-                    if (d.weight != "NULL") {
+                    if (d.weight != null) {
                         weight = d.weight;
                     }
 
@@ -1310,7 +1314,7 @@ function createEditionGraph(d3, saveAs, Blob) {
             var levelDescription = thisGraph.getLevelsDescription(d.tooltip);
 
             var weight = "None"
-            if (d.weight != "NULL") {
+            if (d.weight != null) {
                 weight = d.weight;
             }
 
