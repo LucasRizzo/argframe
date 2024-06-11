@@ -37,7 +37,8 @@ CREATE TABLE `arguments` (
   `y` decimal(10,0) NOT NULL,
   `label` varchar(40) NOT NULL,
   `graph` varchar(40) NOT NULL,
-  `featureset` varchar(40) NOT NULL
+  `featureset` varchar(40) NOT NULL,
+  `weight` decimal(15,5) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
