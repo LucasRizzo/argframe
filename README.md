@@ -26,16 +26,16 @@ A running example can be seen here https://lucasrizzo.com/framework/index.php
 
 1. Clone the repo by running this command in the terminal:
 
-`git clone https://github.com/LucasRizzo/argframe.git`
+`git clone https://github.com/SoftwareImpacts/SIMPAC-2023-305.git`
 
 2. Make sure to run the command git pull (if you already cloned this repo):
 
-`git pull https://github.com/LucasRizzo/argframe.git`
+`git pull git clone https://github.com/SoftwareImpacts/SIMPAC-2023-305.git`
 
 3. Build docker image by running below commands in the terminal (make sure docker is running and you have docker-compose installed):
 
 ```
-cd argframe
+cd SIMPAC-2023-305
 sudo docker-compose up -d
 ```
 
