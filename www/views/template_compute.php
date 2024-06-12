@@ -392,12 +392,13 @@ ini_set('php_max_size', '100M');
                 cursor: pointer;
                 margin-top: -4px; /* Adjust the margin to align the thumb with the track */
             }
+ 
         </style>
 
         <div class="form-inline" id="inconsistency-div" style="margin-top: 5px;">
             <label for="sel1" class="mr-2">Inconsistency budget: &nbsp </label>0
-            <input type="range" id="inconsistencyRange" name="points2" style="box-shadow: none !important; display: inline-block; width: auto; vertical-align: middle;" class="form-range">
-            <span id="total-inconsistency"></span> (<span id="current-inconsistency"></span>)
+            <input type="range" id="inconsistency-range" name="points2" style="box-shadow: none !important; display: inline-block; width: auto; vertical-align: middle;" class="form-range">
+            <span id="total-inconsistency"></span> (<span id="current-inconsistency"></span>) &nbsp <label for="sel1" class="mr-2">or</label> &nbsp <input type="number" class="form-control" style="width: 85px;" id="percentage-inconsistency" value="100" min="0" max="100" step="0.01"> %
         </div>
 
         <div class='form-inline' style="visibility: hidden; margin-top: 5px;" id="extensions">

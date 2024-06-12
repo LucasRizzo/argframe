@@ -29,6 +29,19 @@ function create(d3, saveAs, Blob) {
         thisGraph.idct = 0;
         thisGraph.nodes = nodes || [];
         thisGraph.edges = edges || [];
+        thisGraph.reciprocalEdges = [];
+
+        // Save reciprocal edges. This is important when changing the inconsistency budget.
+        // Rebuttals that already have an attack removed, should keep the second attack
+        // while there are other rebuttals with two attacks.
+        for (let i = 0; i < thisGraph.edges.length; i++) {
+            for (let j = i + 1; j < thisGraph.edges.length; j++) {
+                if (thisGraph.edges[i].source.id === thisGraph.edges[j].target.id &&
+                     thisGraph.edges[i].target.id === thisGraph.edges[j].source.id) {
+                    thisGraph.reciprocalEdges.push([thisGraph.edges[i], thisGraph.edges[j]]);
+                }
+            }
+        }
 
         thisGraph.zoomScale = 1;
 
@@ -1425,7 +1438,7 @@ function create(d3, saveAs, Blob) {
                         if (conclusionNoRange == highestConclusion) {
                             overallWeightedFiltered += d.value * d.weight;
                             sumWeightedFiltered += d.weight;
-                            console.log("O +:" + d.value + " * " + d.weight);
+                            console.log("Value:" + d.value + " Weight " + d.weight);
                         }
                     }
                 }
@@ -2358,11 +2371,15 @@ function create(d3, saveAs, Blob) {
                                             var currentFeatureset =
                                                 select.options[i].text;
 
+                                            var percent_inconsistency = document.getElementById("percentage-inconsistency").value;
+
                                             link.setAttribute(
                                                 "download",
                                                 currentFeatureset +
                                                     "_" +
                                                     currentGraph +
+                                                    "_" + 
+                                                    percent_inconsistency +
                                                     ".csv"
                                             );
                                             document.body.appendChild(link); // Required for FF
@@ -3574,10 +3591,37 @@ function create(d3, saveAs, Blob) {
     };
 
     GraphCreator.prototype.updateInconsistencyBudget = function(new_budget) {
-        console.log("Here!");
+
+        // Function that chacks if an attack of a rebuttal is already in the budget
+        function isReciprocalInBudget(edge) {
+            for (let pair of thisGraph.reciprocalEdges) {
+                if (pair[0] === edge && pair[1].in_budget)  {
+                    return true;
+                    
+                }
+
+                if (pair[1] === edge && pair[0].in_budget)  {                    
+                    return true;
+                }                 
+            }
+            return false;
+        }
+
+        // Keep adding attacks while the budget allows
         var current_budget = 0;
-        thisGraph.edges.some(function(val) {
+
+        // Assume all edges are not in budget
+        edges.forEach(function(val) {
             val.in_budget = false;
+        });
+
+        // Include nodes without adding rebuttals that are already in the budget
+        // Edges are alread sorted in the order that they should be added to the budget.
+        // The sorting is done when the graph is created.
+        edges.some(function(val) {
+            if (isReciprocalInBudget(val)) {
+                return false; // Go to next edge
+            }
             // Keep adding while the budget allows
             if (current_budget + val.inconsistency <= new_budget) {
                 current_budget += val.inconsistency;
@@ -3585,15 +3629,32 @@ function create(d3, saveAs, Blob) {
             }
         });
 
+        // Include any node if still necessary
+        edges.some(function(val) {
+            if (val.in_budget) {
+                return false; // Go to next edge
+            }
+            // Keep adding while the budget allows
+            if (current_budget + val.inconsistency <= new_budget) {
+                current_budget += val.inconsistency;
+                val.in_budget = true;                
+            }
+        });
+
         // Update graph with new attacks in budget
         thisGraph.updateGraph();
 
-        // Trigger a new calculation if the row in the data is selected
-        var element = document.querySelector('#featuresetTable tbody tr');
-        if (element.classList.contains('selected')) {
-            var event = new Event("change");
-            document.getElementById("row_input").dispatchEvent(event);
-        }
+        // Trigger a new calculation if a row in the data is selected
+        var rows = document.querySelectorAll('tbody tr');
+
+        rows.forEach(function(row) {
+            // Check if the row has the selected class
+            if (row.classList.contains('selected')) {
+                var event = new Event("change");
+                document.getElementById("row_input").dispatchEvent(event);                
+                return;
+            }
+        });
     }
 
     /**** MAIN ****/
@@ -3747,7 +3808,7 @@ function create(d3, saveAs, Blob) {
                     target: nodes[indexTarget],
                     type: jsonEdges[i].type,
                     inconsistency: inconsistency,
-                    in_budget: true,
+                    in_budget: true
                 });
             } else {
                 edges.push({
@@ -3755,7 +3816,7 @@ function create(d3, saveAs, Blob) {
                     target: nodes[indexTarget],
                     type: "none",
                     inconsistency: inconsistency,
-                    in_budget: true,
+                    in_budget: true
                 });
             }
         }
@@ -3774,11 +3835,11 @@ function create(d3, saveAs, Blob) {
             }
         });
 
-        var rangeInput = document.getElementById("inconsistencyRange");
+        var rangeInput = document.getElementById("inconsistency-range");
         rangeInput.setAttribute("max", total_inconsistency);
         rangeInput.value = total_inconsistency;
-        document.getElementById("total-inconsistency").innerHTML = String(total_inconsistency);
-        document.getElementById("current-inconsistency").innerHTML = String(total_inconsistency);
+        document.getElementById("total-inconsistency").innerHTML = String(total_inconsistency.toFixed(2));
+        document.getElementById("current-inconsistency").innerHTML = String(total_inconsistency.toFixed(2));
 
         if (total_inconsistency == 0) {
             document.getElementById("inconsistency-div").style.display = "none";   
@@ -3798,6 +3859,7 @@ function create(d3, saveAs, Blob) {
             "viewBox",
             viewX + " " + viewY + " " + viewWidth + " " + viewHeight
         );
+
     var graph = new GraphCreator(svg, nodes, edges);
     graph.setIdCt(id);
     graph.updateGraph();
@@ -3838,6 +3900,7 @@ d3.select("#featuresetgraph").on("change", function () {
     d3.event.preventDefault();
     d3.select("#G").remove();
     graph = create(window.d3, window.saveAs, window.Blob);
+
     document.getElementById("overallResults").innerHTML = "";
     document.querySelectorAll(".check1")[0].checked = false;
 });
@@ -3847,10 +3910,30 @@ d3.select("#export").on("click", function () {
     $("#modalExport").modal("show");
 });
 
-d3.select("#inconsistencyRange").on("change", function () {
+d3.select("#inconsistency-range").on("change", function () {
     d3.event.preventDefault();
-    var new_budget = document.getElementById("inconsistencyRange").value
+
+    var new_budget = document.getElementById("inconsistency-range").value;
     document.getElementById("current-inconsistency").innerHTML = new_budget;
+    graph.updateInconsistencyBudget(new_budget);
+
+    var total_inconsistency = document.getElementById("total-inconsistency").innerHTML;
+
+    document.getElementById("percentage-inconsistency").value = 
+        (100 * (parseFloat(new_budget) / parseFloat(total_inconsistency)) ).toFixed(2);
+});
+
+d3.select("#percentage-inconsistency").on("change", function () {
+
+    d3.event.preventDefault();
+
+    var new_budget_percent = parseFloat(document.getElementById("percentage-inconsistency").value) / 100;
+    var total_inconsistency = document.getElementById("total-inconsistency").innerHTML;
+
+    var new_budget = new_budget_percent * total_inconsistency
+    document.getElementById("current-inconsistency").innerHTML = new_budget.toFixed(2);
+    document.getElementById("inconsistency-range").value = new_budget
+
     graph.updateInconsistencyBudget(new_budget);
 });
 
@@ -3932,8 +4015,6 @@ d3.select("#exportFile").on("click", function () {
             header: true,
             skipEmptyLines: true,
             chunk: function (results, parser) {
-                //console.log("Row data:", results.data);
-                //console.log("Row errors:", results.errors);
 
                 // Only first 25mb are imported for table
                 allData_ = results.data;
