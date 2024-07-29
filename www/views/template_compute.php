@@ -276,7 +276,7 @@ ini_set('php_max_size', '100M');
     <input id="row_input" type="hidden" value="">
 </div>
 
-<div class='col-md-7 col-md-pull-5' style='background-color: rgb(255, 255, 255);border-style: solid;border-width: 2px;border-radius: 3px' id='left-side'>
+<div class='col-md-7 col-md-pull-5' style='background-color: rgb(255, 255, 255); border-style: solid; border-width: 2px; border-radius: 3px; height: 90vh;' id='left-side'>
 
     <div id="toolboxbottomleft">
         <form class="form-inline">
