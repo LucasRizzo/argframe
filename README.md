@@ -16,7 +16,7 @@ This argumentation framework has been proposed as a tool to perform automated re
 
 ![Screenshot from 2022-06-28 12-01-44](https://user-images.githubusercontent.com/55241866/176163525-4749dff7-1b93-48fb-8f41-13acb855a3a0.png)
 
-4. exportation of all results to csv file for any number of combinations of agumentation semantics and accrual strategies.
+4. export all results to a csv file for any number of combinations of agumentation semantics and accrual strategies.
 
 ![Screenshot from 2022-06-28 12-04-07](https://user-images.githubusercontent.com/55241866/176163881-c634b204-27d7-4b5b-a3ba-f40c60f2225c.png)
 
@@ -54,31 +54,34 @@ Contact me at lucasmrizzo@gmail.com
 The following papers have used this framework for experimentation.
 
 <a id="1">[1]</a> 
+**Rizzo, L.**, Verda, D., Berretta, S., Longo, L. (2024) A Novel Integration of Data-Driven Rule Generation and Computational Argumentation for Enhanced Explainable AI Mach. Learn. Knowl. Extr., 2024, 6(3), 2049-2073
+
+<a id="1">[2]</a> 
 **Rizzo, L.** and Longo, L. (2022) Examining the modelling capabilities of defeasible argumentation and non-monotonic fuzzy reasoning Information Fusion, 89, 537-566
 
-<a id="2">[2]</a> 
+<a id="2">[3]</a> 
 Longo, L. and **Rizzo, L.** (2021) Examining the modelling capabilities of defeasible argumentation and non-monotonic fuzzy reasoning Knowledge-Based Systems, p. (in press)
 
-<a id="3">[3]</a> 
+<a id="3">[4]</a> 
 **Rizzo, L.** (2020) Evaluating the Impact of Defeasible Argumentation as a Modelling Technique for Reasoning under Uncertainty. Doctoral Thesis, Technological University Dublin.
 
-<a id="4">[4]</a>
+<a id="4">[5]</a>
 **Rizzo, L.** and Longo, L. (2020) An empirical evaluation of the inferential capacity of defeasible argumentation, non-monotonic fuzzy reasoning and expert systems Expert Systems with Applications 147, p. (in press)
 
-<a id="5">[5]</a>
+<a id="5">[6]</a>
 **Rizzo, L.**, Dondio P., Longo L. (2020) Exploring the potential of defeasible argumentation for quantitative inferences in real-world contexts: An assessment of computational trust intelligence in: Proceedings for the 28th AIAI Irish Conference on Artificial Intelligence and Cognitive Science pp. 25-36
 
-<a id="6">[6]</a>
+<a id="6">[7]</a>
 **Rizzo, L.** and Longo, L. (2019) Inferential models of mental workload with defeasible argumentation and non-monotonic fuzzy reasoning: a comparative study in: 2nd Workshop on Advances In Argumentation In Artificial Intelligence pp. 11–26
 
-<a id="7">[7]</a>
+<a id="7">[8]</a>
 **Rizzo, L.** and Longo, L. (2018) A qualitative investigation of the degree of explainability of defeasible argumentation and non-monotonic fuzzy reasoning in: 26th AIAI Irish Conference on Artificial Intelligence and Cognitive Science pp. 138–149
 
-<a id="8">[8]</a>
+<a id="8">[9]</a>
 **Rizzo, L.**, Majnaric, L. and Longo, L. (2018) A comparative study of defeasible argumentation and non-monotonic fuzzy reasoning for elderly survival prediction using biomarkers in: AI*IA 2018 – Advances in Artificial Intelligence, (Eds.) C. Ghidini, B. Magnini, A. Passerini and P. Traverso pp. 197–209 Springer International Publishing, Cham
 
-<a id="9">[9]</a>
+<a id="9">[10]</a>
 **Rizzo, L.**, Majnaric, L., Dondio, P. and Longo, L. (2018) An investigation of argumentation theory for the prediction of survival in elderly using biomarkers in: Artificial Intelligence Applications and Innovations, (Eds.) L. Iliadis, I. Maglogiannis and V. Plagianakos pp. 385–397 Springer International Publishing, Cham
 
-<a id="10">[10]</a>
+<a id="10">[11]</a>
 **Rizzo, L.** and Longo, L. (2017) Representing and inferring mental workload via defeasible reasoning: a comparison with the nasa task load index and the workload profile in: 1st Workshop on Advances In Argumentation In Artificial Intelligence, Bari, Italy pp. 126–140
