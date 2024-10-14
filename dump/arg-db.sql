@@ -115,7 +115,7 @@ INSERT INTO `arguments` (`id`, `argument`, `conclusion`, `x`, `y`, `label`, `gra
 
 DROP TABLE IF EXISTS `attributes`;
 CREATE TABLE `attributes` (
-  `attribute` varchar(30) NOT NULL,
+  `attribute` varchar(100) NOT NULL,
   `featureset` varchar(40) NOT NULL,
   `a_level` varchar(30) NOT NULL,
   `a_from` decimal(10,3) NOT NULL,
