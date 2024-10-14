@@ -49,8 +49,8 @@
             <br>
             <br>
             <h3 class="form-signin-heading">Please sign in</h3>
-                <label for="username" class="sr-only">Email address</label>
-                <input type="email" id="username" class="form-control" name="username" placeholder="Email address" required autofocus 
+                <label for="username" class="sr-only">Login</label>
+                <input type="text" id="username" class="form-control" name="username" placeholder="Login" required autofocus 
                 value="<?php if(isset($_COOKIE["member_login"])) { echo $_COOKIE["member_login"]; }?>">
                 <label for="password" class="sr-only">Password</label>
                 <input type="password" name="password" id="password" class="form-control" placeholder="Password" required value="<?php if(isset($_COOKIE["member_pass"])) { echo $_COOKIE["member_pass"]; }?>">
