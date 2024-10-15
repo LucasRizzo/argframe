@@ -652,6 +652,10 @@ function createEditionGraph(d3, saveAs, Blob) {
         });
         
         thisGraph.updateGraph();
+        // Rebuttals already saves on the server. This is done so there is
+        // no need to save all the data again, but just update the edges in
+        // the sql table.
+        thisGraph.saveGraphEdges();
         
         return true;
     }
@@ -1478,6 +1482,102 @@ function createEditionGraph(d3, saveAs, Blob) {
             }
         }
     }
+
+
+    GraphCreator.prototype.saveGraphEdges = function() {
+
+        // This method seems to work fine for updating rebuttals and saving on the database.
+        // For very large number of attacks (> 80000) it seems to not work.
+        // Before saving the graph it is necessary to update the edge form with
+        // the edges created by the user
+        var thisGraph = this;
+        var edges = thisGraph.edges;
+        var nodes = thisGraph.nodes;
+
+        // Save current name in case it needs to be recovered
+        var currentName = document.getElementById('editGraphName').value;
+        document.getElementById("editGraphForm").reset();
+
+        // Remove controls edit to create a new empty one.
+        // Not sure how to reset it because it might have children appended
+        // and vector inputs.
+        $('.controlsEdit').remove();
+
+        var e = document.createElement('div');
+        e.classList.add('controlsEdit');
+
+        var htmlData = "<input type=\"hidden\" maxlength=\"2000\" name=\"editFeaturesetName\" id=\"editFeaturesetName\">" +
+                       "<input type=\"hidden\" maxlength=\"2000\" name=\"oldGraphName\" id=\"oldGraphName\">" +
+                       "<input type=\"hidden\" maxlength=\"2000\" name=\"fontsize\" id=\"fontsize\">" + 
+                       "<div class=\"edit-form-arguments\">" +
+                       "<input type=\"hidden\" maxlength=\"2000\" name=\"editArgument[]\">" +
+                       "<input type=\"hidden\" maxlength=\"40\" name=\"editLabel[]\">" +
+                       "<input type=\"hidden\" maxlength=\"40\" name=\"editConclusion[]\">" +
+                       "<input type=\"hidden\" maxlength=\"40\" name=\"editWeight[]\">" +
+                       "</div>";
+
+        
+        edges.forEach(function(d) {
+            htmlData += `
+                <div class="edit-form-graph">
+                    <input type="hidden" maxlength="40" name="editSourceLabel[]" value="${d.source.title}">
+                    <input type="hidden" maxlength="40" name="editTargetLabel[]" value="${d.target.title}">
+                    <input type="hidden" maxlength="40" name="editTypeLabel[]" value="${d.type}">
+                </div>
+            `;
+        });
+
+        htmlData += `<div class="edit-form-position">
+                        <input type="hidden" maxlength="40" name="editX[]">
+                        <input type="hidden" maxlength="40" name="editY[]">
+                     </div>`
+
+        e.innerHTML = htmlData;
+
+        document.getElementById("editGraphForm").append(e);
+
+        var select = document.getElementById('editFeatureset'),
+        i = select.selectedIndex,
+        featureset = select.options[i].text;
+
+        document.getElementById('editFeaturesetName').value = featureset;
+
+        
+        var select = document.getElementById('editFeaturesetgraph'),
+        i = select.selectedIndex;
+        currentGraph = select.options[i].text;
+
+        document.getElementById('editGraphName').value = currentGraph;
+
+        for (var i = 0; i < graphs_.length; i++) {
+            if (graphs_[i].featureset == featureset && graphs_[i].name == document.getElementById('editFeaturesetgraph').value) {
+                //console.log("Sent request to save edges...");
+
+                var oReq = new XMLHttpRequest();
+                oReq.open("POST", "index.php?action=updateEdges", true);
+
+                oReq.onreadystatechange = function() {
+                    if (oReq.readyState == 4 && oReq.status == 200) {
+                        graphs_[i].edges = edges;
+                        //console.log("Edges saved successfully.")
+                    }
+                };
+
+                var formData = new FormData(document.getElementById("editGraphForm"));
+                oReq.send(formData);
+
+                document.getElementById('warningsaved').innerHTML = "";
+                document.getElementById('save-graph').hidden = true;
+
+                break;
+            }
+
+            if (i == graphs_.length -1) {
+                console.log("Graph not found");
+            }
+        }        
+    }
+
 
     // Add node using Add button
     GraphCreator.prototype.addEditionArgument = function() {

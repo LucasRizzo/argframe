@@ -141,6 +141,17 @@ class Model {
         $this->currentGraph = $_POST["editGraphName"];
         $this->currentFeatureset = $_POST["editFeaturesetName"];
     }
+
+    public function updateFeaturesetGraphEdges($jsonGraph) {
+        //TODO: check Graphs on the client side
+        $log = $this->dataSetDAO->updateFeaturesetGraphEdges($jsonGraph);
+        $this->success = "Graph updated with success!";
+        $this->successType = "createGraph";
+        $this->currentGraph = $_POST["editGraphName"];
+        $this->currentFeatureset = $_POST["editFeaturesetName"];
+
+        return $log;
+    }
     
     public function copyFeaturesetGraph($jsonGraph) {
         //TODO: check Graphs on the client side

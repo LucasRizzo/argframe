@@ -41,6 +41,9 @@ class Controller {
             case "update" :
                 $this->updateFeaturesetGraph ();
                 break;
+            case "updateEdges" :
+                $this->updateFeaturesetGraphEdges ();
+                break;
             //case "compute":
             //    $this->handleDataBase ();
             //    break;
@@ -180,6 +183,13 @@ class Controller {
         // post parameters
         $jsonEdges = $this->buildJasonEdges();
         $this->model->saveFeaturesetGraph($jsonEdges);
+    }
+
+    public function updateFeaturesetGraphEdges() {
+        // Build the json string of the graph according to the
+        // post parameters
+        $jsonEdges = $this->buildEditJasonEdges();        
+        $this->model->updateFeaturesetGraphEdges($jsonEdges);
     }
 
     public function updateFeaturesetGraph() {

@@ -953,6 +953,17 @@ class DataSetDAO {
         $this->dbManager->executeQuery ($stmt);
     }
 
+    public function updateFeaturesetGraphEdges($jsonEdges) {
+        $sql = "UPDATE graphs ";
+        $sql .= "SET edges = ? WHERE featureset = ? AND name = ? ;";
+
+        $stmt = $this->dbManager->prepareQuery ( $sql );
+        $this->dbManager->bindValue($stmt, 1, $jsonEdges, $this->dbManager->STRING_TYPE);
+        $this->dbManager->bindValue ( $stmt, 2, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
+        $this->dbManager->bindValue ( $stmt, 3, $_POST["editGraphName"], $this->dbManager->STRING_TYPE);
+        $this->dbManager->executeQuery ($stmt);
+    }
+
     public function createGraphCopy($jsonEdges) {
         // Insert arguments
         $sql = "";
