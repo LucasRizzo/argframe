@@ -1,4 +1,8 @@
 # ArgFrame
+
+### Tutorial
+There is a video demonstrating the basic usage of the framework https://youtu.be/8gD3BQENxu8
+
 ## Introduction
 This argumentation framework has been proposed as a tool to perform automated reasoning with numerical data. It is able to use boolean logic for the creation of if-then rules and attacking rules. In turn, these rules can be activated by data, have their attacks solved, and finally aggregated in different fashions in order to produce a prediction (a number). This process works in the following order:
 
