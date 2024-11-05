@@ -1,7 +1,7 @@
 # ArgFrame
 
 - [Tutorial video](#tutorial-video)
-- [Introduction](#introduction)
+- [Overview](#overview)
 - [Getting started](#getting-started)
 - [Citing this project](#citing-this-project)
 - [Contact](#contact)
@@ -11,8 +11,8 @@
 ## Tutorial Video
 There is a video demonstrating the basic usage of the framework https://youtu.be/8gD3BQENxu8
 
-<a name="introduction"></a>
-## Introduction
+<a name="overview"></a>
+## Overview
 This argumentation framework has been proposed as a tool to perform automated reasoning with numerical data. It is able to use boolean logic for the creation of if-then rules and attacking rules. In turn, these rules can be activated by data, have their attacks solved, and finally aggregated in different fashions in order to produce a prediction (a number). This process works in the following order:
 
 1. feature set creation;
@@ -33,6 +33,7 @@ This argumentation framework has been proposed as a tool to perform automated re
 
 ![Screenshot from 2022-06-28 12-04-07](https://user-images.githubusercontent.com/55241866/176163881-c634b204-27d7-4b5b-a3ba-f40c60f2225c.png)
 
+### Running example
 A running example can be seen here https://lucasrizzo.com/framework/index.php
 
 <a name="getting-started"></a>
