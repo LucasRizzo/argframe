@@ -4,7 +4,7 @@
 - [Overview](#overview)
 - [Getting started](#getting-started)
 - [Citing this project](#citing-this-project)
-- [Contact](#contact)
+- [Contact me](#contact)
 - [References](#references)
 
 <a name="tutorial-video"></a>
@@ -41,11 +41,15 @@ A running example can be seen here https://lucasrizzo.com/framework/index.php
 
 1. Clone the repo by running this command in the terminal:
 
-`git clone https://github.com/LucasRizzo/argframe.git`
+```
+git clone https://github.com/LucasRizzo/argframe.git
+```
 
 2. Make sure to run the command git pull (if you already cloned this repo):
 
-`git pull https://github.com/LucasRizzo/argframe.git`
+```
+git pull https://github.com/LucasRizzo/argframe.git
+```
 
 3. Build docker image by running below commands in the terminal (make sure docker is running and you have docker-compose installed):
 
@@ -82,7 +86,7 @@ author = {Lucas Rizzo},
 keywords = {Defeasible argumentation, Automated reasoning, Knowledge-based systems, Dung semantics, Data analysis}
 ```
 <a name="contact"></a>
-## Contact
+## Contact me
 
 Contact me at lucasmrizzo@gmail.com
 
