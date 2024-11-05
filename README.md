@@ -1,5 +1,6 @@
 # ArgFrame
 
+## Table of Contents
 - [Tutorial video](#tutorial-video)
 - [Overview](#overview)
 - [Getting started](#getting-started)
@@ -84,6 +85,7 @@ doi = {https://doi.org/10.1016/j.simpa.2023.100547},
 url = {https://www.sciencedirect.com/science/article/pii/S2665963823000842},
 author = {Lucas Rizzo},
 keywords = {Defeasible argumentation, Automated reasoning, Knowledge-based systems, Dung semantics, Data analysis}
+}
 ```
 <a name="contact"></a>
 ## Contact me
