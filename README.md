@@ -1,8 +1,17 @@
 # ArgFrame
 
-### Tutorial
+- [Tutorial video](#tutorial-video)
+- [Introduction](#introduction)
+- [Getting started](#getting-started)
+- [Citing this project](#citing-this-project)
+- [Contact](#contact)
+- [References](#references)
+
+<a name="tutorial-video"></a>
+## Tutorial Video
 There is a video demonstrating the basic usage of the framework https://youtu.be/8gD3BQENxu8
 
+<a name="introduction"></a>
 ## Introduction
 This argumentation framework has been proposed as a tool to perform automated reasoning with numerical data. It is able to use boolean logic for the creation of if-then rules and attacking rules. In turn, these rules can be activated by data, have their attacks solved, and finally aggregated in different fashions in order to produce a prediction (a number). This process works in the following order:
 
@@ -26,6 +35,7 @@ This argumentation framework has been proposed as a tool to perform automated re
 
 A running example can be seen here https://lucasrizzo.com/framework/index.php
 
+<a name="getting-started"></a>
 ## Getting started
 
 1. Clone the repo by running this command in the terminal:
@@ -49,6 +59,7 @@ sudo docker-compose up -d
 
 6. To add new users go to the link http://localhost:8000/ to manage the database. Login/password: admin/admin. In the `arg-db` databases, add new users to the table `users` by inserting email and md5(password).
 
+<a name="citing-this-project"></a>
 ## Citing this project
 
 If you use this project in your research, please cite the following paper:
@@ -69,11 +80,12 @@ url = {https://www.sciencedirect.com/science/article/pii/S2665963823000842},
 author = {Lucas Rizzo},
 keywords = {Defeasible argumentation, Automated reasoning, Knowledge-based systems, Dung semantics, Data analysis}
 ```
-
+<a name="contact"></a>
 ## Contact
 
 Contact me at lucasmrizzo@gmail.com
 
+<a name="references"></a>
 ## References
 
 The following papers have used this framework for experimentation.
