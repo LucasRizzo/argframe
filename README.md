@@ -49,6 +49,27 @@ sudo docker-compose up -d
 
 6. To add new users go to the link http://localhost:8000/ to manage the database. Login/password: admin/admin. In the `arg-db` databases, add new users to the table `users` by inserting email and md5(password).
 
+## Citing this project
+
+If you use this project in your research, please cite the following paper:
+
+- Rizzo, L. (2023). ArgFrame: A multi-layer, web, argument-based framework for quantitative reasoning. *Software Impacts*, 17, 100547.
+
+Or with bibtex:
+```bibtex
+@article{RIZZO2023100547,
+title = {ArgFrame: A multi-layer, web, argument-based framework for quantitative reasoning},
+journal = {Software Impacts},
+volume = {17},
+pages = {100547},
+year = {2023},
+issn = {2665-9638},
+doi = {https://doi.org/10.1016/j.simpa.2023.100547},
+url = {https://www.sciencedirect.com/science/article/pii/S2665963823000842},
+author = {Lucas Rizzo},
+keywords = {Defeasible argumentation, Automated reasoning, Knowledge-based systems, Dung semantics, Data analysis}
+```
+
 ## Contact
 
 Contact me at lucasmrizzo@gmail.com
