@@ -1,5 +1,19 @@
 # ArgFrame
-## Introduction
+
+## Table of Contents
+- [Tutorial video](#tutorial-video)
+- [Overview](#overview)
+- [Getting started](#getting-started)
+- [Citing this project](#citing-this-project)
+- [Contact me](#contact)
+- [References](#references)
+
+<a name="tutorial-video"></a>
+## Tutorial Video
+There is a video demonstrating the basic usage of the framework https://youtu.be/8gD3BQENxu8
+
+<a name="overview"></a>
+## Overview
 This argumentation framework has been proposed as a tool to perform automated reasoning with numerical data. It is able to use boolean logic for the creation of if-then rules and attacking rules. In turn, these rules can be activated by data, have their attacks solved, and finally aggregated in different fashions in order to produce a prediction (a number). This process works in the following order:
 
 1. feature set creation;
@@ -20,19 +34,25 @@ This argumentation framework has been proposed as a tool to perform automated re
 
 ![Screenshot from 2022-06-28 12-04-07](https://user-images.githubusercontent.com/55241866/176163881-c634b204-27d7-4b5b-a3ba-f40c60f2225c.png)
 
+### Running example
 A running example can be seen here https://lucasrizzo.com/framework/index.php
 
+<a name="getting-started"></a>
 ## Getting started
 
 1. Clone the repo by running this command in the terminal:
 
-`git clone https://github.com/LucasRizzo/argframe.git`
+```
+git clone https://github.com/LucasRizzo/argframe.git
+```
 
 2. Make sure to run the command git pull (if you already cloned this repo):
 
-`git pull https://github.com/LucasRizzo/argframe.git`
+```
+git pull https://github.com/LucasRizzo/argframe.git
+```
 
-3. Build docker image by running below commands in the terminal (make sure docker is running and you have docker-compose installed):
+3. Build docker image by running below commands in the terminal (make sure docker is running and you have [docker-compose](https://docs.docker.com/compose/) installed):
 
 ```
 cd argframe
@@ -45,10 +65,34 @@ sudo docker-compose up -d
 
 6. To add new users go to the link http://localhost:8000/ to manage the database. Login/password: admin/admin. In the `arg-db` databases, add new users to the table `users` by inserting email and md5(password).
 
-## Contact
+<a name="citing-this-project"></a>
+## Citing this project
+
+If you use this project in your research, please cite the following paper:
+
+- Rizzo, L. (2023). ArgFrame: A multi-layer, web, argument-based framework for quantitative reasoning. *Software Impacts*, 17, 100547.
+
+Or with bibtex:
+```bibtex
+@article{RIZZO2023100547,
+title = {ArgFrame: A multi-layer, web, argument-based framework for quantitative reasoning},
+journal = {Software Impacts},
+volume = {17},
+pages = {100547},
+year = {2023},
+issn = {2665-9638},
+doi = {https://doi.org/10.1016/j.simpa.2023.100547},
+url = {https://www.sciencedirect.com/science/article/pii/S2665963823000842},
+author = {Lucas Rizzo},
+keywords = {Defeasible argumentation, Automated reasoning, Knowledge-based systems, Dung semantics, Data analysis}
+}
+```
+<a name="contact"></a>
+## Contact me
 
 Contact me at lucasmrizzo@gmail.com
 
+<a name="references"></a>
 ## References
 
 The following papers have used this framework for experimentation.
