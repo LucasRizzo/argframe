@@ -1391,12 +1391,8 @@ function create(d3, saveAs, Blob) {
                 iHighestCardConclusion[0] = i;
                 overallHCC = acceptedValue[i] / nConclusions[i];
                 nHigh = 1;
-            } else if (
-                nConclusions[i] == nConclusions[iHighestCardConclusion[0]]
-            ) {
-                overallHCC =
-                    (overallHCC * nHigh + acceptedValue[i] / nConclusions[i]) /
-                    (nHigh + 1);
+            } else if (nConclusions[i] == nConclusions[iHighestCardConclusion[0]] ) {
+                overallHCC = (overallHCC * nHigh + acceptedValue[i] / nConclusions[i]) / (nHigh + 1);
                 iHighestCardConclusion[nHigh] = i;
                 nHigh++;
             }
@@ -1431,10 +1427,7 @@ function create(d3, saveAs, Blob) {
                     console.log("Is there range? " + conclusionNoRange);
 
                     for (i = 0; i < iHighestCardConclusion.length; i++) {
-                        var highestConclusion =
-                            conclusionsByFeatureset_[currentFeatureset][
-                                iHighestCardConclusion[i]
-                            ].conclusion;
+                        var highestConclusion = conclusionsByFeatureset_[currentFeatureset][iHighestCardConclusion[i]].conclusion;
                         if (conclusionNoRange == highestConclusion) {
                             overallWeightedFiltered += d.value * d.weight;
                             sumWeightedFiltered += d.weight;
@@ -1471,13 +1464,8 @@ function create(d3, saveAs, Blob) {
 
                     accrual +=
                         "Average arguments with <i>" +
-                        String(
-                            conclusionsByFeatureset_[currentFeatureset][i]
-                                .conclusion
-                        ) +
-                        "</i> (" +
-                        String(nConclusions[i]) +
-                        ") conclusion: " +
+                        String(conclusionsByFeatureset_[currentFeatureset][i].conclusion) +
+                        "</i> (" + String(nConclusions[i]) + ") conclusion: " +
                         String(acceptedValue[i]);
                 } else {
                     accrual +=
@@ -1507,7 +1495,15 @@ function create(d3, saveAs, Blob) {
                 if (currentAggregation == "Average") {
                     overall /= nAccepted;
                 } else if (currentAggregation == "Highest cardinality") {
-                    overall = overallHCC;
+
+                    if (iHighestCardConclusion.length > 1) {
+                        //console.log("Multiple sets with same cardinality");
+                        overall = "None";
+                    } else {
+                        overall = overallHCC;
+                    }
+
+                    // overall = overallHCC;                    
                 } else if (currentAggregation == "Median") {
                     valuesAccepted.sort((a, b) => a - b);
                     let lowMiddle = Math.floor((valuesAccepted.length - 1) / 2);
@@ -1536,32 +1532,27 @@ function create(d3, saveAs, Blob) {
             } else {
                 if (document.getElementById("accrualAverageExport").checked) {
                     overall /= nAccepted;
-                } else if (
-                    document.getElementById("cardinalityAverageExport").checked
-                ) {
-                    overall = overallHCC;
+                } else if (document.getElementById("cardinalityAverageExport").checked) {
+                    if (iHighestCardConclusion.length > 1) {
+                        //console.log("Multiple sets with same cardinality");
+                        overall = "None";
+                    } else {
+                        overall = overallHCC;
+                    }                    
+                    // overall = overallHCC;
                 } else if (document.getElementById("medianExport").checked) {
                     valuesAccepted.sort((a, b) => a - b);
                     let lowMiddle = Math.floor((valuesAccepted.length - 1) / 2);
                     let highMiddle = Math.ceil((valuesAccepted.length - 1) / 2);
-                    overall =
-                        (valuesAccepted[lowMiddle] +
-                            valuesAccepted[highMiddle]) /
-                        2;
+                    overall = (valuesAccepted[lowMiddle] + valuesAccepted[highMiddle]) / 2;
                 } else if (document.getElementById("weightedExport").checked) {
                     overallWeighted /= sumWeights;
                     overall = overallWeighted;
-                } else if (
-                    document.getElementById("highestConclusionExport").checked
-                ) {
+                } else if (document.getElementById("highestConclusionExport").checked) {
                     overall = highestConclustion;
-                } else if (
-                    document.getElementById("absoluteConclusionExport").checked
-                ) {
+                } else if (document.getElementById("absoluteConclusionExport").checked) {
                     overall = overallHCC - nNotHigh;
-                } else if (
-                    document.getElementById("highestWeightedExport").checked
-                ) {
+                } else if (document.getElementById("highestWeightedExport").checked) {
                     if (sumWeightedFiltered > 0) {
                         overall = overallWeightedFiltered / sumWeightedFiltered;
                     } else {
@@ -1579,11 +1570,7 @@ function create(d3, saveAs, Blob) {
                 i = select.selectedIndex,
                 currentAggregation = select.options[i].text;
 
-            if (
-                (toFile &&
-                    !document.getElementById("nConclusionsExport").checked) ||
-                (!toFile && currentAggregation != "# Conclusions")
-            ) {
+            if ((toFile && !document.getElementById("nConclusionsExport").checked) || (!toFile && currentAggregation != "# Conclusions")) {
                 result = String(overall);
             } else {
                 result = numberConclusions;
@@ -1592,6 +1579,7 @@ function create(d3, saveAs, Blob) {
             accrual += "<br><br>Average of all accepted arguments: " + result;
         } else {
             accrual += "<br>No argument was accepted";
+            result = "None";
         }
 
         thisGraph.circles.exit().remove();
@@ -1756,22 +1744,14 @@ function create(d3, saveAs, Blob) {
         iHighestCardConclusion[0] = 0;
         var overallHCC = acceptedValue[0] / nConclusions[0];
         var nHigh = 1;
-        for (
-            i = 1;
-            i < conclusionsByFeatureset_[currentFeatureset].length;
-            i++
-        ) {
+        for (i = 1; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
             if (nConclusions[i] > nConclusions[iHighestCardConclusion[0]]) {
                 iHighestCardConclusion = [];
                 iHighestCardConclusion[0] = i;
                 overallHCC = acceptedValue[i] / nConclusions[i];
                 nHigh = 1;
-            } else if (
-                nConclusions[i] == nConclusions[iHighestCardConclusion[0]]
-            ) {
-                overallHCC =
-                    (overallHCC * nHigh + acceptedValue[i] / nConclusions[i]) /
-                    (nHigh + 1);
+            } else if (nConclusions[i] == nConclusions[iHighestCardConclusion[0]]) {
+                overallHCC = (overallHCC * nHigh + acceptedValue[i] / nConclusions[i]) / (nHigh + 1);
                 iHighestCardConclusion[nHigh] = i;
                 nHigh++;
             }
@@ -1793,11 +1773,7 @@ function create(d3, saveAs, Blob) {
 
                 // If it is rankBased not all nodes in the extension are accepted.
                 // Only the nodes with a conclusion and highest rank are accepted.
-                if (
-                    (hasConclusion && !rankBased) ||
-                    (rankBased &&
-                        onlyConclusions.indexOf("," + d.title + ",") != -1)
-                ) {
+                if ((hasConclusion && !rankBased) || (rankBased && onlyConclusions.indexOf("," + d.title + ",") != -1)) {
                     var conclusionNoRange = "";
                     for (var i = 0; i < premiseAndConclusion[1].length; i++) {
                         if (premiseAndConclusion[1][i] != " ") {
@@ -1808,10 +1784,7 @@ function create(d3, saveAs, Blob) {
                     }
 
                     for (i = 0; i < iHighestCardConclusion.length; i++) {
-                        var highestConclusion =
-                            conclusionsByFeatureset_[currentFeatureset][
-                                iHighestCardConclusion[i]
-                            ].conclusion;
+                        var highestConclusion = conclusionsByFeatureset_[currentFeatureset][iHighestCardConclusion[i]].conclusion;
                         if (conclusionNoRange == highestConclusion) {
                             overallWeightedFiltered += d.value * d.weight;
                             sumWeightedFiltered += d.weight;
@@ -1823,11 +1796,7 @@ function create(d3, saveAs, Blob) {
 
         // Find number of conclusions that are not in the highest cardinality set(s)
         var nNotHigh = 0;
-        for (
-            i = 0;
-            i < conclusionsByFeatureset_[currentFeatureset].length;
-            i++
-        ) {
+        for (i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
             if (nConclusions[i] < nConclusions[iHighestCardConclusion[0]]) {
                 nNotHigh += nConclusions[i];
             }
@@ -1835,39 +1804,16 @@ function create(d3, saveAs, Blob) {
 
         if (nAccepted > 0) {
             // Round index to two decimals
-            for (
-                var i = 0;
-                i < conclusionsByFeatureset_[currentFeatureset].length;
-                i++
-            ) {
+            for (var i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
                 if (nConclusions[i] > 0) {
                     acceptedValue[i] /= nConclusions[i];
 
                     var numberParts = String(acceptedValue[i]).split(".");
                     if (numberParts.length > 1) {
-                        acceptedValue[i] =
-                            numberParts[0] + "." + numberParts[1].slice(0, 2);
+                        acceptedValue[i] = numberParts[0] + "." + numberParts[1].slice(0, 2);
                     }
                 }
             }
-
-            /* result = "";
-            
-            var average = overall / nAccepted;
-            var highestCardinality = overallHCC;
-            
-            overallWeighted /= sumWeights;
-            var weightedAverage = overallWeighted;
-            
-            var highestWeighted;
-            if (sumWeightedFiltered > 0) {
-                highestWeighted = overallWeightedFiltered / sumWeightedFiltered;
-            } else {
-                highestWeighted = "None";
-            }
-            
-            //h3 h1 h4 h2
-            result += String(average) + "," + String(highestCardinality) + "," + String(weightedAverage) + "," + String(highestWeighted); */
 
             for (var i = 0; i < accrual.length; i++) {
                 if (accrual[i] == "Sum") {
@@ -1896,11 +1842,14 @@ function create(d3, saveAs, Blob) {
                 if (accrual[i] == "Highest cardinality") {
                     var numberParts = String(overallHCC).split(".");
                     if (numberParts.length > 1) {
-                        overallHCC =
-                            numberParts[0] + "." + numberParts[1].slice(0, 9);
+                        overallHCC = numberParts[0] + "." + numberParts[1].slice(0, 9);
                     }
 
-                    overallString += "," + String(overallHCC);
+                    if (iHighestCardConclusion.length == 1) {
+                        overallString += "," + String(overallHCC);
+                    } else {  // If there is more than on group with highest cardinality, do not export a result
+                        overallString += ",";
+                    }
                     continue;
                 }
 
@@ -1969,41 +1918,6 @@ function create(d3, saveAs, Blob) {
                     continue;
                 }
             }
-
-            //             if (document.getElementById("accrualAverageExport").checked) {
-            //                 overall /= nAccepted;
-            //             } else if (document.getElementById("cardinalityAverageExport").checked) {
-            //                 overall = overallHCC;
-            //             } else if (document.getElementById("medianExport").checked) {
-            //                 valuesAccepted.sort((a, b) => a - b);
-            //                 let lowMiddle = Math.floor((valuesAccepted.length - 1) / 2);
-            //                 let highMiddle = Math.ceil((valuesAccepted.length - 1) / 2);
-            //                 overall = (valuesAccepted[lowMiddle] + valuesAccepted[highMiddle]) / 2;
-            //             } else if (document.getElementById("weightedExport").checked) {
-            //                 overallWeighted /= sumWeights;
-            //                 overall = overallWeighted;
-            //             } else if (document.getElementById("highestConclusionExport").checked) {
-            //                 overall = highestConclustion;
-            //             } else if (document.getElementById("absoluteConclusionExport").checked) {
-            //                 overall = overallHCC - nNotHigh;
-            //             } else if (document.getElementById("highestWeightedExport").checked) {
-            //                 if (sumWeightedFiltered > 0) {
-            //                     overall = overallWeightedFiltered / sumWeightedFiltered;
-            //                 } else {
-            //                     overall = "None";
-            //                 }
-            //             }
-            //
-            //             var numberParts = String(overall).split(".");
-            //             if (numberParts.length > 1) {
-            //                 overall = numberParts[0] + "." + numberParts[1].slice(0, 9);
-            //             }
-
-            //             if (! document.getElementById("nConclusionsExport").checked) {
-            //                 result = String(overall);
-            //             } else {
-            //                 result = numberConclusions;
-            //             }
         }
 
         thisGraph.circles.exit().remove();
@@ -2026,7 +1940,7 @@ function create(d3, saveAs, Blob) {
     ) {
         //document.getElementById('progressRow').className = "col-md-12";
 
-        var maxComputation = 1000;
+        var maxComputation = 10000;
 
         console.log("Alldata: ", allData_.length);
 
@@ -2472,11 +2386,7 @@ function create(d3, saveAs, Blob) {
                 //console.log(semanticsVector);
                 for (var ei = 0; ei < semanticsVector.length; ei++) {
                     // Expert system, grounded, eager or ideal. Only one extension
-                    if (
-                        jsonExtension[ei]
-                            .toString()
-                            .search("Maximum execution time") != -1
-                    ) {
+                    if (jsonExtension[ei].toString().search("Maximum execution time") != -1) {
                         var timeLimit = "";
                         for (var i = 0; i < accrualVector.length; i++) {
                             timeLimit += "Time limit,";
@@ -2487,11 +2397,7 @@ function create(d3, saveAs, Blob) {
                         continue;
                     }
 
-                    if (
-                        jsonExtension[ei]
-                            .toString()
-                            .search("Allowed memory size") != -1
-                    ) {
+                    if (jsonExtension[ei].toString().search("Allowed memory size") != -1) {
                         var memoryLimit = "";
                         for (var i = 0; i < accrualVector.length; i++) {
                             memoryLimit += "Memory limit,";
@@ -2506,22 +2412,9 @@ function create(d3, saveAs, Blob) {
                     // Unique extension semantics
                     if (semanticsVector[ei] == "categoriser") {
                         if (!invisible) {
-                            row.push(
-                                graph.semanticsPerRow(
-                                    jsonExtension[ei][0],
-                                    true,
-                                    false,
-                                    true
-                                )
-                            );
+                            row.push(graph.semanticsPerRow(jsonExtension[ei][0],true,false,true));
                         } else {
-                            row.push(
-                                graph.semanticsPerRowInvisible(
-                                    jsonExtension[ei][0],
-                                    accrualVector,
-                                    true
-                                )
-                            );
+                            row.push(graph.semanticsPerRowInvisible(jsonExtension[ei][0],accrualVector,true));
                         }
                     } else if (
                         semanticsVector[ei] == "grounded" ||
@@ -2530,16 +2423,9 @@ function create(d3, saveAs, Blob) {
                         semanticsVector[ei] == "ideal"
                     ) {
                         if (!invisible) {
-                            row.push(
-                                graph.semanticsPerRow(jsonExtension[ei], true)
-                            );
+                            row.push(graph.semanticsPerRow(jsonExtension[ei], true));
                         } else {
-                            row.push(
-                                graph.semanticsPerRowInvisible(
-                                    jsonExtension[ei],
-                                    accrualVector
-                                )
-                            );
+                            row.push(graph.semanticsPerRowInvisible(jsonExtension[ei],accrualVector));
                         }
                     // Not unique extension semantics
                     } else {
@@ -2554,19 +2440,9 @@ function create(d3, saveAs, Blob) {
                         if (jsonExtension[ei].length == 1 && jsonExtension[ei][0].length == 0) {
                             // There is no extension. Push undefined so it won't appear in the csv
                             if (!invisible) {
-                                row.push(
-                                    graph.semanticsPerRow(
-                                        jsonExtension[ei][0],
-                                        true
-                                    )
-                                );
+                                row.push(graph.semanticsPerRow(jsonExtension[ei][0],true));
                             } else {
-                                row.push(
-                                    graph.semanticsPerRowInvisible(
-                                        jsonExtension[ei][0],
-                                        accrualVector
-                                    )
-                                );
+                                row.push(graph.semanticsPerRowInvisible(jsonExtension[ei][0], accrualVector));
                             }
                             break;
                         }
@@ -2575,12 +2451,7 @@ function create(d3, saveAs, Blob) {
                             if (!invisible) {
                                 row.push(graph.semanticsPerRow("[]", true));
                             } else {
-                                row.push(
-                                    graph.semanticsPerRowInvisible(
-                                        "[]",
-                                        accrualVector
-                                    )
-                                );
+                                row.push(graph.semanticsPerRowInvisible("[]",accrualVector));
                             }
                             break;
                         }
@@ -2598,32 +2469,14 @@ function create(d3, saveAs, Blob) {
                                 sameSizeExtension++;
                                 if (!invisible) {
                                     // each index is correspondent to an accrual option selected
-                                    var indexes = graph
-                                        .semanticsPerRow(
-                                            jsonExtension[ei][ej],
-                                            true
-                                        )
-                                        .split(",");
-                                    for (
-                                        var i = 0;
-                                        i < accrualVector.length;
-                                        i++
-                                    ) {
+                                    var indexes = graph.semanticsPerRow(jsonExtension[ei][ej], true).split(",");
+                                    for (var i = 0; i < accrualVector.length; i++ ) {
                                         finalIndex[i] += parseFloat(indexes[i]);
                                     }
                                 } else {
                                     // each index is correspondent to an accrual option selected
-                                    var indexes = graph
-                                        .semanticsPerRowInvisible(
-                                            jsonExtension[ei][ej],
-                                            accrualVector
-                                        )
-                                        .split(",");
-                                    for (
-                                        var i = 0;
-                                        i < accrualVector.length;
-                                        i++
-                                    ) {
+                                    var indexes = graph.semanticsPerRowInvisible(jsonExtension[ei][ej],accrualVector).split(",");
+                                    for (var i = 0; i < accrualVector.length; i++) {
                                         finalIndex[i] += parseFloat(indexes[i]);
                                     }
                                 }
@@ -2632,8 +2485,19 @@ function create(d3, saveAs, Blob) {
 
                         var finalIndexString = "";
                         for (var i = 0; i < accrualVector.length; i++) {
-                            finalIndex[i] /= sameSizeExtension;
-                            finalIndexString += finalIndex[i].toString() + ",";
+
+                            if (accrualVector[i] == "Highest cardinality") {
+                                
+                                // Only add highest cardinality if there is a single extension of max size.
+                                if (sameSizeExtension == 1) {                                    
+                                    finalIndexString += finalIndex[i].toString() + ",";
+                                } else {
+                                    finalIndexString += ",";
+                                }
+                            } else {
+                                finalIndex[i] /= sameSizeExtension;
+                                finalIndexString += finalIndex[i].toString() + ",";
+                            }   
                         }
                         finalIndexString = finalIndexString.slice(0, -1);
                         row.push(finalIndexString.toString());
