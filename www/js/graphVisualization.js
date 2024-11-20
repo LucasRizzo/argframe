@@ -1105,22 +1105,20 @@ function create(d3, saveAs, Blob) {
         const rankBased = api.includes("categoriser");
         const strengthOfArguments = document.getElementById("strengthCheckBox").checked;
 
-        var result;
-
-        const { consts, state, edges, circles, paths } = thisGraph;
+        const { consts, edges, circles, paths } = thisGraph;
 
         // Utility to toggle styles for nodes and edges
-        const updateStyles = () => {
+        const updateOpacityStyles = () => {
             paths.style("opacity", 0.15);
             circles.style("opacity", 1.0).each(function (d) {
-                if (!d.activated) {
+                if (! d.activated) {
                     d3.select(this).style("opacity", 0.4);
                 }
             });
         };
 
         // Process activated nodes and their connections
-        const processActivatedNodes = () => {
+        const processActivatedNodesOpacity = () => {
             circles.each(function (node) {
                 if (node.activated) {
                     processNodeEdges(node);
@@ -1152,414 +1150,264 @@ function create(d3, saveAs, Blob) {
             }
         };
 
-        // const calculateAccrualMetrics = () => {
-        //     const valuesAccepted = [];
-        //     const nConclusions = Array(conclusionsByFeatureset_[currentFeatureset].length).fill(0);
-        //     const acceptedValue = Array(nConclusions.length).fill(0);
-    
-        //     let nAccepted = 0, overall = 0, overallWeighted = 0, sumWeights = 0;
-        //     let highestConclusion = Number.MIN_VALUE;
-    
-        //     circles.each(function (node) {
-        //         const nodeSelection = d3.select(this);
-        //         if (extension.includes(`,${node.title},`)) {
-        //             const [premise, conclusion] = String(node.tooltip).split(" -> ");
-        //             if (! conclusion || conclusion === "NULL") return;
-    
-        //             const conclusionIndex = conclusionsByFeatureset_[currentFeatureset].findIndex(c => c.conclusion === conclusion.trim());
-        //             if (conclusionIndex === -1) return;
-    
-        //             nConclusions[conclusionIndex]++;
-        //             acceptedValue[conclusionIndex] += node.value;
-        //             highestConclusion = Math.max(highestConclusion, parseFloat(conclusionsByFeatureset_[currentFeatureset][conclusionIndex].c_to));
-    
-        //             valuesAccepted.push(node.value);
-        //             overall += node.value;
-        //             overallWeighted += node.value * node.weight;
-        //             sumWeights += node.weight;
-    
-        //             // Update node class based on acceptance
-        //             nodeSelection.classed(consts.acceptedGClass, true).classed(consts.deniedGClass, false);
-        //             nAccepted++;
-        //         } else if (node.activated) {
-        //             nodeSelection.classed(consts.deniedGClass, true).classed(consts.acceptedGClass, false);
-        //         }
-        //     });
-    
-        //     // Calculate overall metrics
-        //     const average = (nAccepted > 0) ? (overall / nAccepted).toFixed(2) : 0;
-        //     const median = valuesAccepted.sort((a, b) => a - b)[Math.floor(valuesAccepted.length / 2)];
-        //     const weightedAvg = (sumWeights > 0) ? (overallWeighted / sumWeights).toFixed(2) : 0;
-    
-        //     return {overall, average, weightedAvg, median, highestConclusion};
-        // };
+        const processRankBasedExtension = (extension) => {
+            let i = 0;
+            let previousValue;
+            let onlyConclusions = [];
+            const epsilon = 0.000001;
+        
+            for (let prop in extension) {
+        
+                // Retrieve tooltip for the current property
+                const tooltip = thisGraph.circles.find(d => d.title === String(prop))?.tooltip;
+                const [, conclusion] = String(tooltip).split(" -> ");
 
-
-        // Main logic
-        // extension = api == "categoriser" ? extension : 
-
-        updateStyles();
-        processActivatedNodes();
-        // const metrics = calculateAccrualMetrics();
-
-
-
-
-        // Store final result string
-        var accrual = "";
-
-        // Overall number of accepted arguments
-        var nAccepted = 0;
-        // Arguments accepted for each conclusion
-        var nConclusions = [];
-        // Conclusion with the maximum right side range
-        var highestConclustion = Number.MIN_VALUE;
-        // Sum of accepted arguments values for each conclusion
-        var acceptedValue = [];
-        var weights = [];
-        var overall = 0;
-        var overallWeighted = 0;
-        var sumWeights = 0;
-        // Vector of values accepted to calculate the median
-        var valuesAccepted = [];
-
-        for (i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
-            nConclusions[i] = 0;
-            acceptedValue[i] = 0;
-        }
-
-        $("#results").remove();
-
-        var original = extension;
-        var onlyConclusions = ",";
-
-        if (rankBased) {
-            var i = 0;
-            var previousValue;
-            var allLabels = "";
-            for (var prop in extension) {
-                allLabels += String(prop) + ",";
-
-                // First value is always inserted
-                var premiseAndConclusion;
-
-                thisGraph.circles.filter(function (d) {
-                    if (d.title == String(prop)) {
-                        premiseAndConclusion = d.tooltip;
-                    }
-                });
-
-                premiseAndConclusion =
-                    String(premiseAndConclusion).split(" -> ");
-                var hasConclusion =
-                    premiseAndConclusion.length == 2 &&
-                    premiseAndConclusion[1] != "NULL";
-
-                if (!hasConclusion) {
-                    continue;
-                }
-
-                if (i == 0) {
-                    onlyConclusions += String(prop) + ",";
-                    previousValue = extension[prop];
-                    // If next value equal previous value it is also inserted
-                } else if (Math.abs(previousValue - extension[prop]) < 0.000001) {
-                    onlyConclusions += "," + String(prop) + ",";
-                    // If new greater value has been found restart extension
+                if (! conclusion || conclusion === "NULL") continue;
+                
+                if (i === 0 || Math.abs(previousValue - extension[prop]) < epsilon) {
+                    onlyConclusions.push(prop);
                 } else if (previousValue < extension[prop]) {
-                    onlyConclusions = "," + String(prop) + ",";
-                    previousValue = extension[prop];
+                    onlyConclusions = [prop];
                 }
+                
+                previousValue = extension[prop];
                 i++;
             }
-
-            // Remove last comma cause it will be inserted again below
-            allLabels = allLabels.slice(0, -1);
-            extension = allLabels;
-        }
-
-        extension = "," + extension + ",";
-        thisGraph.circles.each(function (d) {
-            var currentNode = d3.select(this);
-
-            if (extension.indexOf("," + d.title + ",") != -1) {
-                var premiseAndConclusion = String(d.tooltip).split(" -> ");
-                // Only arguments with a conclusion will have a value
-                var hasConclusion =
-                    premiseAndConclusion.length == 2 &&
-                    premiseAndConclusion[1] != "NULL";
-
-                // If it is rankBased not all nodes in the extension are accepted.
-                // Only the nodes with a conclusion and highest rank are accepted.
-                if ((hasConclusion && !rankBased) || (rankBased && onlyConclusions.indexOf("," + d.title + ",") != -1)) {
-                    valuesAccepted[nAccepted] = d.value;
-                    nAccepted++;
-
-                    var conclusionNoRange = "";
-
-                    for (var i = 0; i < premiseAndConclusion[1].length; i++) {
-                        if (premiseAndConclusion[1][i] != " ") {
-                            conclusionNoRange += premiseAndConclusion[1][i];
-                        } else {
-                            break;
-                        }
-                    }
-
-                    var indexConclusion = 0;
-
-                    for (var i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
-                        if (conclusionsByFeatureset_[currentFeatureset][i].conclusion == conclusionNoRange) {
-                            if (parseFloat(conclusionsByFeatureset_[currentFeatureset][i].c_to) > highestConclustion) {
-                                highestConclustion = parseFloat(conclusionsByFeatureset_[currentFeatureset][i].c_to);
-                            }
-                            indexConclusion = i;
-                            break;
-                        }
-                    }
-
-                    nConclusions[indexConclusion]++;
-                    acceptedValue[indexConclusion] += d.value;
-                    overall += d.value;
-                    overallWeighted += d.value * d.weight;
-                    sumWeights += d.weight;
-                }
-
-                currentNode.classed(consts.circleGClass, false);
-                currentNode.classed(consts.deniedGClass, false);
-
-                if (!hasConclusion) {
-                    // If it has no conclusion the color will change only if there
-                    // is an activated attack from this node
-                    var hasTarget = false;
-                    edges.forEach(function (edge, i) {
-                        if (edge.source.id == d.id) {
-                            thisGraph.circles.each(function (td) {
-                                if (td.activated && edge.target.id == td.id) {
-                                    currentNode.classed(
-                                        consts.onlyActivatedGClass,
-                                        true
-                                    );
-                                    currentNode.classed(
-                                        consts.acceptedGClass,
-                                        false
-                                    );
-                                    hasTarget = true;
-                                }
-                            });
-                        }
-                    });
-
-                    if (!hasTarget) {
-                        currentNode.classed(consts.circleGClass, true);
-                    }
-                } else if (api == "Activated") {
-                    currentNode.classed(consts.onlyActivatedGClass, true);
-                    currentNode.classed(consts.acceptedGClass, false);
-                } else {
-                    if (!rankBased ||(rankBased && onlyConclusions.indexOf("," + d.title + ",") != -1)) {
-                        currentNode.classed(consts.acceptedGClass, true);
-                        currentNode.classed(consts.onlyActivatedGClass, false);
-                    }
-
-                    if (rankBased && onlyConclusions.indexOf("," + d.title + ",") == -1) {
-                        currentNode.classed(consts.circleGClass, false);
-                        currentNode.classed(consts.deniedGClass, true);
-                        currentNode.classed(consts.acceptedGClass, false);
-                        currentNode.classed(consts.onlyActivatedGClass, false);
-                    }
-                }
-            } else if (
-                extension.indexOf("," + d.title + ",") == -1 &&
-                d.activated
-            ) {
-                currentNode.classed(consts.circleGClass, false);
-                currentNode.classed(consts.deniedGClass, true);
-                currentNode.classed(consts.acceptedGClass, false);
-                currentNode.classed(consts.onlyActivatedGClass, false);
-            }
-        });
-
-        var iHighestCardConclusion = [];
-        iHighestCardConclusion[0] = 0;
-        var overallHCC = acceptedValue[0] / nConclusions[0];
-        var nHigh = 1;
-        for (i = 1; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
-            if (nConclusions[i] > nConclusions[iHighestCardConclusion[0]]) {
-                iHighestCardConclusion = [];
-                iHighestCardConclusion[0] = i;
-                overallHCC = acceptedValue[i] / nConclusions[i];
-                nHigh = 1;
-            } else if (
-                nConclusions[i] == nConclusions[iHighestCardConclusion[0]]
-            ) {
-                overallHCC =
-                    (overallHCC * nHigh + acceptedValue[i] / nConclusions[i]) /
-                    (nHigh + 1);
-                iHighestCardConclusion[nHigh] = i;
-                nHigh++;
-            }
-        }
-
-        // Find the weighted average of the arguments who belong to the highest
-        // conclusions
-        var overallWeightedFiltered = 0;
-        var sumWeightedFiltered = 0;
-
-        thisGraph.circles.each(function (d) {
-            var currentNode = d3.select(this);
-            if (extension.indexOf("," + d.title + ",") != -1) {
-                var premiseAndConclusion = String(d.tooltip).split(" -> ");
-                // Only arguments with a conclusion will have a value
-                var hasConclusion =
-                    premiseAndConclusion.length == 2 &&
-                    premiseAndConclusion[1] != "NULL";
-
-                // If it is rankBased not all nodes in the extension are accepted.
-                // Only the nodes with a conclusion and highest rank are accepted.
-                if ((hasConclusion && !rankBased) || (rankBased && onlyConclusions.indexOf("," + d.title + ",") != -1)) {
-                    var conclusionNoRange = "";
-                    for (var i = 0; i < premiseAndConclusion[1].length; i++) {
-                        if (premiseAndConclusion[1][i] != " ") {
-                            conclusionNoRange += premiseAndConclusion[1][i];
-                        } else {
-                            break;
-                        }
-                    }
-
-                    console.log("Is there range? " + conclusionNoRange);
-
-                    for (i = 0; i < iHighestCardConclusion.length; i++) {
-                        var highestConclusion =
-                            conclusionsByFeatureset_[currentFeatureset][
-                                iHighestCardConclusion[i]
-                            ].conclusion;
-                        if (conclusionNoRange == highestConclusion) {
-                            overallWeightedFiltered += d.value * d.weight;
-                            sumWeightedFiltered += d.weight;
-                            console.log("Value:" + d.value + " Weight " + d.weight);
-                        }
-                    }
-                }
-            }
-        });
-
-        // Find number of conclusions that are not in the highest cardinality set(s)
-        var nNotHigh = 0;
-        for (i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
-            if (nConclusions[i] < nConclusions[iHighestCardConclusion[0]]) {
-                nNotHigh += nConclusions[i];
-            }
-        }
-
-        if (nAccepted > 0) {
-            // Round index to two decimals
-            for (var i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
-                if (i > 0) {
-                    accrual += "<br>";
-                }
-
-                if (nConclusions[i] > 0) {
-                    acceptedValue[i] /= nConclusions[i];
-
-                    var numberParts = String(acceptedValue[i]).split(".");
-                    if (numberParts.length > 1) {
-                        acceptedValue[i] =
-                            numberParts[0] + "." + numberParts[1].slice(0, 2);
-                    }
-
-                    accrual +=
-                        "Average arguments with <i>" +
-                        String(
-                            conclusionsByFeatureset_[currentFeatureset][i]
-                                .conclusion
-                        ) +
-                        "</i> (" +
-                        String(nConclusions[i]) +
-                        ") conclusion: " +
-                        String(acceptedValue[i]);
-                } else {
-                    accrual +=
-                        "No arguments with <i>" +
-                        String(
-                            conclusionsByFeatureset_[currentFeatureset][i]
-                                .conclusion
-                        ) +
-                        "</i> conclusion.";
-                }
-            }
-            if (rankBased) {
-                accrual += "<br><br>Argument ranking:<br>";
-                for (var key in original) {
-                    accrual += "<i>" + key + "</i>: " + original[key] + "<br>";
-                }
-
-                // Remove last <br>
-                accrual = accrual.slice(0, -4);
-            }
-
-            
-            var select = document.getElementById("accrualVisualization"),
-                i = select.selectedIndex,
-                currentAggregation = select.options[i].text;
-
-            if (currentAggregation == "Average") {
-                overall /= nAccepted;
-            } else if (currentAggregation == "Highest cardinality") {
-                overall = overallHCC;
-            } else if (currentAggregation == "Median") {
-                valuesAccepted.sort((a, b) => a - b);
-                let lowMiddle = Math.floor((valuesAccepted.length - 1) / 2);
-                let highMiddle = Math.ceil((valuesAccepted.length - 1) / 2);
-                overall =
-                    (valuesAccepted[lowMiddle] +
-                        valuesAccepted[highMiddle]) /
-                    2;
-            } else if (currentAggregation == "Weighted average") {
-                overallWeighted /= sumWeights;
-                console.log("sum: " + sumWeights);
-                overall = overallWeighted;
-            } else if (currentAggregation == "Highest conclusion") {
-                overall = highestConclustion;
-            } else if (
-                currentAggregation == "Absolute highest conclusion"
-            ) {
-                overall = overallHCC - nNotHigh;
-            } else if (currentAggregation == "Highest and weighted") {
-                if (sumWeightedFiltered > 0) {
-                    overall = overallWeightedFiltered / sumWeightedFiltered;
-                } else {
-                    overall = "None";
-                }
-            }
-
-
-            var numberParts = String(overall).split(".");
-            if (numberParts.length > 1) {
-                overall = numberParts[0] + "." + numberParts[1].slice(0, 2);
-            }
-
-            var select = document.getElementById("accrualVisualization"),
-                i = select.selectedIndex,
-                currentAggregation = select.options[i].text;
-
-            result = String(overall);
         
-            accrual += "<br><br>Average of all accepted arguments: " + result;
-        } else {
-            accrual += "<br>No argument was accepted";
+            return onlyConclusions;
         }
 
-        thisGraph.circles.exit().remove();
-        //$('#resultsColumn').append("<p id='results'>" + accrual + "</p>");
-        var popover = $("#resultsContent")
+        const calculateAccrualMetrics = () => {
+            
+            const currentFeatureset = document.getElementById("featureset").selectedOptions[0].text;
+            const conclusions = conclusionsByFeatureset_[currentFeatureset];
+            
+            // All values accepted
+            const valuesAccepted = [];
+            // Number of accepted argumets per conclusion
+            const nConclusions = Array(conclusions.length).fill(0);
+            // Sum of accepted values per conclusion
+            const sumAcceptedValuesPerConclusion = Array(conclusions.length).fill(0);
+    
+            let weightedSum = 0,  // Used to calculated weighted average value of accepted nodes
+                totalWeight = 0,  // Used to calculated weighted average value of accepted nodes
+                // Used to calculated conclusion with highest value (not very useful anymore)
+                highestConclusionValue = Number.MIN_VALUE; 
+    
+            circles.each(function (node) {
+                
+                
+                if (!extension.includes(`${node.title}`) || !node.activated) return;
+                
+    
+                const tooltipParts = String(node.tooltip).split(" -> ");
+                const conclusion = tooltipParts[1].split(" ")[0].trim();
+    
+                const conclusionIndex = conclusions.findIndex(c => c.conclusion === conclusion);
+                if (conclusionIndex === -1) return;
+    
+                nConclusions[conclusionIndex]++;
+                sumAcceptedValuesPerConclusion[conclusionIndex] += node.value;
+                highestConclusionValue = Math.max(highestConclusionValue, parseFloat(conclusions[conclusionIndex].c_to));
+    
+                valuesAccepted.push(node.value);
+                weightedSum += node.value * node.weight;
+                totalWeight += node.weight;
+            });
+            
+            // Weighted average value of accepted nodes
+            const weightedAvg = totalWeight ? (weightedSum / totalWeight).toFixed(2) : 0;
+            return {nConclusions, sumAcceptedValuesPerConclusion, valuesAccepted, weightedAvg, highestConclusionValue};
+        };
+
+        const processHighestCardinality = (metrics) => {
+            const {nConclusions, sumAcceptedValuesPerConclusion} = metrics;
+            let iHighestCardinality = [0]; // Array with index of conclusions with highest cardinality
+            // Average value of arguments with highest cardinality conclusion
+            let averageHCC = sumAcceptedValuesPerConclusion[0] / nConclusions[0];
+            // Number of conclusion with highest cardinality
+            let nHigh = 1;
+            
+            // Find conclusions with highest cardinality and calculated average value of arguments
+            // inferring them
+            conclusionsByFeatureset_[currentFeatureset].forEach((_, i) => {
+                if (i === 0) return;  // 0 is assumed to be the highest
+    
+                if (nConclusions[i] > nConclusions[iHighestCardinality[0]]) {
+                    iHighestCardinality = [i];
+                    averageHCC = sumAcceptedValuesPerConclusion[i] / nConclusions[i];
+                    nHigh = 1;
+                } else if (nConclusions[i] === nConclusions[iHighestCardinality[0]]) {
+                    // More than one conclusion with highest cardinality
+                    // This takes the average of all of them (doesn't make much sense)
+                    averageHCC = (averageHCC * nHigh + sumAcceptedValuesPerConclusion[i] / nConclusions[i]) / (nHigh + 1);
+                    iHighestCardinality.push(i);
+                    nHigh++;
+                }
+            });
+
+            // Find weighted average of arguments inferring conclusions with highest cardinality
+            let weightedSumFiltered = 0;
+            let totalWeightFiltered = 0;
+    
+            circles.each(function (d) {
+                if (!extension.includes(`,${d.title},`)) return;
+    
+                const conclusion = String(d.tooltip).split(" -> ")[1]?.split(" ")[0];
+                if (!conclusion) return;
+    
+                const isHighestCardinality = iHighestCardinality.some(index =>
+                    conclusion === conclusionsByFeatureset_[currentFeatureset][index].conclusion
+                );
+    
+                if (isHighestCardinality) {
+                    weightedSumFiltered += d.value * d.weight;
+                    totalWeightFiltered += d.weight;
+                }
+            });
+            
+            let averageHCCWeighted = "None"
+            if (totalWeightFiltered) 
+                averageHCCWeighted = (weightedSumFiltered / totalWeightFiltered).toFixed(2)
+    
+            return {averageHCC, averageHCCWeighted};
+        };
+
+        const calculateOverall = (aggregationMethod, metrics) => {
+            switch (aggregationMethod) {
+                case "Sum":
+                    if (! metrics.valuesAccepted.length) {
+                        return "No argument accepted."
+                    }
+                    const sum = metrics.valuesAccepted.reduce((sum, value) => sum + value, 0);
+                    return sum.toFixed(2);
+                case "Average":
+                    if (! metrics.valuesAccepted.length) {
+                        return "No argument accepted."
+                    }
+                    const average = metrics.valuesAccepted.reduce((sum, value) => sum + value, 0) / metrics.valuesAccepted.length;
+                    return average.toFixed(2);
+                case "Highest cardinality":
+                    return metrics.averageHCC.toFixed(2);
+                case "Median":
+                    const median = valuesAccepted.sort((a, b) => a - b)[Math.floor(valuesAccepted.length / 2)];
+                    return median.toFixed(2);
+                case "Weighted average":
+                    return metrics.weightedAvg.toFixed(2);
+                case "Highest conclusion":
+                    return metrics.highestConclusionValue.toFixed(2);
+                case "Highest and weighted":
+                    return metrics.averageHCCWeighted.toFixed(2);
+                default:
+                    return "Invalid aggregation method";
+            }
+        };
+
+        // Helper function to reset classes for a node
+        const resetNodeClasses = (node) => {
+            node.classed(consts.circleGClass, false)
+                .classed(consts.deniedGClass, false)
+                .classed(consts.acceptedGClass, false)
+                .classed(consts.onlyActivatedGClass, false);
+        };
+
+        const updateActivatedStyles = () => {
+            circles.each(function (d) {
+
+                if (! d.activated) {
+                    return
+                }
+
+                const currentNode = d3.select(this);
+                resetNodeClasses(currentNode);
+                
+                // Not activated nodes don't need to set any other style
+                
+                if (api === "Activated") {
+                    // Activated API.
+                    currentNode.classed(consts.onlyActivatedGClass, true);
+                    return;
+                }
+                
+                // Check if nodes are in the extension or not
+                if (! extension.includes(`${d.title}`)) {
+                    // Node is not part of the extension, but activated, hence rejected
+                    currentNode.classed(consts.deniedGClass, true);
+                    return
+                }
+                
+                // Node in the extension, handle activation logic
+                let [, conclusion] = String(d.tooltip).split(" -> ");
+
+                if (conclusion && conclusion !== "NULL") {
+                    currentNode.classed(consts.acceptedGClass, true);
+                    return
+                }
+                
+                // If it has no conclusion the color will change only if there
+                // is an activated attack from this node    
+                let hasTarget = false;
+                edges.forEach((edge) => {
+                    if (edge.source.id === d.id) {
+                        circles.each(function (td) {
+                            if (td.activated && edge.target.id === td.id) {
+                                currentNode.classed(consts.onlyActivatedGClass, true);
+                                hasTarget = true;
+                            }
+                        });
+                    }
+                });
+                
+                // Node has neutral color, activated, but not in the reasoning process
+                if (! hasTarget) currentNode.classed(consts.circleGClass, true);
+            
+            });
+        }
+
+        // Main logic
+        updateOpacityStyles();
+        
+        processActivatedNodesOpacity();
+        
+        if (rankBased) extension = processRankBasedExtension(extension);
+        
+        updateActivatedStyles();
+        
+        let metrics = calculateAccrualMetrics();
+        // Array with index of conclusions with highest cardinality, (weighted) average values of nodes
+        // inferring the conclusions with highest cardinality
+        let {averageHCC, averageHCCWeighted} = processHighestCardinality(metrics);
+
+        // Add the new properties to metrics
+        metrics = {
+            ...metrics, // Spread existing metrics
+            averageHCC,
+            averageHCCWeighted
+        };
+
+        const aggregationMethod = document.getElementById("accrualVisualization").selectedOptions[0].text;
+        const overall = calculateOverall(aggregationMethod, metrics);
+
+        // Generate accrual summary
+        let accrual = "";
+        if (!metrics.valuesAccepted.length) {
+            accrual += "<br>No argument was accepted";
+        } else {
+            metrics.nConclusions.forEach((count, i) => {
+                const avgValue = count ? (metrics.sumAcceptedValuesPerConclusion[i] / count).toFixed(2) : "No arguments";
+                accrual += `Average arguments with <i>${conclusionsByFeatureset_[currentFeatureset][i].conclusion}</i> (${count}): ${avgValue}<br>`;
+            });
+            accrual += `<br><br>Average of all accepted arguments: ${overall}`;
+        }
+        
+        // Update UI
+        $("#results").remove(); // Why?
+        const popover = $("#resultsContent")
             .attr("data-content", accrual)
-            .html(result)
+            .html(overall)
             .data("bs.popover");
         popover.setContent();
         popover.$tip.addClass(popover.options.placement);
-        //$('#resultsContent').html(accrual");
-        //console.log("Visible: " + result);
-        return result;
     };
 
     GraphCreator.prototype.semanticsPerRowInvisible = function (
