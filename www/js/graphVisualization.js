@@ -1036,70 +1036,98 @@ function create(d3, saveAs, Blob) {
             thisGraph.active(d, row, currentFeatureset);
         });
 
-        var htmlArgs = ""; // To list them all in a modal
-        var htmlAttacks = ""; // To list themm all in a modal
-        var argumentsN = 0;
-        var attacksN = 0;
 
-        thisGraph.circles.each(function (d) {
-            if (d.activated) {
-                d.degree = 0;
+        
+            // Need to update the degree of all nodes and return
+            // Helper function to count valid edges connected to a node
+            function countValidEdges(node, edges, isSource) {
+                return edges.reduce((degree, edge) => {
+                    const otherNodeId = isSource ? edge.target.id : edge.source.id;
+                    const otherNode = thisGraph.circles.find(c => c.id === otherNodeId);
 
-                var premiseAndConclusion = String(d.tooltip).split(" -> ");
-                var hasConclusion =
-                    premiseAndConclusion.length == 2 &&
-                    premiseAndConclusion[1] != "NULL";
-
-                if (hasConclusion != "NULL") {
-                    htmlArgs += "<i>" + d.title + "</i>: " + premiseAndConclusion[0] + " <b>&#8594;</b> " + premiseAndConclusion[1] + "<br>";
-                } else {
-                    htmlArgs += "<i>" + d.title + "</i>: " + d.tooltip + "<br>";
-                }
-
-                argumentsN++;
-
-                edges.forEach(function (edge, i) {
-                    // Count edges in which d is the target
-                    if (edge.target.id == d.id) {
-                        var sourceCircle = thisGraph.circles.filter(function (sd) {
-                            return sd.id === edge.source.id;
-                        });
-
-                        sourceCircle.each(function (sd) {
-                            if (sd.activated) {
-                                if (graph.isAttackValid(sd, d) && edge.in_budget) {
-                                    htmlAttacks += "<i>" + sd.title + "</i>  &rArr; <i>" + d.title + "</i><br>";
-                                    attacksN++;
-                                    d.degree++;
-                                }
-                            }
-                        });
+                    if (otherNode && otherNode.activated && edge.in_budget) {
+                        if (isSource ? graph.isAttackValid(node, otherNode) : graph.isAttackValid(otherNode, node)) {
+                            return degree + 1;
+                        }
                     }
-
-                    // Count edges in which d is the source
-                    if (edge.source.id == d.id) {
-                        var targetCircle = thisGraph.circles.filter(function (td) {
-                            return td.id === edge.target.id;
-                        });
-
-                        targetCircle.each(function (td) {
-                            if (td.activated) {
-                                if (graph.isAttackValid(d, td) && edge.in_budget) {
-                                    htmlAttacks += "<i>" + d.title + "</i>  &rArr; <i>" + td.title + "</i><br>";
-                                    attacksN++;
-                                    d.degree++;
-                                }
-                            }
-                        });
-                    }
-                });
+                    return degree;
+                }, 0);
             }
-        });
 
+            // Main loop to calculate degrees
+            thisGraph.circles.each(d => {
+                if (d.activated) {
+                    d.degree = 0;
+
+                    // Count edges where the node is the source or target
+                    d.degree += countValidEdges(d, edges, true); // As source
+                    d.degree += countValidEdges(d, edges, false); // As target
+                }
+            });
+            
+        if (! DONT_EXPORT_DATA) {
+            // Remainder of the function is for the GUI
+            return
+        }
+        
+
+        let htmlArgs = ""; // To list all arguments in a modal
+        let htmlAttacks = ""; // To list all attacks in a modal
+        let argumentsN = 0;  // Count number of arguments
+        let attacksN = 0;  // Count number of attacks
+        
+        // Helper to format argument strings
+        function formatArgumentString(d) {
+            const [premise, conclusion] = String(d.tooltip).split(" -> ");
+            return conclusion && conclusion !== "NULL"
+                ? `<i>${d.title}</i>: ${premise} <b>&#8594;</b> ${conclusion}<br>`
+                : `<i>${d.title}</i>: ${d.tooltip}<br>`;
+        }
+        
+        // Helper to add attack details
+        function addAttackDetails(fromNode, toNode) {
+            return `<i>${fromNode.title}</i>  &rArr; <i>${toNode.title}</i><br>`;
+        }
+        
+        // Main logic
+        thisGraph.circles.each(d => {
+            if (!d.activated) return;
+        
+            // Handle arguments
+            htmlArgs += formatArgumentString(d);
+            argumentsN++;
+        
+            // Handle edges
+            edges.forEach(edge => {
+                if (edge.in_budget) {
+                    // Process incoming edges (where d is the target)
+                    if (edge.target.id === d.id) {
+                        thisGraph.circles.each(sd => {
+                            if (sd.id === edge.source.id && sd.activated && graph.isAttackValid(sd, d)) {
+                                htmlAttacks += addAttackDetails(sd, d);
+                                attacksN++;
+                            }
+                        });
+                    }
+        
+                    // Process outgoing edges (where d is the source)
+                    if (edge.source.id === d.id) {
+                        thisGraph.circles.each(td => {
+                            if (td.id === edge.target.id && td.activated && graph.isAttackValid(d, td)) {
+                                htmlAttacks += addAttackDetails(d, td);
+                                attacksN++;
+                            }
+                        });
+                    }
+                }
+            });
+        });
+        
+        // Update the DOM
         document.getElementById("listArgumentsFiltered").innerHTML = htmlArgs;
-        document.getElementById("listArgumentsNFiltered").innerHTML = " <b>(" + argumentsN.toString() + ")</b>";
+        document.getElementById("listArgumentsNFiltered").innerHTML = ` <b>(${argumentsN})</b>`;
         document.getElementById("listAttacksFiltered").innerHTML = htmlAttacks;
-        document.getElementById("listAttacksNFiltered").innerHTML = " <b>(" + attacksN.toString() + ")</b>";
+        document.getElementById("listAttacksNFiltered").innerHTML = ` <b>(${attacksN})</b>`;
     };
 
     GraphCreator.prototype.semanticsPerRow = function (extension, api="default") {
@@ -1511,6 +1539,7 @@ function create(d3, saveAs, Blob) {
             if (request.readyState == 4 && request.status == 200) {
                 // Save computations from 0 until maxComputation records in SQL.
                 // If more than maxComputation records then recursive call
+                console.log("Progress on computing extensions...");
                 saveComputations(0, maxComputation);
             }
         };
@@ -1546,7 +1575,7 @@ function create(d3, saveAs, Blob) {
                     graph.activeAll(allData_[i], currentFeatureset);
                     const graphString = graph.getStringGraph(true) + semanticsAndAccrual[0];
                     dataString += graphString.length > 0 ? graphString : emptySemantics;
-        
+
                     if (i < Math.min(to, allData_.length) - 1) {
                         dataString += ";;";
                     }
@@ -1554,13 +1583,13 @@ function create(d3, saveAs, Blob) {
                 return dataString;
             };
 
-            const updateProgress = (from, to) => {
-                const percentage = Math.min(((to / allData_.length) * 100) / 2 + (savetoServer ? 50 : 0), 100);
+            const updateProgress = (to) => {
+                const percentage = Math.min(((to / allData_.length) * 100));
                 console.log(`${percentage.toFixed(2)}%`);
             };
 
             const createCSV = (data) => {
-                const csvHeader = createSemanticsHeader();
+                const csvHeader = createHeader();
                 data.unshift(csvHeader);
         
                 const csvContent = data.map((row) => row.join(",")).join("\n");
@@ -1576,7 +1605,7 @@ function create(d3, saveAs, Blob) {
                 document.dispatchEvent(exportDoneEvent);
             };
 
-            const createSemanticsHeader = () => {
+            const createHeader = () => {
                 const semanticsMap = {
                     expert: "Expert System",
                     grounded: "Grounded Semantics",
@@ -1617,16 +1646,22 @@ function create(d3, saveAs, Blob) {
 
             // Main Logic
             const dataString = generateDataString(from, to);
-            if (await saveDataToServer(dataString)) {
-                updateProgress(from, to);
+            if (await saveDataToServer(dataString)) {                
+                updateProgress(to);
                 if (to < allData_.length) {
                     return saveComputations(to, to + maxComputation);
                 } else {
+                    // All computations done
                     const extensions = await fetchComputations();
                     if (extensions) {
+                        
+                        console.log("Progress on calculating inferences...");
                         const data = [];
-                        for (const key in extensions) {
-                            extensions[key].extensions = `[${extensions[key].extensions}`;
+                        let from = 0;
+                        let to = maxComputation;
+                        
+                        // Returns a number of extension for each time saveComputations was called
+                        for (const key in extensions) {  
                             getSemanticsIndex(
                                 extensions[key].extensions,
                                 semanticsVector,
@@ -1635,7 +1670,10 @@ function create(d3, saveAs, Blob) {
                                 to,
                                 data
                             );
-                            updateProgress(from, to);
+                            
+                            from = to;
+                            to += maxComputation;
+                            updateProgress(from);
                         }
 
                         if (!savetoServer || await deleteComputations()) {
@@ -1657,7 +1695,8 @@ function create(d3, saveAs, Blob) {
             var enxtensionVector = String(extensions.slice(1)).split(";;");
 
             // ???
-            //enxtensionVector[0] = "[" + enxtensionVector[0];
+            // Magic
+            enxtensionVector[0] = "[" + enxtensionVector[0];
 
             for (var index = from; index < Math.min(to, allData_.length); index++) {
                 // Fill values that are not semantic indexes
@@ -1669,8 +1708,7 @@ function create(d3, saveAs, Blob) {
                     }
                 }
 
-                graph.activeAll(allData_[index], currentFeatureset);
-
+                graph.activeAll(allData_[index], currentFeatureset);                
                 var jsonExtension = JSON.parse(enxtensionVector[index - from]);
 
                 //console.log(semanticsVector);
@@ -3014,57 +3052,42 @@ d3.select("#exportFile").on("click", function () {
     DONT_EXPORT_DATA = false;
 
     if (file_.size <= Papa.LocalChunkSize) {
-        var checkboxes = document.getElementsByName("semanticsExport");
-        var accrualCheckboxes = document.getElementsByName("accrualExport");
-        var semantics = ";";
 
-        var accruals = "-";
-        // loop over all accruals
-        for (var i = 0; i < accrualCheckboxes.length; i++) {
-            // And stick the checked ones onto an array...
-            if (accrualCheckboxes[i].checked) {
-                accruals += accrualCheckboxes[i].value + "*";
-            }
+        function getCheckedValues(name) {
+            return Array.from(document.getElementsByName(name))
+                .filter(checkbox => checkbox.checked)
+                .map(checkbox => checkbox.value);
         }
-
-        accruals = accruals.slice(0, -1);
-
-        // loop over them all
-        for (var i = 0; i < checkboxes.length; i++) {
-            // And stick the checked ones onto an array...
-            if (checkboxes[i].checked) {
-                if (checkboxes[i].value == "Expert System") {
-                    semantics += "expert,";
-                } else if (checkboxes[i].value == "Preferred") {
-                    semantics += "preferred,";
-                } else if (checkboxes[i].value == "Grounded") {
-                    semantics += "grounded,";
-                } else if (checkboxes[i].value == "Eager") {
-                    semantics += "eager,";
-                } else if (checkboxes[i].value == "Ideal") {
-                    semantics += "ideal,";
-                } else if (checkboxes[i].value == "Stable") {
-                    semantics += "stable,";
-                } else if (checkboxes[i].value == "Semi-stable") {
-                    semantics += "semistable,";
-                } else if (checkboxes[i].value == "Admissible") {
-                    semantics += "admissible,";
-                } else if (checkboxes[i].value == "Categoriser") {
-                    semantics += "categoriser,";
-                }
-            }
-        }
-
-        var select = document.getElementById("featureset"),
-            i = select.selectedIndex,
-            currentFeatureset = select.options[i].text;
-
-        // Remove last coma
-        semantics = semantics.slice(0, -1);
+        
+        // Map semantics values to their corresponding labels
+        const semanticsMap = {
+            "Expert System": "expert",
+            "Preferred": "preferred",
+            "Grounded": "grounded",
+            "Eager": "eager",
+            "Ideal": "ideal",
+            "Stable": "stable",
+            "Semi-stable": "semistable",
+            "Admissible": "admissible",
+            "Categoriser": "categoriser",
+        };
+        
+        // Process semantics and accruals
+        let semantics = ";"
+        semantics += getCheckedValues("semanticsExport")
+            .map(value => semanticsMap[value] || "")
+            .join(",");
+        
+        let accruals = getCheckedValues("accrualExport").join("*");
+        if (accruals) accruals = `-${accruals}`;
+        
+        // Add accruals to semantics
         semantics += accruals;
 
         //final semantics example
-        // ;expert,ideal,preferred-sum*average*median
+        //;expert,ideal,preferred-sum*average*median
+        const select = document.getElementById("featureset");
+        const currentFeatureset = select.options[select.selectedIndex].text;
 
         $("#modalExport").modal("hide");
         graph.exportAll(currentFeatureset, semantics);
