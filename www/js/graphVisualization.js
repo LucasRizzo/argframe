@@ -1294,7 +1294,6 @@ function create(d3, saveAs, Blob) {
                     return (metrics.valuesAccepted.reduce((sum, value) => sum + value, 0) / metrics.valuesAccepted.length).toFixed(2);
                 
                 case "Highest cardinality":
-
                     if (metrics.averageHCC == "None" && DONT_EXPORT_DATA) return "None";
                     if (metrics.averageHCC == "None" && ! DONT_EXPORT_DATA) return "";
                     return metrics.averageHCC.toFixed(2);
@@ -1741,11 +1740,25 @@ function create(d3, saveAs, Blob) {
                                 }
                             }
                         }
+                        
+                        if (sameSizeExtension > 1) {
+                            for (var i = 0; i < accrualVector.length; i++) {
+                                if (accrualVector[i] == "Highest cardinality" || accrualVector[i] == "Highest and weighted") {
+                                    // Highest cardinality does not export anything
+                                    // when there are more than one extension
+                                    finalIndex[i] = "";
+                                }
+                            }
+                        }
 
                         var finalIndexString = "";
                         for (var i = 0; i < accrualVector.length; i++) {
-                            finalIndex[i] /= sameSizeExtension;
-                            finalIndexString += finalIndex[i].toString() + ",";
+                            if (finalIndex[i] == "") {
+                                finalIndexString += ",";
+                            } else {
+                                finalIndex[i] /= sameSizeExtension;
+                                finalIndexString += finalIndex[i].toString() + ",";
+                            }
                         }
                         finalIndexString = finalIndexString.slice(0, -1);
                         row.push(finalIndexString.toString());
