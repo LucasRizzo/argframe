@@ -1,4 +1,6 @@
 var DONT_EXPORT_DATA = true;  // Default behaviour is to no export results
+var OVERALL_MATCHES = false;  // Default behaviour is not to use overall matched on the GUI
+
 
 function fixSpaces(argument) {
     argument = argument.replace("  ", " ");
@@ -1139,7 +1141,6 @@ function create(d3, saveAs, Blob) {
             });
         };
 
-        // Handle edge activation logic
         const handleEdgeActivation = (edge, sourceNode, targetNode) => {
             const path = paths.filter(pd => pd.source.id === edge.source.id && pd.target.id === edge.target.id);
             if (edge.in_budget) {
@@ -1193,9 +1194,7 @@ function create(d3, saveAs, Blob) {
                 // Used to calculated conclusion with highest value (not very useful anymore)
                 highestConclusionValue = Number.MIN_VALUE; 
     
-            circles.each(function (node) {
-                
-                
+            circles.each(function (node) {  
                 if (!extension.includes(`${node.title}`) || !node.activated) return;
                 
     
@@ -1239,18 +1238,28 @@ function create(d3, saveAs, Blob) {
                 } else if (nConclusions[i] === nConclusions[iHighestCardinality[0]]) {
                     // More than one conclusion with highest cardinality
                     // This takes the average of all of them (doesn't make much sense)
+                    // As it is, the function returns none when there is more than
+                    // one highest cardinality, so this average is not really used
                     averageHCC = (averageHCC * nHigh + sumAcceptedValuesPerConclusion[i] / nConclusions[i]) / (nHigh + 1);
                     iHighestCardinality.push(i);
                     nHigh++;
                 }
             });
 
+            // HighestCardinality does not returning anything if multiple
+            // extensions have the same highest cardinality
+            if (iHighestCardinality.length > 1) {
+                // Return none for highest cardinality
+                // and highest cardinality weighted
+                return {averageHCC:"None", averageHCCWeighted:"None"};
+            }
+
             // Find weighted average of arguments inferring conclusions with highest cardinality
             let weightedSumFiltered = 0;
             let totalWeightFiltered = 0;
     
             circles.each(function (d) {
-                if (!extension.includes(`,${d.title},`)) return;
+                if (!extension.includes(`${d.title}`)) return;
     
                 const conclusion = String(d.tooltip).split(" -> ")[1]?.split(" ")[0];
                 if (!conclusion) return;
@@ -1264,42 +1273,62 @@ function create(d3, saveAs, Blob) {
                     totalWeightFiltered += d.weight;
                 }
             });
+
+            if (! totalWeightFiltered) throw new Error("Multiple highest cardinality but weighted couldn't be calculated");
             
-            let averageHCCWeighted = "None"
-            if (totalWeightFiltered) 
-                averageHCCWeighted = (weightedSumFiltered / totalWeightFiltered).toFixed(2)
+            const averageHCCWeighted = (weightedSumFiltered / totalWeightFiltered);
     
             return {averageHCC, averageHCCWeighted};
         };
 
-        const calculateOverall = (aggregationMethod, metrics) => {
+        const calculateAggregation = (aggregationMethod, metrics) => {
             switch (aggregationMethod) {
                 case "Sum":
-                    if (! metrics.valuesAccepted.length) {
-                        return "No argument accepted."
-                    }
-                    const sum = metrics.valuesAccepted.reduce((sum, value) => sum + value, 0);
-                    return sum.toFixed(2);
+                    if (!metrics.valuesAccepted.length && DONT_EXPORT_DATA) return "No argument accepted.";
+                    if (!metrics.valuesAccepted.length && ! DONT_EXPORT_DATA) return "";
+                    return metrics.valuesAccepted.reduce((sum, value) => sum + value, 0).toFixed(2);
+                
                 case "Average":
-                    if (! metrics.valuesAccepted.length) {
-                        return "No argument accepted."
-                    }
-                    const average = metrics.valuesAccepted.reduce((sum, value) => sum + value, 0) / metrics.valuesAccepted.length;
-                    return average.toFixed(2);
+                    if (!metrics.valuesAccepted.length && DONT_EXPORT_DATA) return "No argument accepted.";
+                    if (!metrics.valuesAccepted.length && ! DONT_EXPORT_DATA) return "";
+                    return (metrics.valuesAccepted.reduce((sum, value) => sum + value, 0) / metrics.valuesAccepted.length).toFixed(2);
+                
                 case "Highest cardinality":
+
+                    if (metrics.averageHCC == "None" && DONT_EXPORT_DATA) return "None";
+                    if (metrics.averageHCC == "None" && ! DONT_EXPORT_DATA) return "";
                     return metrics.averageHCC.toFixed(2);
+                
                 case "Median":
-                    const median = valuesAccepted.sort((a, b) => a - b)[Math.floor(valuesAccepted.length / 2)];
+                    const median = metrics.valuesAccepted.sort((a, b) => a - b)[Math.floor(metrics.valuesAccepted.length / 2)];
                     return median.toFixed(2);
+                
                 case "Weighted average":
                     return metrics.weightedAvg.toFixed(2);
+                
                 case "Highest conclusion":
                     return metrics.highestConclusionValue.toFixed(2);
+                
                 case "Highest and weighted":
+                    if (metrics.averageHCCWeighted == "None" && DONT_EXPORT_DATA) return "None";
+                    if (metrics.averageHCCWeighted == "None" && ! DONT_EXPORT_DATA) return "";
                     return metrics.averageHCCWeighted.toFixed(2);
+                
                 default:
                     return "Invalid aggregation method";
             }
+        };
+
+        // Calculate overall for multiple methods (export)
+        const calculateOverallExport = (aggregationMethods, metrics) => {
+            let overall = [];
+
+            for (const aggregation of aggregationMethods) {
+                const result = calculateAggregation(aggregation, metrics);
+                overall.push(result);
+            }
+
+            return overall.join(","); // Return results separated by commas for CSV export
         };
 
         // Helper function to reset classes for a node
@@ -1364,10 +1393,10 @@ function create(d3, saveAs, Blob) {
         }
 
         // Main logic
-        updateOpacityStyles();
-        
-        processActivatedNodesOpacity();
-        
+        if (DONT_EXPORT_DATA) {
+            updateOpacityStyles();
+            processActivatedNodesOpacity();
+        }
         
         if (rankBased) {
             // Original ranks with values between 0 and 1 for each argument
@@ -1376,7 +1405,8 @@ function create(d3, saveAs, Blob) {
             extension = processRankBasedExtension(extension);  
         } 
 
-        updateActivatedStyles();
+        // Set nodes red, green and blue
+        if (DONT_EXPORT_DATA) updateActivatedStyles();
         
         let metrics = calculateAccrualMetrics();
         // Array with index of conclusions with highest cardinality, (weighted) average values of nodes
@@ -1390,9 +1420,31 @@ function create(d3, saveAs, Blob) {
             averageHCCWeighted
         };
 
-        const aggregationMethod = document.getElementById("accrualVisualization").selectedOptions[0].text;
-        const overall = calculateOverall(aggregationMethod, metrics);
+        if (! DONT_EXPORT_DATA) {
 
+            const accrualCheckboxes = document.getElementsByName("accrualExport");
+            const aggregationMethods = Array.from(accrualCheckboxes)
+                .filter(checkbox => checkbox.checked)
+                .map(checkbox => checkbox.value);
+
+            if (aggregationMethods.length === 0) {
+                throw new Error("No accruals selected!"); // Raise an error if the array is empty
+            }
+
+            return calculateOverallExport(aggregationMethods, metrics);
+        }
+
+        // If data is not being exported, accrual is a single one selected in the GUI
+        const aggregationMethod = document.getElementById("accrualVisualization").selectedOptions[0].text;
+        const overall = calculateAggregation(aggregationMethod, metrics);
+
+        if (OVERALL_MATCHES) {
+            // If we are doing overall matches, just need to return the current 
+            // overall accrual to be included in the statistics
+            return overall;
+        }
+
+        // From here it updates the GUI
         // Generate accrual summary
         let accrual = "";
         if (!metrics.valuesAccepted.length) {
@@ -1422,414 +1474,6 @@ function create(d3, saveAs, Blob) {
             .data("bs.popover");
         popover.setContent();
         popover.$tip.addClass(popover.options.placement);
-    };
-
-    GraphCreator.prototype.semanticsPerRowInvisible = function (
-        extension,
-        accrual,
-        rankBased = false
-    ) {
-        var thisGraph = this,
-            consts = thisGraph.consts,
-            state = thisGraph.state;
-
-        var edges = thisGraph.edges;
-        var result;
-        var overallString = "";
-
-        // Overall number of accepted arguments
-        var nAccepted = 0;
-        // Arguments accepted for each conclusion
-        var nConclusions = [];
-        // Conclusion with the maximum right side range
-        var highestConclustion = Number.MIN_VALUE;
-        // Sum of accepted arguments values for each conclusion
-        var acceptedValue = [];
-        var weights = [];
-        var overall = 0;
-        var overallWeighted = 0;
-        var sumWeights = 0;
-        // Vector of values accepted to calculate the median
-        var valuesAccepted = [];
-
-        for (i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
-            nConclusions[i] = 0;
-            acceptedValue[i] = 0;
-        }
-
-        var original = extension;
-        var onlyConclusions = ",";
-
-        if (rankBased) {
-            var i = 0;
-            var previousValue;
-            var allLabels = "";
-            for (var prop in extension) {
-                allLabels += String(prop) + ",";
-
-                // First value is always inserted
-                var premiseAndConclusion;
-
-                thisGraph.circles.filter(function (d) {
-                    if (d.title == String(prop)) {
-                        premiseAndConclusion = d.tooltip;
-                    }
-                });
-
-                premiseAndConclusion =
-                    String(premiseAndConclusion).split(" -> ");
-                var hasConclusion =
-                    premiseAndConclusion.length == 2 &&
-                    premiseAndConclusion[1] != "NULL";
-
-                if (!hasConclusion) {
-                    continue;
-                }
-
-                if (i == 0) {
-                    onlyConclusions += String(prop) + ",";
-                    previousValue = extension[prop];
-                    // If next value equal previous value it is also inserted
-                } else if (Math.abs(previousValue - extension[prop]) < 0.000001) {
-                    onlyConclusions += "," + String(prop) + ",";
-                    // If new greater value has been found restart extension
-                } else if (previousValue < extension[prop]) {
-                    onlyConclusions = "," + String(prop) + ",";
-                    previousValue = extension[prop];
-                }
-                i++;
-            }
-
-            // Remove last comma cause it will be inserted again below
-            allLabels = allLabels.slice(0, -1);
-            extension = allLabels;
-        }
-
-        extension = "," + extension + ",";
-        thisGraph.circles.each(function (d) {
-            var currentNode = d3.select(this);
-
-            if (extension.indexOf("," + d.title + ",") != -1) {
-                var premiseAndConclusion = String(d.tooltip).split(" -> ");
-                // Only arguments with a conclusion will have a value
-                var hasConclusion =
-                    premiseAndConclusion.length == 2 &&
-                    premiseAndConclusion[1] != "NULL";
-
-                // If it is rankBased not all nodes in the extension are accepted.
-                // Only the nodes with a conclusion and highest rank are accepted.
-                if ((hasConclusion && !rankBased) || (rankBased && onlyConclusions.indexOf("," + d.title + ",") != -1)) {
-
-                    valuesAccepted[nAccepted] = d.value;
-                    nAccepted++;
-
-                    var conclusionNoRange = ""; // Conclusion level
-
-                    for (var i = 0; i < premiseAndConclusion[1].length; i++) {
-                        if (premiseAndConclusion[1][i] != " ") {
-                            conclusionNoRange += premiseAndConclusion[1][i];
-                        } else {
-                            break;
-                        }
-                    }
-
-                    var indexConclusion = 0;
-                    //console.log("data");
-                    //console.log(conclusionsByFeatureset_[currentFeatureset]);
-                    for (var i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
-                        if (conclusionsByFeatureset_[currentFeatureset][i].conclusion == conclusionNoRange) {
-                            //console.log(conclusionsByFeatureset_[currentFeatureset][i].c_to);
-                            if (parseFloat(conclusionsByFeatureset_[currentFeatureset][i].c_to) > highestConclustion) {
-                                highestConclustion = parseFloat(conclusionsByFeatureset_[currentFeatureset][i].c_to);
-                            }
-                            //console.log("h: " + highestConclustion);
-                            indexConclusion = i;
-                            break;
-                        }
-                    }
-
-                    nConclusions[indexConclusion]++;
-                    acceptedValue[indexConclusion] += d.value;
-                    overall += d.value;
-                    overallWeighted += d.value * d.weight;
-                    sumWeights += d.weight;
-                }
-            }
-        });
-
-        // Define string with the number of arguments by conclusions
-        var numberConclusions = "";
-        for (i = 0; i < conclusionsByFeatureset_[currentFeatureset].length; i++) {
-            numberConclusions +=
-                String(nConclusions[i]) +
-                ":" +
-                conclusionsByFeatureset_[currentFeatureset][i].conclusion;
-            if (i < conclusionsByFeatureset_[currentFeatureset].length - 1) {
-                numberConclusions += ";";
-            }
-        }
-
-        var iHighestCardConclusion = [];
-        iHighestCardConclusion[0] = 0;
-        var overallHCC = acceptedValue[0] / nConclusions[0];
-        var nHigh = 1;
-        for (
-            i = 1;
-            i < conclusionsByFeatureset_[currentFeatureset].length;
-            i++
-        ) {
-            if (nConclusions[i] > nConclusions[iHighestCardConclusion[0]]) {
-                iHighestCardConclusion = [];
-                iHighestCardConclusion[0] = i;
-                overallHCC = acceptedValue[i] / nConclusions[i];
-                nHigh = 1;
-            } else if (
-                nConclusions[i] == nConclusions[iHighestCardConclusion[0]]
-            ) {
-                overallHCC =
-                    (overallHCC * nHigh + acceptedValue[i] / nConclusions[i]) /
-                    (nHigh + 1);
-                iHighestCardConclusion[nHigh] = i;
-                nHigh++;
-            }
-        }
-
-        // Find the weighted average of the arguments who belong to the highest
-        // conclusions
-        var overallWeightedFiltered = 0;
-        var sumWeightedFiltered = 0;
-
-        thisGraph.circles.each(function (d) {
-            var currentNode = d3.select(this);
-            if (extension.indexOf("," + d.title + ",") != -1) {
-                var premiseAndConclusion = String(d.tooltip).split(" -> ");
-                // Only arguments with a conclusion will have a value
-                var hasConclusion =
-                    premiseAndConclusion.length == 2 &&
-                    premiseAndConclusion[1] != "NULL";
-
-                // If it is rankBased not all nodes in the extension are accepted.
-                // Only the nodes with a conclusion and highest rank are accepted.
-                if (
-                    (hasConclusion && !rankBased) ||
-                    (rankBased &&
-                        onlyConclusions.indexOf("," + d.title + ",") != -1)
-                ) {
-                    var conclusionNoRange = "";
-                    for (var i = 0; i < premiseAndConclusion[1].length; i++) {
-                        if (premiseAndConclusion[1][i] != " ") {
-                            conclusionNoRange += premiseAndConclusion[1][i];
-                        } else {
-                            break;
-                        }
-                    }
-
-                    for (i = 0; i < iHighestCardConclusion.length; i++) {
-                        var highestConclusion =
-                            conclusionsByFeatureset_[currentFeatureset][
-                                iHighestCardConclusion[i]
-                            ].conclusion;
-                        if (conclusionNoRange == highestConclusion) {
-                            overallWeightedFiltered += d.value * d.weight;
-                            sumWeightedFiltered += d.weight;
-                        }
-                    }
-                }
-            }
-        });
-
-        // Find number of conclusions that are not in the highest cardinality set(s)
-        var nNotHigh = 0;
-        for (
-            i = 0;
-            i < conclusionsByFeatureset_[currentFeatureset].length;
-            i++
-        ) {
-            if (nConclusions[i] < nConclusions[iHighestCardConclusion[0]]) {
-                nNotHigh += nConclusions[i];
-            }
-        }
-
-        if (nAccepted > 0) {
-            // Round index to two decimals
-            for (
-                var i = 0;
-                i < conclusionsByFeatureset_[currentFeatureset].length;
-                i++
-            ) {
-                if (nConclusions[i] > 0) {
-                    acceptedValue[i] /= nConclusions[i];
-
-                    var numberParts = String(acceptedValue[i]).split(".");
-                    if (numberParts.length > 1) {
-                        acceptedValue[i] =
-                            numberParts[0] + "." + numberParts[1].slice(0, 2);
-                    }
-                }
-            }
-
-            /* result = "";
-            
-            var average = overall / nAccepted;
-            var highestCardinality = overallHCC;
-            
-            overallWeighted /= sumWeights;
-            var weightedAverage = overallWeighted;
-            
-            var highestWeighted;
-            if (sumWeightedFiltered > 0) {
-                highestWeighted = overallWeightedFiltered / sumWeightedFiltered;
-            } else {
-                highestWeighted = "None";
-            }
-            
-            //h3 h1 h4 h2
-            result += String(average) + "," + String(highestCardinality) + "," + String(weightedAverage) + "," + String(highestWeighted); */
-
-            for (var i = 0; i < accrual.length; i++) {
-                if (accrual[i] == "Sum") {
-                    var numberParts = String(overall).split(".");
-                    if (numberParts.length > 1) {
-                        overall =
-                            numberParts[0] + "." + numberParts[1].slice(0, 9);
-                    }
-
-                    overallString += "," + String(overall);
-                }
-
-                if (accrual[i] == "Average") {
-                    var average = overall / nAccepted;
-
-                    var numberParts = String(average).split(".");
-                    if (numberParts.length > 1) {
-                        average =
-                            numberParts[0] + "." + numberParts[1].slice(0, 9);
-                    }
-
-                    overallString += "," + String(average);
-                    continue;
-                }
-
-                if (accrual[i] == "Highest cardinality") {
-                    var numberParts = String(overallHCC).split(".");
-                    if (numberParts.length > 1) {
-                        overallHCC =
-                            numberParts[0] + "." + numberParts[1].slice(0, 9);
-                    }
-
-                    overallString += "," + String(overallHCC);
-                    continue;
-                }
-
-                if (accrual[i] == "Median") {
-                    valuesAccepted.sort((a, b) => a - b);
-                    let lowMiddle = Math.floor((valuesAccepted.length - 1) / 2);
-                    let highMiddle = Math.ceil((valuesAccepted.length - 1) / 2);
-                    var median =
-                        (valuesAccepted[lowMiddle] +
-                            valuesAccepted[highMiddle]) /
-                        2;
-
-                    var numberParts = String(median).split(".");
-                    if (numberParts.length > 1) {
-                        median =
-                            numberParts[0] + "." + numberParts[1].slice(0, 9);
-                    }
-
-                    overallString += "," + String(median);
-                    continue;
-                }
-
-                if (accrual[i] == "Weighted average") {
-                    overallWeighted /= sumWeights;
-
-                    var numberParts = String(overallWeighted).split(".");
-                    if (numberParts.length > 1) {
-                        overallWeighted =
-                            numberParts[0] + "." + numberParts[1].slice(0, 9);
-                    }
-
-                    overallString += "," + String(overallWeighted);
-                    continue;
-                }
-
-                if (accrual[i] == "Highest conclusion") {
-                    var numberParts = String(highestConclustion).split(".");
-                    if (numberParts.length > 1) {
-                        highestConclustion =
-                            numberParts[0] + "." + numberParts[1].slice(0, 9);
-                    }
-
-                    overallString += "," + String(highestConclustion);
-                    continue;
-                }
-
-                if (accrual[i] == "Highest and weighted") {
-                    if (sumWeightedFiltered > 0) {
-                        overallWeightedFiltered =
-                            overallWeightedFiltered / sumWeightedFiltered;
-
-                        var numberParts = String(overallWeightedFiltered).split(
-                            "."
-                        );
-                        if (numberParts.length > 1) {
-                            overallWeightedFiltered =
-                                numberParts[0] +
-                                "." +
-                                numberParts[1].slice(0, 9);
-                        }
-                    } else {
-                        overallWeightedFiltered = "None";
-                    }
-
-                    overallString += "," + String(overallWeightedFiltered);
-                    continue;
-                }
-            }
-
-            //             if (document.getElementById("accrualAverageExport").checked) {
-            //                 overall /= nAccepted;
-            //             } else if (document.getElementById("cardinalityAverageExport").checked) {
-            //                 overall = overallHCC;
-            //             } else if (document.getElementById("medianExport").checked) {
-            //                 valuesAccepted.sort((a, b) => a - b);
-            //                 let lowMiddle = Math.floor((valuesAccepted.length - 1) / 2);
-            //                 let highMiddle = Math.ceil((valuesAccepted.length - 1) / 2);
-            //                 overall = (valuesAccepted[lowMiddle] + valuesAccepted[highMiddle]) / 2;
-            //             } else if (document.getElementById("weightedExport").checked) {
-            //                 overallWeighted /= sumWeights;
-            //                 overall = overallWeighted;
-            //             } else if (document.getElementById("highestConclusionExport").checked) {
-            //                 overall = highestConclustion;
-            //             } else if (document.getElementById("absoluteConclusionExport").checked) {
-            //                 overall = overallHCC - nNotHigh;
-            //             } else if (document.getElementById("highestWeightedExport").checked) {
-            //                 if (sumWeightedFiltered > 0) {
-            //                     overall = overallWeightedFiltered / sumWeightedFiltered;
-            //                 } else {
-            //                     overall = "None";
-            //                 }
-            //             }
-            //
-            //             var numberParts = String(overall).split(".");
-            //             if (numberParts.length > 1) {
-            //                 overall = numberParts[0] + "." + numberParts[1].slice(0, 9);
-            //             }
-
-            //             if (! document.getElementById("nConclusionsExport").checked) {
-            //                 result = String(overall);
-            //             } else {
-            //                 result = numberConclusions;
-            //             }
-        }
-
-        thisGraph.circles.exit().remove();
-
-        //console.log("Invisible: " + result);
-
-        //remove first comma;
-        overallString = overallString.substring(1);
-        return overallString;
     };
 
     GraphCreator.prototype.exportAll = function (
@@ -1929,6 +1573,8 @@ function create(d3, saveAs, Blob) {
                 link.download = generateFileName();
                 document.body.appendChild(link);
                 link.click();
+                const exportDoneEvent = new Event("exportDone");
+                document.dispatchEvent(exportDoneEvent);
             };
 
             const createSemanticsHeader = () => {
@@ -2026,7 +1672,6 @@ function create(d3, saveAs, Blob) {
 
                 graph.activeAll(allData_[index], currentFeatureset);
 
-                //console.log("a: ", enxtensionVector[index - from]);
                 var jsonExtension = JSON.parse(enxtensionVector[index - from]);
 
                 //console.log(semanticsVector);
@@ -2037,8 +1682,8 @@ function create(d3, saveAs, Blob) {
                         for (var i = 0; i < accrualVector.length; i++) {
                             timeLimit += "Time limit,";
                         }
-                        
-                        row.push(timeLimit.slice(0, -1));
+                        timeLimit.slice(0, -1)
+                        row.push(timeLimit);
                         continue;
                     }
 
@@ -2054,12 +1699,14 @@ function create(d3, saveAs, Blob) {
                         continue;
                     }
 
+                    if (jsonExtension[ei][0] == undefined) {
+                        row.push(graph.semanticsPerRow("[]", semanticsVector[ei]));
+                        break;
+                    }
+
                     // Unique extension semantics
-                    if (semanticsVector[ei] == "categoriser") {
-                        row.push(graph.semanticsPerRowInvisible(jsonExtension[ei][0], accrualVector, true));
-                    } else if (semanticsVector[ei] == "grounded" || semanticsVector[ei] == "expert" || semanticsVector[ei] == "eager" || semanticsVector[ei] == "ideal") {
-                        row.push(graph.semanticsPerRowInvisible(jsonExtension[ei], accrualVector));
-                    // Not unique extension semantics
+                    if (["grounded", "expert", "eager", "ideal", "categoriser"].includes(semanticsVector[ei])) {
+                        row.push(graph.semanticsPerRow(jsonExtension[ei][0], semanticsVector[ei]));
                     } else {
                         var sameSizeExtension = 0;
 
@@ -2072,13 +1719,9 @@ function create(d3, saveAs, Blob) {
                         if (jsonExtension[ei].length == 1 && jsonExtension[ei][0].length == 0) {
                             // There is no extension. Push undefined so it won't appear in the csv
                             
-                            row.push(graph.semanticsPerRowInvisible(jsonExtension[ei][0], accrualVector));
+                            row.push(graph.semanticsPerRow(jsonExtension[ei][0], semanticsVector[ei]));
                             break;
-                        }
-
-                        if (jsonExtension[ei][0] == undefined) {
-                            row.push(graph.semanticsPerRowInvisible("[]", accrualVector));
-                        }
+                        }                        
 
                         var maxSize = jsonExtension[ei][0].length;
 
@@ -2092,7 +1735,7 @@ function create(d3, saveAs, Blob) {
                             if (jsonExtension[ei][ej].length == maxSize) {
                                 sameSizeExtension++;
                                 // each index is correspondent to an accrual option selected
-                                var indexes = graph.semanticsPerRowInvisible(jsonExtension[ei][ej], accrualVector).split(",");
+                                var indexes = graph.semanticsPerRow(jsonExtension[ei][ej], semanticsVector[ei]).split(",");
                                 for (var i = 0; i < accrualVector.length; i++) {
                                     finalIndex[i] += parseFloat(indexes[i]);
                                 }
@@ -2121,6 +1764,8 @@ function create(d3, saveAs, Blob) {
         currentFeatureset,
         semantics
     ) {
+        // This is important to set for the semanticsPerRow function
+        OVERALL_MATCHES = true;
         //document.getElementById('progressRow').className = "col-md-12";
 
         var thisGraph = this;
@@ -2135,35 +1780,14 @@ function create(d3, saveAs, Blob) {
             allGraphStrings.push("" + graph.getStringGraph());
         }
 
-        // Remove first caracter
-        var semanticsVector = String(semantics.slice(1)).split(",");
-
-        var emptySemantics = "[";
-
-        for (var i = 0; i < semanticsVector.length; i++) {
-            if (semanticsVector[i] == "expert") {
-                emptySemantics += "[],";
-            } else if (semanticsVector[i] == "grouded") {
-                emptySemantics += "[],";
-            } else if (semanticsVector[i] == "eager") {
-                emptySemantics += "[],";
-            } else if (semanticsVector[i] == "ideal") {
-                emptySemantics += "[],";
-            } else if (semanticsVector[i] == "preferred") {
-                emptySemantics += "[[]],";
-            } else if (semanticsVector[i] == "stable") {
-                emptySemantics += "[[]],";
-            } else if (semanticsVector[i] == "semistable") {
-                emptySemantics += "[[]],";
-            } else if (semanticsVector[i] == "admissible") {
-                emptySemantics += "[[]],";
-            } else if (semanticsVector[i] == "categoriser") {
-                emptySemantics += "[],";
-            }
-        }
-
-        emptySemantics = emptySemantics.slice(0, -1);
-        emptySemantics += "]";
+        // Json representing empty results for each semantics
+        // [] if single extension, [[]] if multiple
+        const doubleBracketSemantics = ["preferred", "stable", "semistable", "admissible"];
+        // Example single brackets, or those that are not double bracket
+        // const singleBracketSemantics = ["expert", "grouded", "eager", "ideal", "categoriser"];
+        const emptySemantics = "[" + semanticsVector.map(semantic => 
+            doubleBracketSemantics.includes(semantic) ? "[[]]" : "[]"
+        ).join(",") + "]";  
 
         pushExtensionIndexes(
             allGraphStrings,
@@ -2280,20 +1904,12 @@ function create(d3, saveAs, Blob) {
 
             for (var ei = 0; ei < semanticsVector.length; ei++) {
                 // Expert system, grounded, eager or ideal. Only one extension
-                if (
-                    jsonExtension[ei]
-                        .toString()
-                        .search("Maximum execution time") != -1
-                ) {
+                if (jsonExtension[ei].toString().search("Maximum execution time") != -1) {
                     row.push("Time limit");
                     continue;
                 }
 
-                if (
-                    jsonExtension[ei]
-                        .toString()
-                        .search("Allowed memory size") != -1
-                ) {
+                if (jsonExtension[ei].toString().search("Allowed memory size") != -1) {
                     row.push("Memory limit");
                     continue;
                 }
@@ -2303,51 +1919,22 @@ function create(d3, saveAs, Blob) {
                     currentAggregation = select.options[i].text;
 
                 // Unique extension semantics
-                if (semanticsVector[ei] == "categoriser") {
-                    row.push(
-                        graph.semanticsPerRowInvisible(
-                            jsonExtension[ei][0],
-                            [currentAggregation],
-                            true
-                        )
-                    );
-                } else if (
-                    semanticsVector[ei] == "grounded" ||
-                    semanticsVector[ei] == "expert" ||
-                    semanticsVector[ei] == "eager" ||
-                    semanticsVector[ei] == "ideal"
-                ) {
-                    row.push(
-                        graph.semanticsPerRowInvisible(jsonExtension[ei], [
-                            currentAggregation,
-                        ])
-                    );
-                    // Not unique extension semantics
+
+                if (["grounded", "expert", "eager", "ideal", "categoriser"].includes(semanticsVector[ei])) {
+                    row.push(graph.semanticsPerRow(jsonExtension[ei][0], semanticsVector[ei]));
                 } else {
                     var sameSizeExtension = 0;
                     var finalIndex = 0;
 
-                    if (
-                        jsonExtension[ei].length == 1 &&
-                        jsonExtension[ei][0].length == 0
-                    ) {
+                    if (jsonExtension[ei].length == 1 && jsonExtension[ei][0].length == 0) {
                         // There is no extension. Push undefined so it won't
                         // appear in the csv
-                        row.push(
-                            graph.semanticsPerRowInvisible(
-                                jsonExtension[ei][0],
-                                [currentAggregation]
-                            )
-                        );
+                        row.push(graph.semanticsPerRow(jsonExtension[ei][0], semanticsVector[ei]));
                         break;
                     }
 
                     if (jsonExtension[ei][0] == undefined) {
-                        row.push(
-                            graph.semanticsPerRowInvisible("[]", [
-                                currentAggregation,
-                            ])
-                        );
+                        row.push(graph.semanticsPerRow("[]", semanticsVector[ei]));
                         break;
                     }
 
@@ -2362,12 +1949,7 @@ function create(d3, saveAs, Blob) {
                     for (var ej = 0; ej < jsonExtension[ei].length; ej++) {
                         if (jsonExtension[ei][ej].length == maxSize) {
                             sameSizeExtension++;
-                            finalIndex += parseFloat(
-                                graph.semanticsPerRowInvisible(
-                                    jsonExtension[ei][ej],
-                                    [currentAggregation]
-                                )
-                            );
+                            finalIndex += parseFloat(graph.semanticsPerRow(jsonExtension[ei][ej],semanticsVector[ei]));
                         }
                     }
 
@@ -2516,6 +2098,9 @@ function create(d3, saveAs, Blob) {
                     "%";
             }
         }
+
+        // Set back to default behaviour
+        OVERALL_MATCHES = false;
     };
 
     // call to propagate changes to graph
@@ -3405,6 +2990,11 @@ d3.select("#percentage-inconsistency").on("change", function () {
     graph.updateInconsistencyBudget(new_budget);
 });
 
+document.addEventListener("exportDone", function () {
+    DONT_EXPORT_DATA = true;
+    console.log("Export complete, DONT_EXPORT_DATA set to true");
+});
+
 d3.select("#exportFile").on("click", function () {
     d3.event.preventDefault();
 
@@ -3652,9 +3242,6 @@ d3.select("#exportFile").on("click", function () {
             },
         });
     }
-
-    // Change back to default behaviour
-    DONT_EXPORT_DATA = true;
 });
 
 d3.select("#overallCheckBox").on("change", function () {
