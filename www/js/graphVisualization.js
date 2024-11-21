@@ -1156,10 +1156,9 @@ function create(d3, saveAs, Blob) {
             let onlyConclusions = [];
             const epsilon = 0.000001;
         
-            for (let prop in extension) {
-        
+            for (let prop in extension) {        
                 // Retrieve tooltip for the current property
-                const tooltip = thisGraph.circles.find(d => d.title === String(prop))?.tooltip;
+                const tooltip = circles.data().find(d => d.title == String(prop)).tooltip;
                 const [, conclusion] = String(tooltip).split(" -> ");
 
                 if (! conclusion || conclusion === "NULL") continue;
@@ -1369,8 +1368,14 @@ function create(d3, saveAs, Blob) {
         
         processActivatedNodesOpacity();
         
-        if (rankBased) extension = processRankBasedExtension(extension);
         
+        if (rankBased) {
+            // Original ranks with values between 0 and 1 for each argument
+            var ranks = extension;
+            // Extension with the accepted nodes only
+            extension = processRankBasedExtension(extension);  
+        } 
+
         updateActivatedStyles();
         
         let metrics = calculateAccrualMetrics();
@@ -1394,9 +1399,18 @@ function create(d3, saveAs, Blob) {
             accrual += "<br>No argument was accepted";
         } else {
             metrics.nConclusions.forEach((count, i) => {
-                const avgValue = count ? (metrics.sumAcceptedValuesPerConclusion[i] / count).toFixed(2) : "No arguments";
+                if (! count) return;
+                const avgValue = (metrics.sumAcceptedValuesPerConclusion[i] / count).toFixed(2);
                 accrual += `Average arguments with <i>${conclusionsByFeatureset_[currentFeatureset][i].conclusion}</i> (${count}): ${avgValue}<br>`;
             });
+
+            if (rankBased) {
+                accrual += "<br>Rank based info<br>";
+                for (let key in ranks) {
+                    accrual += `${key}: ${ranks[key]}<br>`;
+                }
+            }
+
             accrual += `<br><br>Average of all accepted arguments: ${overall}`;
         }
         
