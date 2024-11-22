@@ -971,8 +971,16 @@ function create(d3, saveAs, Blob) {
 
         var stringGraph = "";
 
+        var nArgument = 0;
+        var nAttack = 0;
+
         // Include edges
         thisGraph.circles.each(function (td) {
+
+            if (td.activated) {
+                nArgument++;
+            }
+
             edges.forEach(function (val, i) {
                 if (val.target.id == td.id && td.activated) {
                     var sourceCircle = thisGraph.circles.filter(function (sd) {
@@ -983,6 +991,7 @@ function create(d3, saveAs, Blob) {
                         if (sd.activated) {
                             if (graph.isAttackValid(sd, td) && val.in_budget) {
                                 stringGraph += sd.title + "," + td.title + ",";
+                                nAttack++;
                             }
                         }
                     });
@@ -1010,9 +1019,7 @@ function create(d3, saveAs, Blob) {
             stringGraph = stringGraph.substring(0, stringGraph.length - 1);
         }
 
-        //console.log(stringGraph);
-
-        return stringGraph;
+        return {stringGraph, nArgument, nAttack};
     };
     
     // graph.activeAll(allData_[i], currentFeatureset, !invisible, true);
@@ -1547,6 +1554,8 @@ function create(d3, saveAs, Blob) {
         request.open("GET", url);
         request.send();
 
+        let stats = [];
+
         async function saveComputations(from, to) {
             const saveDataToServer = async (dataString) => {
                 const dataPost = new FormData();
@@ -1569,41 +1578,95 @@ function create(d3, saveAs, Blob) {
                 return response.ok;
             };
 
-            const generateDataString = (from, to) => {
-                let dataString = "";
+            const generateData = (from, to) => {
+                let dataString = "";  // Return a string representing the graphs and semantics to be computed for each
+                let nArguments = [];  // Stores the number of arguments for each graph to be computed
+                let nAttacks = [];  // Stores the number of attacks for each graph to be computed
+                let ids = []; // ID in the data related to the graph
                 for (let i = from; i < Math.min(to, allData_.length); i++) {
                     graph.activeAll(allData_[i], currentFeatureset);
-                    const graphString = graph.getStringGraph(true) + semanticsAndAccrual[0];
+                    let {graphString, nArgument, nAttack} = graph.getStringGraph(true);
+
+                    graphString += semanticsAndAccrual[0];
                     dataString += graphString.length > 0 ? graphString : emptySemantics;
 
                     if (i < Math.min(to, allData_.length) - 1) {
                         dataString += ";;";
                     }
+
+                    for (var key in allData_[i]) {
+                        if (key.toUpperCase() == "ID") {
+                            ids.push(allData_[i][key]);
+                        }
+                    }
+
+                    nArguments.push(nArgument);
+                    nAttacks.push(nAttack);
                 }
-                return dataString;
+
+                return {dataString, nArguments, nAttacks, ids};
             };
 
             const updateProgress = (to) => {
                 const percentage = Math.min(((to / allData_.length) * 100));
-                console.log(`${percentage.toFixed(2)}%`);
+
+                if (percentage <= 100) {
+                    console.log(`${percentage.toFixed(2)}%`);
+                } else {
+                    console.log(`100%`);  // Might happen if file has less than the max computation parameters
+                }
             };
 
-            const createCSV = (data) => {
+            const createCSVs = (data, stats) => {
+
+                // Inference file
                 const csvHeader = createHeader();
                 data.unshift(csvHeader);
-        
+
                 const csvContent = data.map((row) => row.join(",")).join("\n");
                 const csvBlob = new Blob([csvContent], { type: "text/csv" });
         
                 const link = document.createElement("a");
                 const csvUrl = URL.createObjectURL(csvBlob);
                 link.href = csvUrl;
-                link.download = generateFileName();
+                link.download = generateInferenceFileName();
                 document.body.appendChild(link);
                 link.click();
+
+
+                // Stats file
+                // Can be removed if no statis is required
+                const csvStatsHeader = createHeaderStats();
+                stats.unshift(csvStatsHeader);
+
+                const csvStatsContent = stats.map((row) => row.join(",")).join("\n");
+                const csvStatsBlob = new Blob([csvStatsContent], { type: "text/csv" });
+        
+                const linkStats = document.createElement("a");
+                const csvStatsUrl = URL.createObjectURL(csvStatsBlob);
+                linkStats.href = csvStatsUrl;
+                linkStats.download = generateStatsFileName();
+                document.body.appendChild(linkStats);
+                linkStats.click();
+                
+                // Trigger export done event so app can chage export mode status
                 const exportDoneEvent = new Event("exportDone");
                 document.dispatchEvent(exportDoneEvent);
             };
+
+            const createHeaderStats = () => {
+                const header = [];
+                for (const key in allData_[0]) {
+                    if (key.toLowerCase() === "id") {
+                        header.push("ID");
+                    }
+                }
+
+                header.push("# Arguments");
+                header.push("# Attacks");
+        
+                return header;
+            }
 
             const createHeader = () => {
                 const semanticsMap = {
@@ -1637,16 +1700,32 @@ function create(d3, saveAs, Blob) {
             };
         
 
-            const generateFileName = () => {
+            const generateInferenceFileName = () => {
                 const currentGraph = document.getElementById("featuresetgraph").value;
                 const currentFeatureset = document.getElementById("featureset").selectedOptions[0].text;
                 const percentInconsistency = document.getElementById("percentage-inconsistency").value;
                 return `${currentFeatureset}_${currentGraph}_${percentInconsistency}.csv`;
             };
 
+            const generateStatsFileName = () => {
+                const currentFeatureset = document.getElementById("featureset").selectedOptions[0].text;
+                const currentGraph = document.getElementById("featuresetgraph").value;
+                const percentInconsistency = document.getElementById("percentage-inconsistency").value;
+                return `${currentFeatureset}_${currentGraph}_${percentInconsistency}_stats.csv`;
+            };
+
             // Main Logic
-            const dataString = generateDataString(from, to);
-            if (await saveDataToServer(dataString)) {                
+            const data_graph = generateData(from, to);
+
+            if (data_graph.ids.length > 0) {
+                // If there is an ID conlumns in the data file
+                stats = stats.concat(data_graph.ids.map((item, index) => [item, data_graph.nArguments[index], data_graph.nAttacks[index]]));
+            } else {
+                stats = stats.concat(data_graph.nArguments.map((item, index) => [item, data_graph.nAttacks[index]]));
+            }
+            
+
+            if (await saveDataToServer(data_graph.dataString)) {                
                 updateProgress(to);
                 if (to < allData_.length) {
                     return saveComputations(to, to + maxComputation);
@@ -1656,7 +1735,7 @@ function create(d3, saveAs, Blob) {
                     if (extensions) {
                         
                         console.log("Progress on calculating inferences...");
-                        const data = [];
+                        const inferences = [];
                         let from = 0;
                         let to = maxComputation;
                         
@@ -1668,7 +1747,7 @@ function create(d3, saveAs, Blob) {
                                 accrualVector,
                                 from,
                                 to,
-                                data
+                                inferences
                             );
                             
                             from = to;
@@ -1677,7 +1756,7 @@ function create(d3, saveAs, Blob) {
                         }
 
                         if (!savetoServer || await deleteComputations()) {
-                            createCSV(data);
+                            createCSVs(inferences, stats);
                         }
                     }
                 }
@@ -1828,7 +1907,8 @@ function create(d3, saveAs, Blob) {
 
         for (var i = 0; i < allData_.length; i++) {
             graph.activeAll(allData_[i], currentFeatureset);
-            allGraphStrings.push("" + graph.getStringGraph());
+            var {stringGraph, nArgument, nAttack} = graph.getStringGraph();
+            allGraphStrings.push("" + stringGraph);
         }
 
         // Json representing empty results for each semantics
@@ -3408,7 +3488,9 @@ d3.select("#row_input").on("change", function () {
 
     var extensionTotal = document.getElementById("nExtensions");
 
-    var graphString = "" + graph.getStringGraph();
+    var {stringGraph, nArgument, nAttack} = graph.getStringGraph();
+
+    var graphString = "" + stringGraph;
 
     if (graphString.length > 0) {
         if (api == "activated") {
@@ -3417,7 +3499,7 @@ d3.select("#row_input").on("change", function () {
             extensionTotal.innerHTML = "of <b>" + 1 + "</b>";
             graph.semanticsPerRow(jsonExtension, api);
         } else {
-            getExtension(addressCall_ + api + "/" + graph.getStringGraph(), api, callsemantics);
+            getExtension(addressCall_ + api + "/" + stringGraph, api, callsemantics);
         }
     } else {
         extensionTotal.innerHTML = "of <b>" + 1 + "</b>";
@@ -3496,11 +3578,11 @@ d3.select("#extensionNumber").on("change", function () {
 
     //graph.activeAll(row, currentFeatureset);
 
-    var graphString = "" + graph.getStringGraph();
+    var {stringGraph, nArgument, nAttack} = graph.getStringGraph();
 
     if (graphString.length > 0) {
         getExtension(
-            addressCall_ + api + "/" + graph.getStringGraph(),
+            addressCall_ + api + "/" + stringGraph,
             api,
             callsemantics
         );
