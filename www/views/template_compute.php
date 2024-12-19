@@ -282,7 +282,7 @@ ini_set('php_max_size', '100M');
         <form class="form-inline">
             <label for="sel1">Select feature set: &nbsp</label>
             <select class="form-control confirmation-callback" name="featureset" id="featureset">
-                <?php foreach ($view_featuresets as $d) {
+                <?php foreach ($view_featuresetsWithGraphs as $d) {
                     echo "<option value='" . $d . "'>" . $d . "</option>";
                 }
                 ?>
