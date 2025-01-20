@@ -119,7 +119,7 @@ ini_set('php_max_size', '100M');
         <div class="modal-content">
             <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title">Export final accrual for whole dataset</h4>
+                <h4 class="modal-title">Generate final inference for the whole dataset</h4>
             </div>
 
             <div class="modal-body">
@@ -137,8 +137,17 @@ ini_set('php_max_size', '100M');
                         _______________________
                         <br>
                         <br>
-                    </div>                   
-                    <b>Semantics</b></br></br>
+                    </div>
+
+                    <b>Statistics</b></br></br>
+                    <div class="form-group">
+                        <label class="checkbox-inline"><input id="statsExport" name="statsExport" type="checkbox" checked>Export stats file</label></br>
+                        _______________________
+                        <br>
+                        <br>
+                    </div>  
+
+                    <br><b>Semantics</b></br></br>
                     <div class="form-group">
                         <label class="checkbox-inline"><input name="semanticsExport" type="checkbox" value="Expert System">Expert System</label></br>
                         <label class="checkbox-inline"><input name="semanticsExport" type="checkbox" value="Preferred">Preferred</label></br>

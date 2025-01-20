@@ -1517,7 +1517,6 @@ function create(d3, saveAs, Blob) {
         parser = undefined,
         size = 0
     ) {
-        //document.getElementById('progressRow').className = "col-md-12";
 
         var maxComputation = 10000;
 
@@ -1557,6 +1556,7 @@ function create(d3, saveAs, Blob) {
         let stats = [];
 
         async function saveComputations(from, to) {
+
             const saveDataToServer = async (dataString) => {
                 const dataPost = new FormData();
                 dataPost.append("data", dataString);
@@ -1635,7 +1635,13 @@ function create(d3, saveAs, Blob) {
 
 
                 // Stats file
-                // Can be removed if no statis is required
+                // If stats file is not required, trigger export done and leave
+                if (! document.getElementById('statsExport').checked) {
+                    const exportDoneEvent = new Event("exportDone");
+                    document.dispatchEvent(exportDoneEvent);
+                    return;
+                }
+
                 const csvStatsHeader = createHeaderStats();
                 stats.unshift(csvStatsHeader);
 
