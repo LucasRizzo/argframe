@@ -1084,16 +1084,16 @@ class DataSetDAO {
         $sql = '
         SELECT DISTINCT featureset 
         FROM attributes 
-        WHERE featureset IN (
-            SELECT DISTINCT featureset 
+        WHERE BINARY featureset IN (
+            SELECT DISTINCT BINARY featureset 
             FROM user_featureset 
             WHERE email = "' . $_SESSION["username"] . '"
         )
         UNION
         SELECT DISTINCT featureset 
         FROM conclusions 
-        WHERE featureset IN (
-            SELECT DISTINCT featureset 
+        WHERE BINARY featureset IN (
+            SELECT DISTINCT BINARY featureset 
             FROM user_featureset 
             WHERE email = "' . $_SESSION["username"] . '"
         );
