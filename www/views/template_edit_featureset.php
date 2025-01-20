@@ -310,7 +310,6 @@ var attributesByFeatureset_ = <?php echo json_encode($view_attributesByFeaturese
 
 var conclusionsByFeatureset_ = <?php echo json_encode($view_conclusionsByFeatureset, JSON_PRETTY_PRINT); ?>;
 
-
 document.getElementById("create-conclusion").addEventListener("click", function(e){
     event.preventDefault();
     $('#createConclusionModal').modal('show');
@@ -379,11 +378,19 @@ document.getElementById("createConclusion").addEventListener("click", function(e
     conclusion += document.getElementById("conclusionName").value + ":" +
                            document.getElementById("fromConclusionValue").value + ":" +
                            document.getElementById("toConclusionValue").value;
+
+    console.log(conclusion);
     
      var xmlhttp = new XMLHttpRequest();
      xmlhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
             if (this.responseText == "ok") {
+
+                if (attributesByFeatureset_[currentFeatureset] === undefined) {
+                    attributesByFeatureset_[currentFeatureset] = new Array(0);
+                    conclusionsByFeatureset_[currentFeatureset] = new Array(0);
+                }
+
                 conclusionsByFeatureset_[currentFeatureset].push({conclusion: document.getElementById("conclusionName").value,
                                                                     c_from: document.getElementById("fromConclusionValue").value,
                                                                     c_to: document.getElementById("toConclusionValue").value});
@@ -453,6 +460,11 @@ document.getElementById("saveNewFeature").addEventListener("click", function(e){
      xmlhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
             if (this.responseText == "ok") {
+
+                if (attributesByFeatureset_[currentFeatureset] === undefined) {
+                    attributesByFeatureset_[currentFeatureset] = new Array(0);
+                    conclusionsByFeatureset_[currentFeatureset] = new Array(0);
+                }
                 
                 attributesByFeatureset_[currentFeatureset].push({attribute: document.getElementById("featureName").value,
                                                                  a_level: document.getElementById("levelName").value,
@@ -834,7 +846,7 @@ function printFeatureSet() {
     // Not empty featureset
     var featuresN = 0;
     var rows = 0;
-    if (attributesByFeatureset_[currentFeatureset].length > 0) {
+    if (attributesByFeatureset_[currentFeatureset] !== undefined && attributesByFeatureset_[currentFeatureset].length > 0) {
         var currentAttribute = attributesByFeatureset_[currentFeatureset][0].attribute;
         featuresN = 1
         rows = attributesByFeatureset_[currentFeatureset].length;
@@ -877,18 +889,20 @@ function printFeatureSet() {
 
     
     var conclusionN = 0;
-    for (var conc = 0; conc < conclusionsByFeatureset_[currentFeatureset].length; conc++) {
+    if (conclusionsByFeatureset_[currentFeatureset] !== undefined) {
+        for (var conc = 0; conc < conclusionsByFeatureset_[currentFeatureset].length; conc++) {
 
-        html_conclusions += "<tr><td>" + conclusionsByFeatureset_[currentFeatureset][conc].conclusion + "</td>" +
-                "<td>" + conclusionsByFeatureset_[currentFeatureset][conc].c_from +
-                "</td><td>" + conclusionsByFeatureset_[currentFeatureset][conc].c_to + "</td>";
+            html_conclusions += "<tr><td>" + conclusionsByFeatureset_[currentFeatureset][conc].conclusion + "</td>" +
+                    "<td>" + conclusionsByFeatureset_[currentFeatureset][conc].c_from +
+                    "</td><td>" + conclusionsByFeatureset_[currentFeatureset][conc].c_to + "</td>";
 
-        html_conclusions += "<td><a data-toggle=\"modal\" data-conclusion-id=\"" + conc.toString() + 
-                            "\" href=\"#updateConclusionModal\"><span data-toggle=\"tooltip\" title=\"Edit conclusion\"><span class=\"glyphicon glyphicon-edit\"></span></span></a>";
-        html_conclusions += "&nbsp; &nbsp; <a href=\"#\" onclick=\"deleteConclusion(" + conc.toString() + ")\"><span data-toggle=\"tooltip\" title=\"Delete conclusion\"><span class=\"glyphicon glyphicon-trash\"></span></span></a>";
-        html_conclusions += "</td></tr>";
+            html_conclusions += "<td><a data-toggle=\"modal\" data-conclusion-id=\"" + conc.toString() + 
+                                "\" href=\"#updateConclusionModal\"><span data-toggle=\"tooltip\" title=\"Edit conclusion\"><span class=\"glyphicon glyphicon-edit\"></span></span></a>";
+            html_conclusions += "&nbsp; &nbsp; <a href=\"#\" onclick=\"deleteConclusion(" + conc.toString() + ")\"><span data-toggle=\"tooltip\" title=\"Delete conclusion\"><span class=\"glyphicon glyphicon-trash\"></span></span></a>";
+            html_conclusions += "</td></tr>";
 
-        conclusionN++
+            conclusionN++
+        }
     }
 
 

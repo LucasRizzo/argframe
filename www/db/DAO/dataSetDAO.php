@@ -1081,8 +1081,23 @@ class DataSetDAO {
     }
 
     public function featuresets() {
-        $sql = 'SELECT DISTINCT featureset FROM attributes WHERE featureset ' .
-               'IN (SELECT DISTINCT featureset FROM user_featureset WHERE email = "' . $_SESSION["username"] . '");';
+        $sql = '
+        SELECT DISTINCT featureset 
+        FROM attributes 
+        WHERE BINARY featureset IN (
+            SELECT DISTINCT BINARY featureset 
+            FROM user_featureset 
+            WHERE email = "' . $_SESSION["username"] . '"
+        )
+        UNION
+        SELECT DISTINCT featureset 
+        FROM conclusions 
+        WHERE BINARY featureset IN (
+            SELECT DISTINCT BINARY featureset 
+            FROM user_featureset 
+            WHERE email = "' . $_SESSION["username"] . '"
+        );
+        ';
         $stmt = $this->dbManager->prepareQuery ($sql);
         $this->dbManager->executeQuery ($stmt);
         $featuresets = $stmt->fetchAll (PDO::FETCH_COLUMN, 0);

@@ -63,7 +63,7 @@ sudo docker-compose up -d
 
 5. The guest account comes with a feature set and a dataset set that can be downloaded in the "Compute graph" page.
 
-6. To add new users go to the link http://localhost:8000/ to manage the database. Login/password: admin/admin. In the `arg-db` databases, add new users to the table `users` by inserting email and md5(password).
+6. To add new users go to the link http://localhost:8000/ to manage the database. Login/password: admin/admin. In the `arg-db` databases, add new users to the table `users` by inserting email and md5(password). Users are only usefull to segment the featuresets and graphs.
 
 <a name="citing-this-project"></a>
 ## Citing this project
@@ -90,7 +90,7 @@ keywords = {Defeasible argumentation, Automated reasoning, Knowledge-based syste
 <a name="contact"></a>
 ## Contact me
 
-Contact me at lucasmrizzo@gmail.com
+Contact me at lucasmrizzo@gmail.com or lucas.rizzo@tudublin.ie
 
 <a name="references"></a>
 ## References

@@ -202,7 +202,7 @@ class DungAF {
      * @throws IllegalArgumentException if {@code attsParam} contains a {@code String}-array which does not have 
      * exactly two elements.
      */ 
-    public function PopulatedDungAF ($attsParam, $isolatedNodes) {
+    public static function PopulatedDungAF ($attsParam, $isolatedNodes) {
 
         $dungAF = new self();
         if (! $dungAF->arraysDenoteAttacks($attsParam)) {
