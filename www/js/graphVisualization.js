@@ -973,12 +973,17 @@ function create(d3, saveAs, Blob) {
 
         var nArgument = 0;
         var nAttack = 0;
+        var sumArgumentLength = 0; // Sum the number of premisses for each argument
 
         // Include edges
         thisGraph.circles.each(function (td) {
 
             if (td.activated) {
                 nArgument++;
+
+                // Count the number of premises by the number of AND operators
+                // Premises is AND operators + 1
+                sumArgumentLength += td.tooltip.split(" AND ").length;
             }
 
             edges.forEach(function (val, i) {
@@ -1019,7 +1024,9 @@ function create(d3, saveAs, Blob) {
             stringGraph = stringGraph.substring(0, stringGraph.length - 1);
         }
 
-        return {stringGraph, nArgument, nAttack};
+        let avgArgumentLength = sumArgumentLength/nArgument;
+
+        return {stringGraph, nArgument, nAttack, avgArgumentLength};
     };
     
     // graph.activeAll(allData_[i], currentFeatureset, !invisible, true);
@@ -1042,35 +1049,33 @@ function create(d3, saveAs, Blob) {
             // Set node as active or not based on the row
             thisGraph.active(d, row, currentFeatureset);
         });
-
-
         
-            // Need to update the degree of all nodes and return
-            // Helper function to count valid edges connected to a node
-            function countValidEdges(node, edges, isSource) {
-                return edges.reduce((degree, edge) => {
-                    const otherNodeId = isSource ? edge.target.id : edge.source.id;
-                    const otherNode = thisGraph.circles.find(c => c.id === otherNodeId);
+        // Need to update the degree of all nodes and return
+        // Helper function to count valid edges connected to a node
+        function countValidEdges(node, edges, isSource) {
+            return edges.reduce((degree, edge) => {
+                const otherNodeId = isSource ? edge.target.id : edge.source.id;
+                const otherNode = thisGraph.circles.find(c => c.id === otherNodeId);
 
-                    if (otherNode && otherNode.activated && edge.in_budget) {
-                        if (isSource ? graph.isAttackValid(node, otherNode) : graph.isAttackValid(otherNode, node)) {
-                            return degree + 1;
-                        }
+                if (otherNode && otherNode.activated && edge.in_budget) {
+                    if (isSource ? graph.isAttackValid(node, otherNode) : graph.isAttackValid(otherNode, node)) {
+                        return degree + 1;
                     }
-                    return degree;
-                }, 0);
-            }
-
-            // Main loop to calculate degrees
-            thisGraph.circles.each(d => {
-                if (d.activated) {
-                    d.degree = 0;
-
-                    // Count edges where the node is the source or target
-                    d.degree += countValidEdges(d, edges, true); // As source
-                    d.degree += countValidEdges(d, edges, false); // As target
                 }
-            });
+                return degree;
+            }, 0);
+        }
+
+        // Main loop to calculate degrees
+        thisGraph.circles.each(d => {
+            if (d.activated) {
+                d.degree = 0;
+
+                // Count edges where the node is the source or target
+                d.degree += countValidEdges(d, edges, true); // As source
+                d.degree += countValidEdges(d, edges, false); // As target
+            }
+        });
             
         if (! DONT_EXPORT_DATA) {
             // Remainder of the function is for the GUI
@@ -1308,8 +1313,10 @@ function create(d3, saveAs, Blob) {
                     totalWeightFiltered += d.weight;
                 }
             });
-
-            if (! totalWeightFiltered) throw new Error("Multiple highest cardinality but weighted couldn't be calculated");
+            
+            if (! totalWeightFiltered) {
+                return {averageHCC, averageHCCWeighted:"None"};
+            }
             
             const averageHCCWeighted = (weightedSumFiltered / totalWeightFiltered);
     
@@ -1468,6 +1475,7 @@ function create(d3, saveAs, Blob) {
             return calculateOverallExport(aggregationMethods, metrics);
         }
 
+        // DATA IS NOT BEING EXPORTED, CONTINUE
         // If data is not being exported, accrual is a single one selected in the GUI
         const aggregationMethod = document.getElementById("accrualVisualization").selectedOptions[0].text;
         const overall = calculateAggregation(aggregationMethod, metrics);
@@ -1582,13 +1590,14 @@ function create(d3, saveAs, Blob) {
                 let dataString = "";  // Return a string representing the graphs and semantics to be computed for each
                 let nArguments = [];  // Stores the number of arguments for each graph to be computed
                 let nAttacks = [];  // Stores the number of attacks for each graph to be computed
+                let avgArgumentLengths = [] // Stores the average argument length (number of premises) for each graph to be computed
                 let ids = []; // ID in the data related to the graph
                 for (let i = from; i < Math.min(to, allData_.length); i++) {
                     graph.activeAll(allData_[i], currentFeatureset);
-                    let {graphString, nArgument, nAttack} = graph.getStringGraph(true);
+                    let {stringGraph, nArgument, nAttack, avgArgumentLength} = graph.getStringGraph(true);
 
-                    graphString += semanticsAndAccrual[0];
-                    dataString += graphString.length > 0 ? graphString : emptySemantics;
+                    stringGraph += semanticsAndAccrual[0];  // Concatenate the semantics to be used
+                    dataString += stringGraph.length > 0 ? stringGraph : emptySemantics;
 
                     if (i < Math.min(to, allData_.length) - 1) {
                         dataString += ";;";
@@ -1602,9 +1611,10 @@ function create(d3, saveAs, Blob) {
 
                     nArguments.push(nArgument);
                     nAttacks.push(nAttack);
+                    avgArgumentLengths.push(avgArgumentLength)
                 }
 
-                return {dataString, nArguments, nAttacks, ids};
+                return {dataString, nArguments, nAttacks, ids, avgArgumentLengths};
             };
 
             const updateProgress = (to) => {
@@ -1617,13 +1627,13 @@ function create(d3, saveAs, Blob) {
                 }
             };
 
-            const createCSVs = (data, stats) => {
+            const createCSVs = (infereces, stats, semanticsVector) => {
 
                 // Inference file
                 const csvHeader = createHeader();
-                data.unshift(csvHeader);
+                infereces.unshift(csvHeader);
 
-                const csvContent = data.map((row) => row.join(",")).join("\n");
+                const csvContent = infereces.map((row) => row.join(",")).join("\n");
                 const csvBlob = new Blob([csvContent], { type: "text/csv" });
         
                 const link = document.createElement("a");
@@ -1642,7 +1652,7 @@ function create(d3, saveAs, Blob) {
                     return;
                 }
 
-                const csvStatsHeader = createHeaderStats();
+                const csvStatsHeader = createHeaderStats(semanticsVector);
                 stats.unshift(csvStatsHeader);
 
                 const csvStatsContent = stats.map((row) => row.join(",")).join("\n");
@@ -1660,7 +1670,7 @@ function create(d3, saveAs, Blob) {
                 document.dispatchEvent(exportDoneEvent);
             };
 
-            const createHeaderStats = () => {
+            const createHeaderStats = (semanticsVector) => {
                 const header = [];
                 for (const key in allData_[0]) {
                     if (key.toLowerCase() === "id") {
@@ -1670,6 +1680,15 @@ function create(d3, saveAs, Blob) {
 
                 header.push("# Arguments");
                 header.push("# Attacks");
+                header.push("Avg Argument Length");
+
+                if (semanticsVector.includes("preferred")) {
+                    header.push("# Preferred extensions");
+                }
+
+                if (semanticsVector.includes("categoriser")) {
+                    header.push("# Categoriser ties at top");
+                }
         
                 return header;
             }
@@ -1723,11 +1742,13 @@ function create(d3, saveAs, Blob) {
             // Main Logic
             const data_graph = generateData(from, to);
 
+            // Starts to populate stats. First columns are ID (optional), # Arguments, # Attacks
+            // These stats can be found before identifying extensions.
             if (data_graph.ids.length > 0) {
-                // If there is an ID conlumns in the data file
-                stats = stats.concat(data_graph.ids.map((item, index) => [item, data_graph.nArguments[index], data_graph.nAttacks[index]]));
+                // If there is an ID columns in the data file
+                stats = stats.concat(data_graph.ids.map((item, index) => [item, data_graph.nArguments[index], data_graph.nAttacks[index], data_graph.avgArgumentLengths[index]]));
             } else {
-                stats = stats.concat(data_graph.nArguments.map((item, index) => [item, data_graph.nAttacks[index]]));
+                stats = stats.concat(data_graph.nArguments.map((item, index) => [item, data_graph.nAttacks[index], data_graph.avgArgumentLengths[index]]));
             }
             
 
@@ -1738,6 +1759,7 @@ function create(d3, saveAs, Blob) {
                 } else {
                     // All computations done
                     const extensions = await fetchComputations();
+
                     if (extensions) {
                         
                         console.log("Progress on calculating inferences...");
@@ -1753,16 +1775,18 @@ function create(d3, saveAs, Blob) {
                                 accrualVector,
                                 from,
                                 to,
-                                inferences
+                                inferences,
+                                stats
                             );
                             
                             from = to;
                             to += maxComputation;
                             updateProgress(from);
                         }
+                        
 
                         if (!savetoServer || await deleteComputations()) {
-                            createCSVs(inferences, stats);
+                            createCSVs(inferences, stats, semanticsVector);
                         }
                     }
                 }
@@ -1775,37 +1799,67 @@ function create(d3, saveAs, Blob) {
             accrualVector,
             from,
             to,
-            data
+            infereces,
+            stats
         ) {
+
+            const categoriserTiesAtTop = (extension) => {
+                let i = 0;
+                let previousValue;
+                let onlyConclusions = [];
+                const epsilon = 0.000001;
+
+                const { consts, edges, circles, paths } = thisGraph;
+            
+                for (let prop in extension) {        
+                    // Retrieve tooltip for the current property
+                    const tooltip = circles.data().find(d => d.title == String(prop)).tooltip;
+                    const [, conclusion] = String(tooltip).split(" -> ");
+    
+                    if (! conclusion || conclusion === "NULL") continue;
+                    
+                    if (i === 0 || Math.abs(previousValue - extension[prop]) < epsilon) {
+                        onlyConclusions.push(prop);
+                    } else if (previousValue < extension[prop]) {
+                        onlyConclusions = [prop];
+                    }
+                    
+                    previousValue = extension[prop];
+                    i++;
+                }
+            
+                return onlyConclusions.length;
+            }
+
             var enxtensionVector = String(extensions.slice(1)).split(";;");
 
             // ???
             // Magic
             enxtensionVector[0] = "[" + enxtensionVector[0];
 
+            var preferred_stats = []; // number of extensions
+            var categoriser_stats = []; // number of ties at the top
+
             for (var index = from; index < Math.min(to, allData_.length); index++) {
-                // Fill values that are not semantic indexes
-                var row = [];
-                //console.log(allData_[index]);
+                var row_inferences = []; // row of inferences.
+
                 for (var key in allData_[index]) {
                     if (key.toUpperCase() == "ID" || key == "GroundTruth") {
-                        row.push(allData_[index][key]);
+                        row_inferences.push(allData_[index][key]);
                     }
                 }
 
                 graph.activeAll(allData_[index], currentFeatureset);                
                 var jsonExtension = JSON.parse(enxtensionVector[index - from]);
 
-                //console.log(semanticsVector);
                 for (var ei = 0; ei < semanticsVector.length; ei++) {
-                    // Expert system, grounded, eager or ideal. Only one extension
                     if (jsonExtension[ei].toString().search("Maximum execution time") != -1) {
                         var timeLimit = "";
                         for (var i = 0; i < accrualVector.length; i++) {
                             timeLimit += "Time limit,";
                         }
                         timeLimit.slice(0, -1)
-                        row.push(timeLimit);
+                        row_inferences.push(timeLimit);
                         continue;
                     }
 
@@ -1816,19 +1870,44 @@ function create(d3, saveAs, Blob) {
                         }
                         memoryLimit.slice(0, -1);
 
-                        row.push(memoryLimit);
+                        row_inferences.push(memoryLimit);
 
                         continue;
                     }
 
-                    if (jsonExtension[ei][0] == undefined) {
-                        row.push(graph.semanticsPerRow("[]", semanticsVector[ei]));
-                        break;
+                    // Add stats
+                    if (semanticsVector[ei] == "preferred") {
+                        if (jsonExtension[ei].length == undefined) {
+                            preferred_stats.push(0);
+                        } else {
+                            // Number of extensions
+                            preferred_stats.push(jsonExtension[ei].length);
+                        }
                     }
 
+                    if (semanticsVector[ei] == "categoriser") {
+                        if (jsonExtension[ei].length == undefined) {
+                            categoriser_stats.push(0);
+                        } else {
+                            categoriser_stats.push(categoriserTiesAtTop(jsonExtension[ei][0]))
+                        }
+                    }
+
+                    if (jsonExtension[ei].length == 1 && jsonExtension[ei][0].length == 0) {
+                        // There is no extension. Push undefined so it won't appear in the csv
+                        row_inferences.push(graph.semanticsPerRow(jsonExtension[ei][0], semanticsVector[ei]));
+                        continue;
+                    }        
+                    
+                    if (jsonExtension[ei][0] == undefined) {
+                        row_inferences.push(graph.semanticsPerRow("[]", semanticsVector[ei]));
+                        continue;
+                    }
+
+                    // Calculate inferences
                     // Unique extension semantics
                     if (["grounded", "expert", "eager", "ideal", "categoriser"].includes(semanticsVector[ei])) {
-                        row.push(graph.semanticsPerRow(jsonExtension[ei][0], semanticsVector[ei]));
+                        row_inferences.push(graph.semanticsPerRow(jsonExtension[ei][0], semanticsVector[ei]));
                     } else {
                         var sameSizeExtension = 0;
 
@@ -1836,13 +1915,6 @@ function create(d3, saveAs, Blob) {
                         var finalIndex = [];
                         for (var i = 0; i < accrualVector.length; i++) {
                             finalIndex[i] = 0;
-                        }
-
-                        if (jsonExtension[ei].length == 1 && jsonExtension[ei][0].length == 0) {
-                            // There is no extension. Push undefined so it won't appear in the csv
-                            
-                            row.push(graph.semanticsPerRow(jsonExtension[ei][0], semanticsVector[ei]));
-                            break;
                         }                        
 
                         var maxSize = jsonExtension[ei][0].length;
@@ -1876,23 +1948,34 @@ function create(d3, saveAs, Blob) {
 
                         var finalIndexString = "";
                         for (var i = 0; i < accrualVector.length; i++) {
-                            if (finalIndex[i] == "") {
+                            if (finalIndex[i] === "") {
                                 finalIndexString += ",";
                             } else {
                                 finalIndex[i] /= sameSizeExtension;
                                 finalIndexString += finalIndex[i].toString() + ",";
                             }
                         }
-                        finalIndexString = finalIndexString.slice(0, -1);
-                        row.push(finalIndexString.toString());
+                        finalIndexString = finalIndexString.slice(0, -1);                        
+                        row_inferences.push(finalIndexString.toString());
                     }
                 }
-                
-                //console.log(row);
-                data.push(row);
+
+                infereces.push(row_inferences);                
             }
 
-            return data;
+            // Add categoriser and/or preferred stats
+            for (let index = 0; index < stats.length; index++) {
+                if (categoriser_stats.length > 0 && preferred_stats.length > 0) {
+                    stats[index].push(preferred_stats[index], categoriser_stats[index]);
+                } else {
+                    if (categoriser_stats.length > 0) {
+                        stats[index].push(categoriser_stats[index]);
+                    }
+                    if (categoriser_stats.length == 0) {
+                        stats[index].push(preferred_stats[index]);
+                    }
+                }
+            }
         }
     };
 
@@ -1913,7 +1996,7 @@ function create(d3, saveAs, Blob) {
 
         for (var i = 0; i < allData_.length; i++) {
             graph.activeAll(allData_[i], currentFeatureset);
-            var {stringGraph, nArgument, nAttack} = graph.getStringGraph();
+            var {stringGraph, nArgument, nAttack, avgArgumentLength} = graph.getStringGraph();
             allGraphStrings.push("" + stringGraph);
         }
 
@@ -2034,8 +2117,6 @@ function create(d3, saveAs, Blob) {
             }
 
             graph.activeAll(allData_[index], currentFeatureset);
-
-            //console.log(extension);
 
             var jsonExtension = JSON.parse(extension);
 
@@ -3473,7 +3554,7 @@ d3.select("#row_input").on("change", function () {
     };
     
     const api = semanticToApiMap[semantic] || null; // Default to null if semantic not found
-    console.log(api);
+    //console.log(api);
     
 
     // Include the first extension in the extension list.
@@ -3494,7 +3575,7 @@ d3.select("#row_input").on("change", function () {
 
     var extensionTotal = document.getElementById("nExtensions");
 
-    var {stringGraph, nArgument, nAttack} = graph.getStringGraph();
+    var {stringGraph, nArgument, nAttack, avgArgumentLength} = graph.getStringGraph();
 
     var graphString = "" + stringGraph;
 
@@ -3584,9 +3665,9 @@ d3.select("#extensionNumber").on("change", function () {
 
     //graph.activeAll(row, currentFeatureset);
 
-    var {stringGraph, nArgument, nAttack} = graph.getStringGraph();
+    var {stringGraph, nArgument, nAttack, avgArgumentLength} = graph.getStringGraph();
 
-    if (graphString.length > 0) {
+    if (stringGraph.length > 0) {
         getExtension(
             addressCall_ + api + "/" + stringGraph,
             api,
