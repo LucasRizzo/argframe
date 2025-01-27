@@ -139,7 +139,7 @@ ini_set('php_max_size', '100M');
                         <br>
                     </div>
 
-                    <b>Statistics</b></br></br>
+                    <b>Statistics</b>   </br></br>
                     <div class="form-group">
                         <label class="checkbox-inline"><input id="statsExport" name="statsExport" type="checkbox" checked>Export stats file</label></br>
                         _______________________
@@ -527,138 +527,6 @@ $(document).ready(function(){
 
 var addressCall_ = <?php echo json_encode(ADDRESS_CALL, JSON_PRETTY_PRINT); ?>;
 var absoluteCall_ = <?php echo json_encode(ABSOLUTE_CALL, JSON_PRETTY_PRINT); ?>;
-
-document.getElementById("listargs").addEventListener("click", function(){
-    printArguments();
-    printAttacks();
-    printFeatureSet();
-    $('#modalListArgs').modal('show');
-});
-
-document.getElementById("listargsFilter").addEventListener("click", function(){
-    $('#modalListArgsFiltered').modal('show');
-});
-
-function printArguments() {
-
-    var select = document.getElementById('featureset'),
-        i = select.selectedIndex;
-
-    var currentFeatureset = select.options[i].text;
-
-    select = document.getElementById('featuresetgraph');
-    i = select.selectedIndex;
-
-    var currentGraph = select.options[i].text;
-
-    var html = "";
-    var argumentsN = 0;
-    for (var i = 0; i < args_.length; i++) {
-        if (args_[i].featureset != currentFeatureset || 
-            args_[i].graph != currentGraph) {
-            continue;
-        }
-
-        if (args_[i].conclusion != "NULL") {
-            html += "<i>" + args_[i].label + "</i>: " + 
-                    args_[i].argument + " <b>&#8594;</b> " +
-                    args_[i].conclusion + "<br>";
-        } else {
-            html += "<i>" + args_[i].label + "</i>: " + 
-                    args_[i].argument + "<br>";
-        }
-
-        argumentsN++;
-    }
-
-    document.getElementById('listArguments').innerHTML = html;
-    document.getElementById('listArgumentsN').innerHTML = " <b>(" + argumentsN.toString() + ")</b>";
-}
-
-function printAttacks() {
-    var select = document.getElementById('featureset'),
-        i = select.selectedIndex;
-
-    var currentFeatureset = select.options[i].text;
-
-    select = document.getElementById('featuresetgraph');
-    i = select.selectedIndex;
-
-    var currentGraph = select.options[i].text;
-
-    var html = "";
-    var attacksN = 0;
-    for (var i = 0; i < graphs_.length; i++) {
-
-        if (graphs_[i].featureset != currentFeatureset || graphs_[i].name != currentGraph) {
-            continue;
-        }
-
-        var graphObj = JSON.parse(graphs_[i].edges);
-
-        for (var j = 0; j < graphObj.length; j++) {
-            html += "<i>" + graphObj[j].source + "</i>  &rArr; " + 
-                "<i>" + graphObj[j].target + "</i><br>";
-
-            attacksN++;
-        }
-
-        //console.log(graphObj);
-        break;
-    }
-
-    document.getElementById('listAttacks').innerHTML = html;
-    document.getElementById('listAttacksN').innerHTML = " <b>(" + attacksN.toString() + ")</b>";
-}
-
-function printFeatureSet() {
-
-    var select = document.getElementById('featureset'),
-        i = select.selectedIndex;
-
-    var currentFeatureset = select.options[i].text;
-
-    var html = "";
-
-    // Run through all attributes and their respective level in order
-    // to find the current premise's range
-    var currentAttribute = attributesByFeatureset_[currentFeatureset][0].attribute;
-    html += "<i>Attribute</i>: " + attributesByFeatureset_[currentFeatureset][0].attribute + "<br>";
-    var attributesN = 1;
-    for (var attr = 0; attr < attributesByFeatureset_[currentFeatureset].length; attr++) {
-
-        if (attributesByFeatureset_[currentFeatureset][attr].attribute != currentAttribute) {
-            html += "<br><i>Attribute</i>: " + attributesByFeatureset_[currentFeatureset][attr].attribute + "<br>";
-            currentAttribute = attributesByFeatureset_[currentFeatureset][attr].attribute;
-            attributesN++;
-        }
-
-        html += "<i>Level</i>: " + attributesByFeatureset_[currentFeatureset][attr].a_level +
-                ", <i>From:</i> " + attributesByFeatureset_[currentFeatureset][attr].a_from +
-                ", <i>To:</i> " + attributesByFeatureset_[currentFeatureset][attr].a_to +
-                "<br>";
-    }
-
-    for (var conc = 0; conc < conclusionsByFeatureset_[currentFeatureset].length; conc++) {
-        if (conc == 0) {
-            html += "<br>";
-        }
-
-        html += "<i>Conclusion</i>: " + conclusionsByFeatureset_[currentFeatureset][conc].conclusion + "<br>" +
-                "<i>From:</i> " + conclusionsByFeatureset_[currentFeatureset][conc].c_from +
-                ", <i>To:</i> " + conclusionsByFeatureset_[currentFeatureset][conc].c_to + "<br>"; 
-
-        if (conc != conclusionsByFeatureset_[currentFeatureset].length - 1) {
-            html += "<br>";
-        }
-
-        attributesN++;
-    }
-
-    document.getElementById('listAttributes').innerHTML = html;
-    document.getElementById('listAttributesN').innerHTML = " <b>(" + attributesN.toString() + ")</b>";
-}
-
 
 function addGraphs() {
 

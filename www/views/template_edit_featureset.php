@@ -726,17 +726,17 @@ document.getElementById("saveNewJSONFeatureset").addEventListener("click", funct
             console.log(featuresetParse.attributes[i][1]);
             
             if (featuresetParse.attributes[i][1].range != featuresetParse.attributes[i][2].from.length) {
-                window.alert("Rage value does not match number of from fields.", "Logical error.");
+                window.alert("Range value does not match number of from fields.", "Logical error.");
                 return;
             }
             
             if (featuresetParse.attributes[i][1].range != featuresetParse.attributes[i][3].to.length) {
-                window.alert("Rage value does not match number of to fields.", "Logical error.");
+                window.alert("Range value does not match number of to fields.", "Logical error.");
                 return;
             }
             
             if (featuresetParse.attributes[i][1].range != featuresetParse.attributes[i][4].level.length) {
-                window.alert("Rage value does not match number of level fields.", "Logical error.");
+                window.alert("Range value does not match number of level fields.", "Logical error.");
                 return;
             }
         }

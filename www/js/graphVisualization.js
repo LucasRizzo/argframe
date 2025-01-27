@@ -962,6 +962,38 @@ function create(d3, saveAs, Blob) {
         return false;
     };
 
+    GraphCreator.prototype.getListAttacks = function () {
+        /* Return a list of attacks to be showed in the whole knowldege base modal.
+           This will not include attacks not in budget
+        */ 
+        var thisGraph = graph,
+            consts = thisGraph.consts,
+            state = thisGraph.state;
+
+        var edges = thisGraph.edges;
+
+        var attacks = [];
+
+        thisGraph.circles.each(function (td) {
+            edges.forEach(function (val, i) {
+                if (val.target.id == td.id) {
+                    var sourceCircle = thisGraph.circles.filter(function (sd) {
+                        return sd.id === val.source.id;
+                    });
+
+                    sourceCircle.each(function (sd) {                        
+                        if (graph.isAttackValid(sd, td) && val.in_budget) {
+                            attacks.push({ source: sd.title , target: td.title })
+                        }
+                    });
+                }
+            });
+        });
+
+        return attacks;
+    }
+
+
     GraphCreator.prototype.getStringGraph = function () {
         var thisGraph = graph,
             consts = thisGraph.consts,
@@ -3161,7 +3193,6 @@ function create(d3, saveAs, Blob) {
             break;
         }
     }
-
     return graph;
 }
 
@@ -3740,3 +3771,81 @@ d3.select("#zoomout").on("click", function (event) {
     zoom.scale(graph.zoomScale);
     zoom.event(graph.svg);
 });
+
+d3.select("#listargs").on("click", function (event) {
+    printArguments();
+    printAttacks();
+    printFeatureSet();
+    $('#modalListArgs').modal('show');
+});
+
+function getSelectedOption(id) {
+    const select = document.getElementById(id);
+    return select.options[select.selectedIndex].text;
+}
+
+function printArguments() {
+    const currentFeatureset = getSelectedOption('featureset');
+    const currentGraph = getSelectedOption('featuresetgraph');
+
+    let html = "";
+    let argumentsN = 0;
+
+    args_.forEach(arg => {
+        if (arg.featureset === currentFeatureset && arg.graph === currentGraph) {
+            html += `<i>${arg.label}</i>: ${arg.argument} ${arg.conclusion !== "NULL" ? `<b>&#8594;</b> ${arg.conclusion}` : ""}<br>`;
+            argumentsN++;
+        }
+    });
+
+    document.getElementById('listArguments').innerHTML = html;
+    document.getElementById('listArgumentsN').innerHTML = ` <b>(${argumentsN})</b>`;
+}
+
+function printAttacks() {
+    const currentFeatureset = getSelectedOption('featureset');
+    const currentGraph = getSelectedOption('featuresetgraph');
+
+    let html = "";
+    let attacksN = 0;
+
+    for (const graph_ of graphs_) {
+        if (graph_.featureset === currentFeatureset && graph_.name === currentGraph) {
+            const edges = graph.getListAttacks();
+            edges.forEach(edge => {
+                html += `<i>${edge.source}</i> &rArr; <i>${edge.target}</i><br>`;
+            });
+            attacksN = edges.length;
+            break;
+        }
+    }
+
+    document.getElementById('listAttacks').innerHTML = html;
+    document.getElementById('listAttacksN').innerHTML = ` <b>(${attacksN})</b>`;
+}
+
+function printFeatureSet() {
+    const currentFeatureset = getSelectedOption('featureset');
+
+    let html = "";
+    let attributesN = 0;
+    let currentAttribute = "";
+
+    attributesByFeatureset_[currentFeatureset].forEach(attr => {
+        if (attr.attribute !== currentAttribute) {
+            html += `<br><i>Attribute</i>: ${attr.attribute}<br>`;
+            currentAttribute = attr.attribute;
+            attributesN++;
+        }
+        html += `<i>Level</i>: ${attr.a_level}, <i>From:</i> ${attr.a_from}, <i>To:</i> ${attr.a_to}<br>`;
+    });
+
+    conclusionsByFeatureset_[currentFeatureset].forEach((conc, index) => {
+        if (index === 0) html += "<br>";
+        html += `<i>Conclusion</i>: ${conc.conclusion}<br><i>From:</i> ${conc.c_from}, <i>To:</i> ${conc.c_to}<br>${index !== conclusionsByFeatureset_[currentFeatureset].length - 1 ? "<br>" : ""}`;
+        attributesN++;
+    });
+
+    document.getElementById('listAttributes').innerHTML = html;
+    document.getElementById('listAttributesN').innerHTML = ` <b>(${attributesN})</b>`;
+}
