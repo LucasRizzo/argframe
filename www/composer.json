@@ -1,0 +1,7 @@
+{
+    "name": "lucasrizzo/argframe",
+    "require": {
+        "php": "^8.4",
+        "phpoffice/phpspreadsheet": "^5.0"
+    }
+}
