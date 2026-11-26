@@ -3,6 +3,7 @@
 class View {
     private $model;
     private $controller;
+    private $slimApp;
 
     public function __construct($controller, $model, $slimApp) {
         $this->controller = $controller;

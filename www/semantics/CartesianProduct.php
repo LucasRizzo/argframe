@@ -131,6 +131,7 @@ class CartesianProduct implements Iterator
      *
      * @return  array
      */
+    #[\ReturnTypeWillChange]
     public function current()
     {
         return $this->_current;
@@ -157,6 +158,7 @@ class CartesianProduct implements Iterator
      *
      * @return  int
      */
+    #[\ReturnTypeWillChange]
     public function key()
     {
         return $this->_key;
@@ -167,6 +169,7 @@ class CartesianProduct implements Iterator
      *
      * @return  array
      */
+    #[\ReturnTypeWillChange]
     public function next()
     {
         for ($i = 0; $i <= $this->_max; ++$i) {
@@ -200,6 +203,7 @@ class CartesianProduct implements Iterator
      *
      * @return  array
      */
+    #[\ReturnTypeWillChange]
     public function rewind()
     {
         $this->_break = empty($this->_sets);
@@ -220,6 +224,7 @@ class CartesianProduct implements Iterator
      *
      * @return  bool
      */
+    #[\ReturnTypeWillChange]
     public function valid()
     {
         return false === $this->_break;

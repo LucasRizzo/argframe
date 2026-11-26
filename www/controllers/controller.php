@@ -6,7 +6,7 @@ class Controller {
     private $slimApp;
     private $requestBody;
 
-    public function __construct($model, $action = null, $slimApp, $parameters = null) {
+    public function __construct($model, $action, $slimApp, $parameters = null) {
     //public function __construct($model, $action) {
 
         $this->model = $model;
