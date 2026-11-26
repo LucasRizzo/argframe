@@ -928,10 +928,11 @@ class DataSetDAO {
                 $bindPosition++;
                 $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
                 $bindPosition++;
-                if ($_POST["editWeight"][$key] == "NULL") {
-                    $this->dbManager->bindValue($stmt, $bindPosition, null, $this->dbManager->STRING_TYPE);
+                $weight = trim((string) ($_POST["editWeight"][$key] ?? ''));
+                if ($weight === '' || strcasecmp($weight, 'NULL') === 0) {
+                    $this->dbManager->bindValue($stmt, $bindPosition, null, PDO::PARAM_NULL);
                 } else {
-                    $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editWeight"][$key], $this->dbManager->STRING_TYPE);
+                    $this->dbManager->bindValue($stmt, $bindPosition, $weight, $this->dbManager->STRING_TYPE);
                 }
                 $bindPosition++;
             }
@@ -996,10 +997,11 @@ class DataSetDAO {
                 $bindPosition++;
                 $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
                 $bindPosition++;
-                if ($_POST["editWeight"][$key] == "NULL") {
-                    $this->dbManager->bindValue($stmt, $bindPosition, null, $this->dbManager->STRING_TYPE);
+                $weight = trim((string) ($_POST["editWeight"][$key] ?? ''));
+                if ($weight === '' || strcasecmp($weight, 'NULL') === 0) {
+                    $this->dbManager->bindValue($stmt, $bindPosition, null, PDO::PARAM_NULL);
                 } else {
-                    $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editWeight"][$key], $this->dbManager->STRING_TYPE);
+                    $this->dbManager->bindValue($stmt, $bindPosition, $weight, $this->dbManager->STRING_TYPE);
                 }
             }
         }
