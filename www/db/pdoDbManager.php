@@ -33,6 +33,28 @@ class pdoDbManager {
         }
     }
     
+    // Run a group of statements atomically, treating SQL failures as exceptions.
+    public function transaction(callable $operation) {
+        $previousMode = $this->db_link->getAttribute(PDO::ATTR_ERRMODE);
+        $this->db_link->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+        try {
+            $this->db_link->beginTransaction();
+            try {
+                $result = $operation();
+                $this->db_link->commit();
+                return $result;
+            } catch (\Throwable $error) {
+                if ($this->db_link->inTransaction()) {
+                    $this->db_link->rollBack();
+                }
+                throw $error;
+            }
+        } finally {
+            $this->db_link->setAttribute(PDO::ATTR_ERRMODE, $previousMode);
+        }
+    }
+
     function prepareQuery($query) {
         $stmt = $this->db_link->prepare ( $query );
         return $stmt;

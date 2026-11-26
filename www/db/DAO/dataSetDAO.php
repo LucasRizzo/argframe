@@ -877,81 +877,76 @@ class DataSetDAO {
     }
 
     public function updateFeaturesetGraph($jsonEdges) {
+        $this->dbManager->transaction(function () use ($jsonEdges) {
 
-        // First remove old graph. Since it is too complicated to update
-        // all the arguments it is better to remove everything and add as a
-        // new graph.
-        $sql = "DELETE FROM arguments ";
-        $sql .= "WHERE featureset=? AND graph=? ";
+            // First remove old graph. Since it is too complicated to update
+            // all the arguments it is better to remove everything and add as a
+            // new graph.
+            $sql = "DELETE FROM arguments ";
+            $sql .= "WHERE featureset=? AND graph=? ";
 
-        $stmt = $this->dbManager->prepareQuery ( $sql );
-        $this->dbManager->bindValue ( $stmt, 1, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
-        $this->dbManager->bindValue ( $stmt, 2, $_POST["oldGraphName"], $this->dbManager->STRING_TYPE);
-        $this->dbManager->executeQuery ( $stmt );
+            $stmt = $this->dbManager->prepareQuery ( $sql );
+            $this->dbManager->bindValue ( $stmt, 1, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
+            $this->dbManager->bindValue ( $stmt, 2, $_POST["oldGraphName"], $this->dbManager->STRING_TYPE);
+            $this->dbManager->executeQuery ( $stmt );
 
-        $sql = "DELETE FROM graphs ";
-        $sql .= "WHERE featureset=? AND name=? ";
+            $sql = "DELETE FROM graphs ";
+            $sql .= "WHERE featureset=? AND name=? ";
 
-        $stmt = $this->dbManager->prepareQuery ( $sql );
-        $this->dbManager->bindValue ( $stmt, 1, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
-        $this->dbManager->bindValue ( $stmt, 2, $_POST["oldGraphName"], $this->dbManager->STRING_TYPE);
-        $this->dbManager->executeQuery ( $stmt );
+            $stmt = $this->dbManager->prepareQuery ( $sql );
+            $this->dbManager->bindValue ( $stmt, 1, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
+            $this->dbManager->bindValue ( $stmt, 2, $_POST["oldGraphName"], $this->dbManager->STRING_TYPE);
+            $this->dbManager->executeQuery ( $stmt );
+            $this->insertEditedArguments($_POST["editGraphName"]);
 
-        // Insert arguments
-        $sql = "";
+            $sql = "";
+            $sql .= " INSERT INTO graphs (featureset, name, edges, font_size) VALUES ";
+            $sql .= "(?, ?, ?, ?);";
+
+            $stmt = $this->dbManager->prepareQuery ($sql);
+
+            $this->dbManager->bindValue($stmt, 1, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
+            $this->dbManager->bindValue($stmt, 2, $_POST["editGraphName"], $this->dbManager->STRING_TYPE);
+            $this->dbManager->bindValue($stmt, 3, $jsonEdges, $this->dbManager->STRING_TYPE);
+            $this->dbManager->bindValue($stmt, 4, $_POST["fontsize"], $this->dbManager->STRING_TYPE);
+
+            $this->dbManager->executeQuery ($stmt);
+        });
+    }
+
+    // Execute each INSERT separately so an error in any argument rolls back the graph.
+    private function insertEditedArguments($graphName) {
+        $sql = "INSERT INTO arguments (argument, conclusion, x, y, label, graph, featureset, weight) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        $stmt = null;
         foreach ($_POST["editArgument"] as $key => $value) {
-            // The last position of argument is empty because it is the template filled by
-            // the javascript
-            if($value != "") {
-                $sql .= " INSERT INTO arguments (argument, conclusion, x, y, label, graph, featureset, weight) VALUES ";
-                $sql .= "(?, ?, ?, ?, ?, ?, ?, ?);";
+            if ($value == "") {
+                continue;
             }
-        }
-
-        $stmt = $this->dbManager->prepareQuery ($sql);
-        $bindPosition = 1;
-        foreach ($_POST["editArgument"] as $key => $value) {
-            // The last position of argument is empty because it is the template filled by
-            // the javascript
-            if($value != "") {
-                $this->dbManager->bindValue($stmt, $bindPosition, $value, $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editConclusion"][$key], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editX"][$key], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editY"][$key], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editLabel"][$key], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editGraphName"], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $weight = trim((string) ($_POST["editWeight"][$key] ?? ''));
-                if ($weight === '' || strcasecmp($weight, 'NULL') === 0) {
-                    $this->dbManager->bindValue($stmt, $bindPosition, null, PDO::PARAM_NULL);
-                } else {
-                    $this->dbManager->bindValue($stmt, $bindPosition, $weight, $this->dbManager->STRING_TYPE);
-                }
-                $bindPosition++;
+            if ($stmt === null) {
+                $stmt = $this->dbManager->prepareQuery($sql);
             }
+
+            $values = array(
+                $value,
+                $_POST["editConclusion"][$key],
+                $_POST["editX"][$key],
+                $_POST["editY"][$key],
+                $_POST["editLabel"][$key],
+                $graphName,
+                $_POST["editFeaturesetName"]
+            );
+            foreach ($values as $position => $field) {
+                $this->dbManager->bindValue($stmt, $position + 1, $field, $this->dbManager->STRING_TYPE);
+            }
+
+            $weight = trim((string) ($_POST["editWeight"][$key] ?? ''));
+            if ($weight === '' || strcasecmp($weight, 'NULL') === 0) {
+                $this->dbManager->bindValue($stmt, 8, null, PDO::PARAM_NULL);
+            } else {
+                $this->dbManager->bindValue($stmt, 8, $weight, $this->dbManager->STRING_TYPE);
+            }
+            $this->dbManager->executeQuery($stmt);
         }
-
-        $this->dbManager->executeQuery ($stmt);
-
-        $sql = "";
-        $sql .= " INSERT INTO graphs (featureset, name, edges, font_size) VALUES ";
-        $sql .= "(?, ?, ?, ?);";
-
-        $stmt = $this->dbManager->prepareQuery ($sql);
-
-        $this->dbManager->bindValue($stmt, 1, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
-        $this->dbManager->bindValue($stmt, 2, $_POST["editGraphName"], $this->dbManager->STRING_TYPE);
-        $this->dbManager->bindValue($stmt, 3, $jsonEdges, $this->dbManager->STRING_TYPE);
-        $this->dbManager->bindValue($stmt, 4, $_POST["fontsize"], $this->dbManager->STRING_TYPE);
-
-        $this->dbManager->executeQuery ($stmt);
     }
 
     public function updateFeaturesetGraphEdges($jsonEdges) {
@@ -966,59 +961,21 @@ class DataSetDAO {
     }
 
     public function createGraphCopy($jsonEdges) {
-        // Insert arguments
-        $sql = "";
-        foreach ($_POST["editArgument"] as $key => $value) {
-            // The last position of argument is empty because it is the template filled by
-            // the javascript
-            if($value != "") {
-                $sql .= " INSERT INTO arguments (argument, conclusion, x, y, label, graph, featureset, weight) VALUES ";
-                $sql .= "(?, ?, ?, ?, ?, ?, ?, ?);";
-            }
-        }
+        $this->dbManager->transaction(function () use ($jsonEdges) {
+            $this->insertEditedArguments($_POST["copyNameGraph"]);
 
-        $stmt = $this->dbManager->prepareQuery ($sql);
-        $bindPosition = 1;
-        foreach ($_POST["editArgument"] as $key => $value) {
-            // The last position of argument is empty because it is the template filled by
-            // the javascript
-            if($value != "") {
-                $this->dbManager->bindValue($stmt, $bindPosition, $value, $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editConclusion"][$key], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editX"][$key], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editY"][$key], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editLabel"][$key], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["copyNameGraph"], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $weight = trim((string) ($_POST["editWeight"][$key] ?? ''));
-                if ($weight === '' || strcasecmp($weight, 'NULL') === 0) {
-                    $this->dbManager->bindValue($stmt, $bindPosition, null, PDO::PARAM_NULL);
-                } else {
-                    $this->dbManager->bindValue($stmt, $bindPosition, $weight, $this->dbManager->STRING_TYPE);
-                }
-            }
-        }
+            $sql = "";
+            $sql .= " INSERT INTO graphs (featureset, name, edges) VALUES ";
+            $sql .= "(?, ?, ?);";
 
-        $this->dbManager->executeQuery ($stmt);
+            $stmt = $this->dbManager->prepareQuery ($sql);
 
-        $sql = "";
-        $sql .= " INSERT INTO graphs (featureset, name, edges) VALUES ";
-        $sql .= "(?, ?, ?);";
+            $this->dbManager->bindValue($stmt, 1, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
+            $this->dbManager->bindValue($stmt, 2, $_POST["copyNameGraph"], $this->dbManager->STRING_TYPE);
+            $this->dbManager->bindValue($stmt, 3, $jsonEdges, $this->dbManager->STRING_TYPE);
 
-        $stmt = $this->dbManager->prepareQuery ($sql);
-
-        $this->dbManager->bindValue($stmt, 1, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
-        $this->dbManager->bindValue($stmt, 2, $_POST["copyNameGraph"], $this->dbManager->STRING_TYPE);
-        $this->dbManager->bindValue($stmt, 3, $jsonEdges, $this->dbManager->STRING_TYPE);
-
-        $this->dbManager->executeQuery ($stmt);
+            $this->dbManager->executeQuery ($stmt);
+        });
     }
 
     public function getAttributes() {
