@@ -3,7 +3,7 @@
 class DataSetDAO {
     private $dbManager;
 
-    function DataSetDAO($DBMngr) {
+    public function __construct($DBMngr) {
         $this->dbManager = $DBMngr;
     }
 

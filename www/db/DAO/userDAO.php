@@ -3,7 +3,7 @@
 class UserDAO {
     private $dbManager;
 
-    function UserDAO($DBMngr) {
+    public function __construct($DBMngr) {
         $this->dbManager = $DBMngr;
     }
 
