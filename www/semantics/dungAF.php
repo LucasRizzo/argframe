@@ -91,6 +91,11 @@ class DungAF {
      * This AF's stable extensions. 
      */
     private $expertSystem;// = array(array());
+
+    /**
+     * This AF's categoriser scores.
+     */
+    private $categoriser;
  
     /**
      * Constructs an empty AF.
