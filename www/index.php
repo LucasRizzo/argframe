@@ -866,7 +866,6 @@ $app->map ( "/levels", "authenticate", function ($featureset = null) use($app) {
     include_once "views/view.php";
     include_once "expertSystem/expertSystem.php";
     include_once "expertSystem/oldExpert.php";
-    include_once "PHPExcel/PHPExcel.php";
 
     $model = new Model(); // common model
 
@@ -883,7 +882,6 @@ $app->map ( "/featuresetGraphs", "authenticate", function ($featureset = null) u
     include_once "views/view.php";
     include_once "expertSystem/expertSystem.php";
     include_once "expertSystem/oldExpert.php";
-    include_once "PHPExcel/PHPExcel.php";
 
     $model = new Model(); // common model
 
@@ -900,7 +898,6 @@ $app->map ( "/featuresetArguments", "authenticate", function ($featureset = null
     include_once "views/view.php";
     include_once "expertSystem/expertSystem.php";
     include_once "expertSystem/oldExpert.php";
-    include_once "PHPExcel/PHPExcel.php";
 
     $model = new Model(); // common model
 
@@ -917,7 +914,6 @@ $app->map ( "/conclusionsByFeatureset", "authenticate", function ($featureset = 
     include_once "views/view.php";
     include_once "expertSystem/expertSystem.php";
     include_once "expertSystem/oldExpert.php";
-    include_once "PHPExcel/PHPExcel.php";
 
     $model = new Model(); // common model
 
@@ -940,7 +936,6 @@ $app->map ( "/attributesByFeatureset", "authenticate", function ($featureset = n
     include_once "views/view.php";
     include_once "expertSystem/expertSystem.php";
     include_once "expertSystem/oldExpert.php";
-    include_once "PHPExcel/PHPExcel.php";
 
     $model = new Model(); // common model
 
@@ -965,7 +960,6 @@ class loadRunMVCComponents {
         include_once "views/view.php";
         include_once "expertSystem/expertSystem.php";
         include_once "expertSystem/oldExpert.php";
-        include_once "PHPExcel/PHPExcel.php";
         //include ("DB/DAO/UsersDAO.php");
 
         $model = new $modelName (); // common model
