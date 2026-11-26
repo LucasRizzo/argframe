@@ -2221,7 +2221,7 @@ class DungAF {
 
         /* if revisedPrefExtCandidates is empty, there is just one preferred extension: the empty set. */
         if (sizeof($revisedPrefExtCandidates) == 0) {
-            $this->preferredExts = array();
+            $this->preferredExts = array(array());
         } else {
             $this->preferredExts = $revisedPrefExtCandidates;
         }
@@ -2297,8 +2297,10 @@ class DungAF {
             return "Maximum execution time";
         }
 
-        // Empty array is admissible
-        array_push($this->admissibleSets, array());
+        // Empty array is admissible; it may already be the preferred extension.
+        if (!$this->in_array_2D($this->admissibleSets, array())) {
+            array_push($this->admissibleSets, array());
+        }
 
         /* find the intermediate-sized admissible sets. To do this, proceed from the preferred extensions. 
          For each preferred extension argSet, for each arg1 in argSet, proceed as follows. Remove arg1 from argSet. 
