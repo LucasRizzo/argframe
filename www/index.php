@@ -1,5 +1,23 @@
 <?php
-session_start (); // start a new session or reconnect to an existing one
+ini_set('session.use_strict_mode', '1');
+ini_set('session.use_only_cookies', '1');
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => '/',
+    'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+    'httponly' => true,
+    'samesite' => 'Lax'
+]);
+session_start();
+
+// Remove legacy cookies containing login credentials.
+foreach (['member_login', 'member_pass'] as $cookie) {
+    if (isset($_COOKIE[$cookie])) {
+        setcookie($cookie, '', time() - 3600);
+        setcookie($cookie, '', time() - 3600, '/');
+        unset($_COOKIE[$cookie]);
+    }
+}
 
 require_once "Slim/Slim.php";
 require_once "conf/config.inc.php";
@@ -17,109 +35,68 @@ Slim\Slim::registerAutoloader ();
 
 $app = new \Slim\Slim (); // slim run-time object
 
-// route middleware for simple API authentication
+// Route middleware for session authentication.
 function authenticate(\Slim\Route $route) {
     $app = \Slim\Slim::getInstance();
-
-    $headers = $app->request->headers();
-
-    // Empty session given by slim looks like this
-    if (sizeof($_SESSION) == 1 && sizeof($_SESSION["slim.flash"]) == 0 && empty($_POST)) {
-        $app->response->redirect($app->urlFor('login'));
-//     } else if (empty($headers["User"])) {
-//         $app->response->redirect($app->urlFor('login'));
-    } else if (validateUserKey() === false) {
-        $app->response->redirect($app->urlFor('errlogin'));
-    } /*else if (validateUserHeaders($headers) === false) {
-        $app->halt(401);
-    }*/
+    $hasCredentials = array_key_exists('username', $_POST) || array_key_exists('password', $_POST);
+    if (!validateUserKey()) {
+        $app->redirect($app->urlFor($hasCredentials ? 'errlogin' : 'login'));
+    }
 }
 
-// function validateUserHeaders($headers) {
-// 
-//     // Check if it is a guest first
-// 
-//     if (("Guest" == $headers["User"]) && ("guest" == $headers["Password"])) {
-//         $_SESSION["username"] = $headers["User"];
-//         $_SESSION["password"] = $headers["Password"];
-//         return  true;
-//     }
-// 
-//     $dBManager = new pdoDbManager ();
-//     $dbLink = $dBManager->openConnection ();
-//     $userDAO = new UserDAO ($dBManager);
-// 
-//     $userList = $userDAO->getUsers();
-// 
-//     foreach ( $userList as $key => $value ) {
-// 
-//         if (($value["email"] == $headers["User"]) && ($value["password"] == md5($headers["Password"]))) {
-//             $_SESSION["username"] = $headers["User"];
-//             $_SESSION["password"] = md5($headers["Password"]);
-//             return  true;
-//         }
-//     }
-// 
-//     return false;
-// }
-
-function validateUserKey() {
-
-    // Check if it is a guest first
-    if (! empty ( $_POST ["username"] ) && ! empty ( $_POST ["password"] )) {
-        if (("Guest" == $_POST ["username"]) && ("guest" == $_POST ["password"])) {
-                $_SESSION["username"] = $_POST ["username"];
-                $_SESSION["password"] = $_POST ["password"];
-                return  true;
-        }
+function establishAuthenticatedSession(string $username): bool {
+    if (!session_regenerate_id(true)) {
+        return false;
     }
+    unset($_SESSION['password']);
+    $_SESSION['username'] = $username;
+    $_SESSION['authenticated'] = true;
+    return true;
+}
 
-    if (! empty ( $_SESSION ["username"] ) && ! empty ( $_SESSION ["password"] )) {
-        if (("Guest" == $_SESSION ["username"]) && ("guest" == $_SESSION ["password"])) {
-            return  true;
+function validateUserKey(): bool {
+    if (array_key_exists('username', $_POST) || array_key_exists('password', $_POST)) {
+        $username = $_POST['username'] ?? null;
+        $password = $_POST['password'] ?? null;
+        if (!is_string($username) || !is_string($password) || $username === '' || $password === '') {
+            return false;
         }
-    }
 
-    $dBManager = new pdoDbManager ();
-    $dbLink = $dBManager->openConnection ();
-    $userDAO = new UserDAO ($dBManager);
+        if ($username === 'Guest') {
+            return $password === 'guest' && establishAuthenticatedSession('Guest');
+        }
 
-    $userList = $userDAO->getUsers();
-    
-    
-    if (! empty ( $_POST ["username"] ) && ! empty ( $_POST ["password"] )) {
-        foreach ( $userList as $key => $value ) {
-            if (($value["email"] == $_POST ["username"]) && ($value["password"] == md5($_POST ["password"]))) {
-                $_SESSION["username"] = $_POST ["username"];
-                $_SESSION["password"] = md5($_POST["password"]);
-                
-                if(! empty($_POST["remember"])) {
-                    setcookie ("member_login", $_POST["username"] ,time()+ (10 * 365 * 24 * 60 * 60));
-                    setcookie ("member_pass", $_POST["password"] ,time()+ (10 * 365 * 24 * 60 * 60));
-                } else {
-                    if(isset($_COOKIE["member_login"])) {
-                        setcookie ("member_login","");
-                    }
-                    
-                    if(isset($_COOKIE["member_pass"])) {
-                        setcookie ("member_pass","");
-                    }
-                }
-                
-                return  true;
+        $dbManager = new pdoDbManager();
+        $dbManager->openConnection();
+        $userDAO = new UserDAO($dbManager);
+        $user = $userDAO->findByEmail($username);
+        if (!$user) return false;
+
+        $hash = $user['password'];
+        $legacy = preg_match('/\\A[0-9a-f]{32}\\z/i', $hash) === 1;
+        $valid = $legacy
+            ? hash_equals(strtolower($hash), md5($password))
+            : password_verify($password, $hash);
+        if (!$valid) return false;
+
+        if ($legacy || password_needs_rehash($hash, PASSWORD_DEFAULT)) {
+            $newHash = password_hash($password, PASSWORD_DEFAULT);
+            if (!$userDAO->replacePasswordHash($user['email'], $hash, $newHash)) {
+                return false;
             }
         }
-    }
-    
-    if (! empty($_SESSION ["password"]) && ! empty($_SESSION ["username"])) {
-        foreach ( $userList as $key => $value ) {
-            if (($value["email"] == $_SESSION ["username"]) && ($value["password"] == $_SESSION ["password"])) {
-                return  true;
-            }
-        }
+
+        return establishAuthenticatedSession($user['email']);
     }
 
-    return false;
+    return ($_SESSION['authenticated'] ?? false) === true
+        && is_string($_SESSION['username'] ?? null)
+        && $_SESSION['username'] !== '';
+}
+
+function clearAuthenticatedSession(): void {
+    session_unset();
+    session_regenerate_id(true);
 }
 
 function printAspartix($edges, $isolatedNodes) {
@@ -198,7 +175,7 @@ function getDungAf($graph) {
 
 $app->get ( "/login", function () use($app) {
 
-    session_unset (); // unset the session (and the $_SESSION)
+    clearAuthenticatedSession();
 
     $action = ACTION_LOGIN;
     $parameters = null;
@@ -208,7 +185,7 @@ $app->get ( "/login", function () use($app) {
 
 $app->get ( "/errlogin", function () use($app) {
 
-    session_unset (); // unset the session (and the $_SESSION)
+    clearAuthenticatedSession();
 
     $action = ACTION_LOGIN_ERR;
     $parameters = null;

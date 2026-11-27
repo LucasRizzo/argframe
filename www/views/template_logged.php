@@ -1,6 +1,6 @@
 <div class="brand">
 <span>Logged as <?php
-    echo $_SESSION ["username"];
+    echo htmlspecialchars($_SESSION["username"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
 ?>
 
 </span>

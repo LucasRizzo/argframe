@@ -236,7 +236,7 @@ INSERT INTO `graphs` (`featureset`, `name`, `edges`, `font_size`) VALUES
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `email` varchar(40) NOT NULL,
-  `password` varchar(32) NOT NULL
+  `password` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --

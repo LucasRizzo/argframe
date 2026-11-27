@@ -350,7 +350,7 @@ class Model {
 
         //session_start (); // start a new session or reconnect to an existing one
 
-        if (! empty ( $_SESSION ["username"] ) && ! empty ( $_SESSION ["password"] )) {
+        if (($_SESSION["authenticated"] ?? false) === true && !empty($_SESSION["username"])) {
             return true;
         } else {
             return false;

@@ -269,7 +269,7 @@ class Controller {
     }
 
     public function handleLogout() {
-        session_unset (); // unset the session (and the $_SESSION)
+        clearAuthenticatedSession();
         header ( "Location: index.php" ); // redirect to the index.php
     }
 

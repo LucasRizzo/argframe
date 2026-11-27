@@ -50,22 +50,15 @@
             <br>
             <h3 class="form-signin-heading">Please sign in</h3>
                 <label for="username" class="sr-only">Login</label>
-                <input type="text" id="username" class="form-control" name="username" placeholder="Login" required autofocus 
-                value="<?php if(isset($_COOKIE["member_login"])) { echo $_COOKIE["member_login"]; }?>">
+                <input type="text" id="username" class="form-control" name="username" placeholder="Login" required autofocus autocomplete="username">
                 <label for="password" class="sr-only">Password</label>
-                <input type="password" name="password" id="password" class="form-control" placeholder="Password" required value="<?php if(isset($_COOKIE["member_pass"])) { echo $_COOKIE["member_pass"]; }?>">
+                <input type="password" name="password" id="password" class="form-control" placeholder="Password" required autocomplete="current-password">
                 <?php
                     if (! empty($view_loggedErr)) {
                         echo "<font color=\"red\">$view_loggedErr</font>";
                     }
                 ?>
                 
-                <div class="checkbox">
-                    <label>
-                        <!-- TODO implement this functionallity -->
-                        <input type="checkbox" name="remember" id="remember" <?php if(isset($_COOKIE["member_login"])) { ?> checked <?php } ?> />  Remember me
-                    </label>
-                </div>
             <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
         </form>
         <form class="form-signin" method="post" action=<?php echo ADDRESS_PREFIX . "index.php"; ?>>
