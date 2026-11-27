@@ -3297,11 +3297,6 @@ d3.select("#exportFile").on("click", function () {
 
         console.log(file_);
 
-        var url = absoluteCall_ + "deleteCsv.php";
-        var request = new XMLHttpRequest();
-        request.open("GET", url);
-        request.send();
-
         Papa.parse(file_, {
             header: true,
             skipEmptyLines: true,

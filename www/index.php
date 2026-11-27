@@ -684,28 +684,6 @@ $app->map ( "/allSemantics(/:graph)", "authenticate", function ($graph = null) u
 
 } )->via ( "GET", "POST", "PUT", "DELETE" );
 
-if(!empty($_POST['data'])){
-    $data = $_POST['data'];
-    $fname = "graphs.txt";
-    // Clean file
-    file_put_contents($fname, "");
-
-    $file = fopen($fname, 'w');
-
-    fwrite($file, $data);
-
-    /*$requests = explode(";;",  $data);
-
-    $file = 'error.txt';
-    $current = file_get_contents($file);
-    // Append a new person to the file
-    $current .= var_dump(count($requests));
-    // Write the contents back to the file
-    file_put_contents($file, $current);*/
-
-    fclose($file);
-}
-
 $app->map ( "/deleteComputations", "authenticate", function ($graph = null) use($app) {
 
     $dBManager = new pdoDbManager ();
@@ -791,69 +769,6 @@ $app->map ( "/saveComputations", "authenticate", function ($graph = null) use($a
     $dataSetDAO->saveComputations($response, $_SESSION["username"]);
 
 } )->via ( "GET", "POST", "PUT", "DELETE" );
-
-$app->map ( "/fileSemantics", "authenticate", function ($graph = null) use($app) {
-
-    require_once "semantics/dungAF.php"; 
-
-    $httpMethod = $app->request->getMethod ();
-    $myfile = fopen("graphs.txt", "r") or die("Unable to open file!");
-    $requests = explode(";;", fread($myfile,filesize("graphs.txt")));
-
-    //var_dump(count($requests));
-
-    $response = "";
-
-    foreach ($requests as $r) {
-        //echo($r);
-        $graphAndSemantics = explode(";", $r);
-        $graph = $graphAndSemantics[0];
-        $semantics = explode(",", $graphAndSemantics[1]);
-
-        $af = getDungAf($graph);
-
-        $allSemantics = array();
-
-        foreach ($semantics as $nextSemantic) {
-
-            if ($nextSemantic == "expert") {
-                array_push($allSemantics, $af->getExpertSystem());
-            } else  if ($nextSemantic == "grounded") {
-                array_push($allSemantics, $af->getGroundedExt());
-            } else if ($nextSemantic == "eager") {
-                array_push($allSemantics, $af->getEagerExt());
-            } else if ($nextSemantic == "ideal") {
-                array_push($allSemantics, $af->getIdealExt());
-            } else if ($nextSemantic == "preferred") {
-                array_push($allSemantics, $af->getPreferredExts());
-            } else if ($nextSemantic == "stable") {
-                array_push($allSemantics, $af->getStableExts());
-            } else if ($nextSemantic == "semistable") {
-                array_push($allSemantics, $af->getSemiStableExts());
-            } else if ($nextSemantic == "admissible") {
-                array_push($allSemantics, $af->getAdmissibleSets());
-            } else if ($nextSemantic == "categoriser") {
-                array_push($allSemantics, $af->getCategoriser());
-            }
-        }
-
-        $response .= json_encode($allSemantics) . ";;";
-    }
-    //var_dump($response);
-
-    // Save response in a file
-    $fname = "extensions.txt";
-    // Clean file
-    file_put_contents($fname, "");
-    $file = fopen($fname, 'w');
-    // Remove last two ;;
-    fwrite($file, substr($response, 0, -2));
-    fclose($file);
-
-    //$app->response->write(substr($response, 0, -2));
-
-} )->via ( "GET", "POST", "PUT", "DELETE" );
-
 
 
 $app->map ( "/levels", "authenticate", function ($featureset = null) use($app) {
