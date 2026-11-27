@@ -5,6 +5,11 @@
 <meta charset="utf-8">
 <meta name="csrf-token" content="<?php echo htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
 <script>
+function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    })[char]);
+}
 function csrfHeaders() {
     return { "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content };
 }
@@ -137,8 +142,11 @@ function csrfHeaders() {
         </li> -->
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        <li class="navbar-text">Logged as <span class="bg-info "><?php echo $_SESSION["username"]; ?></span></li>
-        <li><a href=<?php echo ADDRESS_PREFIX . "index.php/login"; ?>><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
+        <li class="navbar-text">Logged as <span class="bg-info "><?php echo htmlspecialchars($_SESSION["username"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></span></li>
+        <li><form action="<?php echo ADDRESS_PREFIX . 'index.php?action=logout'; ?>" method="post" class="navbar-form">
+            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
+            <button type="submit" class="btn btn-link"><span class="glyphicon glyphicon-log-out"></span> Logout</button>
+        </form></li>
       </ul>
   </div>
 </div>
@@ -175,7 +183,7 @@ function csrfHeaders() {
                 // Generic error modal included in the index page
                 $(function(){
                     $('#messages').removeClass('hide').addClass('alert alert-danger alert-dismissible fade in').slideDown().show();
-                    $('#messages_content').html('<h4> <strong>Error!</strong> <?php echo $view_apiResponse["message"]; ?> </h4>');
+                    $('#messages_content').html('<h4> <strong>Error!</strong> ' + escapeHtml(<?php echo json_encode($view_apiResponse["message"], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>) + ' </h4>');
                     $('#modal').modal('show');
                 });
                 </script> <?php
@@ -191,7 +199,7 @@ function csrfHeaders() {
                     // Generic error modal included in the index page
                     $(function(){
                         $('#messages').removeClass('hide').addClass('alert alert-danger alert-dismissible fade in').slideDown().show();
-                        $('#messages_content').html('<h4> <strong>Error!</strong> <?php echo $view_error; ?> </h4>');
+                        $('#messages_content').html('<h4> <strong>Error!</strong> ' + escapeHtml(<?php echo json_encode($view_error, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>) + ' </h4>');
                         $('#modal').modal('show');
                     });
                     </script> <?php
@@ -202,7 +210,7 @@ function csrfHeaders() {
                         ?> <script>
                             $(function(){
                                 $('#messages').removeClass('hide').addClass('alert alert-success alert-dismissible fade in').slideDown().show();
-                                $('#messages_content').html('<h4><?php echo $view_success; ?> </h4>');
+                                $('#messages_content').html('<h4>' + escapeHtml(<?php echo json_encode($view_success, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>) + ' </h4>');
                                 $('#modal').modal('show');
                             });
                         </script> <?php

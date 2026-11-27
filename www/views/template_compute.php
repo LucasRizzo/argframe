@@ -495,19 +495,19 @@ ini_set('php_max_size', '100M');
 
     <script>
 
-    var graphs_ = <?php echo json_encode($view_featuresetGraphs, JSON_PRETTY_PRINT); ?>;
+    var graphs_ = <?php echo json_encode($view_featuresetGraphs, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
-    var args_ = <?php echo json_encode($view_featuresetArguments, JSON_PRETTY_PRINT); ?>;
+    var args_ = <?php echo json_encode($view_featuresetArguments, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
-    var attributesByFeatureset_ = <?php echo json_encode($view_attributesByFeatureset, JSON_PRETTY_PRINT); ?>;
+    var attributesByFeatureset_ = <?php echo json_encode($view_attributesByFeatureset, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
-    var conclusionsByFeatureset_ = <?php echo json_encode($view_conclusionsByFeatureset, JSON_PRETTY_PRINT); ?>;
+    var conclusionsByFeatureset_ = <?php echo json_encode($view_conclusionsByFeatureset, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
     
-    var featuresets_ = <?php echo json_encode($view_featuresets, JSON_PRETTY_PRINT); ?>;
+    var featuresets_ = <?php echo json_encode($view_featuresets, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
     var file_;
 
-    var attributes_ = <?php echo json_encode($view_attributes, JSON_PRETTY_PRINT); ?>;
+    var attributes_ = <?php echo json_encode($view_attributes, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
     </script>
 
@@ -525,8 +525,8 @@ $(document).ready(function(){
 
 //console.log(conclusionsByFeatureset_);
 
-var addressCall_ = <?php echo json_encode(ADDRESS_CALL, JSON_PRETTY_PRINT); ?>;
-var absoluteCall_ = <?php echo json_encode(ABSOLUTE_CALL, JSON_PRETTY_PRINT); ?>;
+var addressCall_ = <?php echo json_encode(ADDRESS_CALL, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+var absoluteCall_ = <?php echo json_encode(ABSOLUTE_CALL, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
 function addGraphs() {
 
@@ -803,7 +803,7 @@ function chartFileData(fileToParse, callback) {
 
 function fillTable() {
 
-    var attributes = <?php echo json_encode($view_attributes, JSON_PRETTY_PRINT); ?>;
+    var attributes = <?php echo json_encode($view_attributes, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
     //console.log(attributes);
 
@@ -854,7 +854,7 @@ function fillTable() {
 
             if (inFeatureset) {
                 // Create json columns according to the required fields of the table plugin
-                columns.push({sTitle: key, mData: key, aTargets: [nColumns]});
+                columns.push({sTitle: escapeHtml(key), mData: key, aTargets: [nColumns], render: function(data, type) { return type === "display" ? escapeHtml(data) : data; }});
                 nColumns++;
                 // Save which columns of the csv file will be imported
                 //iColumns.push(iHeader);
@@ -866,7 +866,7 @@ function fillTable() {
                 // If all attributes were checked and header didn't match any of them it will not be imported.
                 // Print list of not imported column
                 // TODO: is this really necessary? Maybe import everything and using only valid data
-                ignoredColumns += "<li>" + key + "</li>";
+                ignoredColumns += "<li>" + escapeHtml(key) + "</li>";
                 removeColumns.push(key);
             }
 

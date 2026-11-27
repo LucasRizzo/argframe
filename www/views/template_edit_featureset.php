@@ -306,9 +306,9 @@ $(document).ready(function(){
 });
 
 
-var attributesByFeatureset_ = <?php echo json_encode($view_attributesByFeatureset, JSON_PRETTY_PRINT); ?>;
+var attributesByFeatureset_ = <?php echo json_encode($view_attributesByFeatureset, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
-var conclusionsByFeatureset_ = <?php echo json_encode($view_conclusionsByFeatureset, JSON_PRETTY_PRINT); ?>;
+var conclusionsByFeatureset_ = <?php echo json_encode($view_conclusionsByFeatureset, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
 document.getElementById("create-conclusion").addEventListener("click", function(e){
     event.preventDefault();
@@ -905,27 +905,27 @@ function printFeatureSet() {
         var currentAttribute = attributesByFeatureset_[currentFeatureset][0].attribute;
         featuresN = 1
         rows = attributesByFeatureset_[currentFeatureset].length;
-        html_features += "<tr><td>" + attributesByFeatureset_[currentFeatureset][0].attribute + "</td>";
+        html_features += "<tr><td>" + escapeHtml(attributesByFeatureset_[currentFeatureset][0].attribute) + "</td>";
         for (var attr = 0; attr < attributesByFeatureset_[currentFeatureset].length; attr++) {
 
             if (attributesByFeatureset_[currentFeatureset][attr].attribute != currentAttribute) {
-                html_features += "<tr><td>" + attributesByFeatureset_[currentFeatureset][attr].attribute + "</td>";
+                html_features += "<tr><td>" + escapeHtml(attributesByFeatureset_[currentFeatureset][attr].attribute) + "</td>";
                 currentAttribute = attributesByFeatureset_[currentFeatureset][attr].attribute;
                 featuresN++;
             } else if (attr > 0) {
-                html_features += "<tr><td>" + attributesByFeatureset_[currentFeatureset][attr].attribute + "</td>";
+                html_features += "<tr><td>" + escapeHtml(attributesByFeatureset_[currentFeatureset][attr].attribute) + "</td>";
             }
 
-            html_features += "<td>" + attributesByFeatureset_[currentFeatureset][attr].a_level +
-                    "</td><td>" + attributesByFeatureset_[currentFeatureset][attr].a_from +
-                    "</td><td>" + attributesByFeatureset_[currentFeatureset][attr].a_to +
+            html_features += "<td>" + escapeHtml(attributesByFeatureset_[currentFeatureset][attr].a_level) +
+                    "</td><td>" + escapeHtml(attributesByFeatureset_[currentFeatureset][attr].a_from) +
+                    "</td><td>" + escapeHtml(attributesByFeatureset_[currentFeatureset][attr].a_to) +
                     "</td>";
             
             // Actions
             html_features += "<td> <a data-toggle=\"modal\" data-feature-id=\"" + attr.toString() + 
                             "\" href=\"#updateFeatureModal\"><span data-toggle=\"tooltip\" title=\"Edit feature or level\"><span class=\"glyphicon glyphicon-edit\"></span></span></a>";
                             
-            html_features += "&nbsp; &nbsp; <a data-toggle=\"modal\" data-feature-name=\"" + attributesByFeatureset_[currentFeatureset][attr].attribute + 
+            html_features += "&nbsp; &nbsp; <a data-toggle=\"modal\" data-feature-name=\"" + escapeHtml(attributesByFeatureset_[currentFeatureset][attr].attribute) + 
                             "\" href=\"#createFeatureModal\"><span data-toggle=\"tooltip\" title=\"Add new level\"><span class=\"glyphicon glyphicon-tasks\"></span></span></a>"
             html_features += "&nbsp; &nbsp; <a href=\"#\" onclick=\"deleteFeature(" + attr.toString() + ")\"><span data-toggle=\"tooltip\" title=\"Delete feature level\"><span class=\"glyphicon glyphicon-trash\"></span></span></a>";
             html_features += "</td></tr>";
@@ -947,9 +947,9 @@ function printFeatureSet() {
     if (conclusionsByFeatureset_[currentFeatureset] !== undefined) {
         for (var conc = 0; conc < conclusionsByFeatureset_[currentFeatureset].length; conc++) {
 
-            html_conclusions += "<tr><td>" + conclusionsByFeatureset_[currentFeatureset][conc].conclusion + "</td>" +
-                    "<td>" + conclusionsByFeatureset_[currentFeatureset][conc].c_from +
-                    "</td><td>" + conclusionsByFeatureset_[currentFeatureset][conc].c_to + "</td>";
+            html_conclusions += "<tr><td>" + escapeHtml(conclusionsByFeatureset_[currentFeatureset][conc].conclusion) + "</td>" +
+                    "<td>" + escapeHtml(conclusionsByFeatureset_[currentFeatureset][conc].c_from) +
+                    "</td><td>" + escapeHtml(conclusionsByFeatureset_[currentFeatureset][conc].c_to) + "</td>";
 
             html_conclusions += "<td><a data-toggle=\"modal\" data-conclusion-id=\"" + conc.toString() + 
                                 "\" href=\"#updateConclusionModal\"><span data-toggle=\"tooltip\" title=\"Edit conclusion\"><span class=\"glyphicon glyphicon-edit\"></span></span></a>";
@@ -1066,10 +1066,10 @@ $('#updateFeatureModal').on('show.bs.modal', function(e) {
     $(e.currentTarget).find('input[id="fromValueNew"]').val(attributesByFeatureset_[currentFeatureset][featureID].a_from);
     $(e.currentTarget).find('input[id="toValueNew"]').val(attributesByFeatureset_[currentFeatureset][featureID].a_to);
     
-    document.getElementById("featureNameOld").innerHTML = attributesByFeatureset_[currentFeatureset][featureID].attribute;
-    document.getElementById("levelNameOld").innerHTML = attributesByFeatureset_[currentFeatureset][featureID].a_level;
-    document.getElementById("fromValueOld").innerHTML = attributesByFeatureset_[currentFeatureset][featureID].a_from;
-    document.getElementById("toValueOld").innerHTML = attributesByFeatureset_[currentFeatureset][featureID].a_to;
+    document.getElementById("featureNameOld").textContent = attributesByFeatureset_[currentFeatureset][featureID].attribute;
+    document.getElementById("levelNameOld").textContent = attributesByFeatureset_[currentFeatureset][featureID].a_level;
+    document.getElementById("fromValueOld").textContent = attributesByFeatureset_[currentFeatureset][featureID].a_from;
+    document.getElementById("toValueOld").textContent = attributesByFeatureset_[currentFeatureset][featureID].a_to;
 });
 
 document.getElementById("updateFeature").addEventListener("click", function(e){
@@ -1083,10 +1083,10 @@ document.getElementById("updateFeature").addEventListener("click", function(e){
     
     var featureOldAndNew = currentFeatureset + ";"
     
-    featureOldAndNew += document.getElementById("featureNameOld").innerHTML + ":" +
-                        document.getElementById("levelNameOld").innerHTML + ":" +
-                        document.getElementById("fromValueOld").innerHTML + ":" +
-                        document.getElementById("toValueOld").innerHTML + ";"
+    featureOldAndNew += document.getElementById("featureNameOld").textContent + ":" +
+                        document.getElementById("levelNameOld").textContent + ":" +
+                        document.getElementById("fromValueOld").textContent + ":" +
+                        document.getElementById("toValueOld").textContent + ";"
     
     featureOldAndNew += document.getElementById("featureNameNew").value + ":" +
                         document.getElementById("levelNameNew").value + ":" +
@@ -1102,8 +1102,8 @@ document.getElementById("updateFeature").addEventListener("click", function(e){
 
                 for (var attr = 0; attr < attributesByFeatureset_[currentFeatureset].length; attr++) {
                     
-                    if (attributesByFeatureset_[currentFeatureset][attr].attribute == document.getElementById("featureNameOld").innerHTML &&
-                        attributesByFeatureset_[currentFeatureset][attr].a_level == document.getElementById("levelNameOld").innerHTML) {
+                    if (attributesByFeatureset_[currentFeatureset][attr].attribute == document.getElementById("featureNameOld").textContent &&
+                        attributesByFeatureset_[currentFeatureset][attr].a_level == document.getElementById("levelNameOld").textContent) {
                         
                         attributesByFeatureset_[currentFeatureset][attr].attribute = document.getElementById("featureNameNew").value;
                         attributesByFeatureset_[currentFeatureset][attr].a_level = document.getElementById("levelNameNew").value;
@@ -1115,10 +1115,10 @@ document.getElementById("updateFeature").addEventListener("click", function(e){
                     }
                 }
             } else {
-                document.getElementById("featureNameNew").value = document.getElementById("featureNameOld").innerHTML;
-                document.getElementById("levelNameNew").value = document.getElementById("levelNameOld").innerHTML;
-                document.getElementById("fromValueNew").value = document.getElementById("fromValueOld").innerHTML;
-                document.getElementById("toValueNew").value = document.getElementById("toValueOld").innerHTML;
+                document.getElementById("featureNameNew").value = document.getElementById("featureNameOld").textContent;
+                document.getElementById("levelNameNew").value = document.getElementById("levelNameOld").textContent;
+                document.getElementById("fromValueNew").value = document.getElementById("fromValueOld").textContent;
+                document.getElementById("toValueNew").value = document.getElementById("toValueOld").textContent;
                 
                 window.alert(this.responseText, "Wrong response error.");
             }
@@ -1145,9 +1145,9 @@ $('#updateConclusionModal').on('show.bs.modal', function(e) {
     $(e.currentTarget).find('input[id="fromConclusionValueNew"]').val(conclusionsByFeatureset_[currentFeatureset][conclusionID].c_from);
     $(e.currentTarget).find('input[id="toConclusionValueNew"]').val(conclusionsByFeatureset_[currentFeatureset][conclusionID].c_to);
     
-    document.getElementById("conclusionNameOld").innerHTML = conclusionsByFeatureset_[currentFeatureset][conclusionID].conclusion;
-    document.getElementById("fromConclusionValueOld").innerHTML = conclusionsByFeatureset_[currentFeatureset][conclusionID].c_from;
-    document.getElementById("toConclusionValueOld").innerHTML = conclusionsByFeatureset_[currentFeatureset][conclusionID].c_to;
+    document.getElementById("conclusionNameOld").textContent = conclusionsByFeatureset_[currentFeatureset][conclusionID].conclusion;
+    document.getElementById("fromConclusionValueOld").textContent = conclusionsByFeatureset_[currentFeatureset][conclusionID].c_from;
+    document.getElementById("toConclusionValueOld").textContent = conclusionsByFeatureset_[currentFeatureset][conclusionID].c_to;
 });
 
 
@@ -1162,9 +1162,9 @@ document.getElementById("updateConclusion").addEventListener("click", function(e
     
     var conclusionOldAndNew = currentFeatureset + ";"
     
-    conclusionOldAndNew += document.getElementById("conclusionNameOld").innerHTML + ":" +
-                           document.getElementById("fromConclusionValueOld").innerHTML + ":" +
-                           document.getElementById("toConclusionValueOld").innerHTML + ";";
+    conclusionOldAndNew += document.getElementById("conclusionNameOld").textContent + ":" +
+                           document.getElementById("fromConclusionValueOld").textContent + ":" +
+                           document.getElementById("toConclusionValueOld").textContent + ";";
     
     conclusionOldAndNew += document.getElementById("conclusionNameNew").value + ":" +
                            document.getElementById("fromConclusionValueNew").value + ":" +
@@ -1176,7 +1176,7 @@ document.getElementById("updateConclusion").addEventListener("click", function(e
             if (this.responseText == "ok") {
                 for (var conc = 0; conc < conclusionsByFeatureset_[currentFeatureset].length; conc++) {
 
-                    if (conclusionsByFeatureset_[currentFeatureset][conc].conclusion == document.getElementById("conclusionNameOld").innerHTML) {
+                    if (conclusionsByFeatureset_[currentFeatureset][conc].conclusion == document.getElementById("conclusionNameOld").textContent) {
                         conclusionsByFeatureset_[currentFeatureset][conc].conclusion = document.getElementById("conclusionNameNew").value;
                         conclusionsByFeatureset_[currentFeatureset][conc].c_from = document.getElementById("fromConclusionValueNew").value;
                         conclusionsByFeatureset_[currentFeatureset][conc].c_to = document.getElementById("toConclusionValueNew").value;
@@ -1186,9 +1186,9 @@ document.getElementById("updateConclusion").addEventListener("click", function(e
                     }
                 }
             } else {
-                document.getElementById("conclusionNameNew").value = document.getElementById("conclusionNameOld").innerHTML;
-                document.getElementById("fromConclusionValueNew").value = document.getElementById("fromConclusionValueOld").innerHTML;
-                document.getElementById("toConclusionValueNew").value = document.getElementById("toConclusionValueOld").innerHTML;
+                document.getElementById("conclusionNameNew").value = document.getElementById("conclusionNameOld").textContent;
+                document.getElementById("fromConclusionValueNew").value = document.getElementById("fromConclusionValueOld").textContent;
+                document.getElementById("toConclusionValueNew").value = document.getElementById("toConclusionValueOld").textContent;
                 
                 window.alert(this.responseText, "Wrong response error.");
             }

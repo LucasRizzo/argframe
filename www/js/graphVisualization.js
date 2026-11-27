@@ -1124,13 +1124,13 @@ function create(d3, saveAs, Blob) {
         function formatArgumentString(d) {
             const [premise, conclusion] = String(d.tooltip).split(" -> ");
             return conclusion && conclusion !== "NULL"
-                ? `<i>${d.title}</i>: ${premise} <b>&#8594;</b> ${conclusion}<br>`
-                : `<i>${d.title}</i>: ${d.tooltip}<br>`;
+                ? `<i>${escapeHtml(d.title)}</i>: ${escapeHtml(premise)} <b>&#8594;</b> ${escapeHtml(conclusion)}<br>`
+                : `<i>${escapeHtml(d.title)}</i>: ${escapeHtml(d.tooltip)}<br>`;
         }
         
         // Helper to add attack details
         function addAttackDetails(fromNode, toNode) {
-            return `<i>${fromNode.title}</i>  &rArr; <i>${toNode.title}</i><br>`;
+            return `<i>${escapeHtml(fromNode.title)}</i>  &rArr; <i>${escapeHtml(toNode.title)}</i><br>`;
         }
         
         // Main logic
@@ -1532,13 +1532,13 @@ function create(d3, saveAs, Blob) {
             metrics.nConclusions.forEach((count, i) => {
                 if (! count) return;
                 const avgValue = (metrics.sumAcceptedValuesPerConclusion[i] / count).toFixed(2);
-                accrual += `Average arguments with <i>${conclusionsByFeatureset_[currentFeatureset][i].conclusion}</i> (${count}): ${avgValue}<br>`;
+                accrual += `Average arguments with <i>${escapeHtml(conclusionsByFeatureset_[currentFeatureset][i].conclusion)}</i> (${count}): ${avgValue}<br>`;
             });
 
             if (rankBased) {
                 accrual += "<br>Rank based info<br>";
                 for (let key in ranks) {
-                    accrual += `${key}: ${ranks[key]}<br>`;
+                    accrual += `${escapeHtml(key)}: ${escapeHtml(ranks[key])}<br>`;
                 }
             }
 
@@ -1549,7 +1549,7 @@ function create(d3, saveAs, Blob) {
         $("#results").remove(); // Why?
         const popover = $("#resultsContent")
             .attr("data-content", accrual)
-            .html(overall)
+            .text(overall)
             .data("bs.popover");
         popover.setContent();
         popover.$tip.addClass(popover.options.placement);
@@ -2690,24 +2690,24 @@ function create(d3, saveAs, Blob) {
                     .selectAll("text")
                     .html(
                         "<b>" +
-                            d.title +
+                            escapeHtml(d.title) +
                             "</b>: " +
-                            d.tooltip +
+                            escapeHtml(d.tooltip) +
                             "<br/>" + 
-                            "<b>Weight</b>: " + weight + "<br/><br/>" +
+                            "<b>Weight</b>: " + escapeHtml(weight) + "<br/><br/>" +
                             "<b>Attacks info</b><br><i># Source attack activated:</i> " +
                             String(nSourceActive) +
                             ". " +
-                            sourceActive +
+                            escapeHtml(sourceActive) +
                             "<br/><i># Target attack activated:</i> " +
                             String(nTargetActive) +
                             ". " +
-                            targetActive +
+                            escapeHtml(targetActive) +
                             "<br/><br/>" +
                             "<i>All source attacks (" + String(nSourceOriginal) + "):</i> " +
-                            sourceOriginal +
+                            escapeHtml(sourceOriginal) +
                             "<br/><i>All target attacks(" + String(nTargetOriginal) + "):</i> " +
-                            targetOriginal +
+                            escapeHtml(targetOriginal) +
                             "<br/>" +
                             thisGraph.getLevelsDescription(d.tooltip) +
                             "<br/>"
@@ -2842,13 +2842,13 @@ function create(d3, saveAs, Blob) {
 
         // Go over the dictionary and add it to the correspoding resulting html
         Object.keys(attribute_values).forEach(key => {
-            result += "<i>" + key + "</i>: ";
+            result += "<i>" + escapeHtml(key) + "</i>: ";
 
             for (let level of attribute_values[key]) {
                 if (Array.isArray(level) ) {
-                    result += "(" + level[0] + ", " + level[1] + "), ";
+                    result += "(" + escapeHtml(level[0]) + ", " + escapeHtml(level[1]) + "), ";
                 } else {
-                    result += level + ", ";
+                    result += escapeHtml(level) + ", ";
                 }
             }
 
@@ -3636,7 +3636,7 @@ function printArguments() {
 
     args_.forEach(arg => {
         if (arg.featureset === currentFeatureset && arg.graph === currentGraph) {
-            html += `<i>${arg.label}</i>: ${arg.argument} ${arg.conclusion !== "NULL" ? `<b>&#8594;</b> ${arg.conclusion}` : ""}<br>`;
+            html += `<i>${escapeHtml(arg.label)}</i>: ${escapeHtml(arg.argument)} ${arg.conclusion !== "NULL" ? `<b>&#8594;</b> ${escapeHtml(arg.conclusion)}` : ""}<br>`;
             argumentsN++;
         }
     });
@@ -3656,7 +3656,7 @@ function printAttacks() {
         if (graph_.featureset === currentFeatureset && graph_.name === currentGraph) {
             const edges = graph.getListAttacks();
             edges.forEach(edge => {
-                html += `<i>${edge.source}</i> &rArr; <i>${edge.target}</i><br>`;
+                html += `<i>${escapeHtml(edge.source)}</i> &rArr; <i>${escapeHtml(edge.target)}</i><br>`;
             });
             attacksN = edges.length;
             break;
@@ -3676,16 +3676,16 @@ function printFeatureSet() {
 
     attributesByFeatureset_[currentFeatureset].forEach(attr => {
         if (attr.attribute !== currentAttribute) {
-            html += `<br><i>Attribute</i>: ${attr.attribute}<br>`;
+            html += `<br><i>Attribute</i>: ${escapeHtml(attr.attribute)}<br>`;
             currentAttribute = attr.attribute;
             attributesN++;
         }
-        html += `<i>Level</i>: ${attr.a_level}, <i>From:</i> ${attr.a_from}, <i>To:</i> ${attr.a_to}<br>`;
+        html += `<i>Level</i>: ${escapeHtml(attr.a_level)}, <i>From:</i> ${escapeHtml(attr.a_from)}, <i>To:</i> ${escapeHtml(attr.a_to)}<br>`;
     });
 
     conclusionsByFeatureset_[currentFeatureset].forEach((conc, index) => {
         if (index === 0) html += "<br>";
-        html += `<i>Conclusion</i>: ${conc.conclusion}<br><i>From:</i> ${conc.c_from}, <i>To:</i> ${conc.c_to}<br>${index !== conclusionsByFeatureset_[currentFeatureset].length - 1 ? "<br>" : ""}`;
+        html += `<i>Conclusion</i>: ${escapeHtml(conc.conclusion)}<br><i>From:</i> ${escapeHtml(conc.c_from)}, <i>To:</i> ${escapeHtml(conc.c_to)}<br>${index !== conclusionsByFeatureset_[currentFeatureset].length - 1 ? "<br>" : ""}`;
         attributesN++;
     });
 

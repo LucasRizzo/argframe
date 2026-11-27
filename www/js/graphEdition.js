@@ -807,7 +807,7 @@ function createEditionGraph(d3, saveAs, Blob) {
                         }
                     }
 
-                    d3.select("#modalTitle").html("Edit node (" + d.title + ")");
+                    d3.select("#modalTitle").text("Edit node (" + d.title + ")");
 
                     document.getElementById("editAddArgument").style.visibility='visible';
                     document.getElementById("editNewArgument").style.visibility='hidden';
@@ -1005,13 +1005,13 @@ function createEditionGraph(d3, saveAs, Blob) {
 
         // Go over the dictionary and add it to the correspoding resulting html
         Object.keys(attribute_values).forEach(key => {
-            result += "<i>" + key + "</i>: ";
+            result += "<i>" + escapeHtml(key) + "</i>: ";
 
             for (let level of attribute_values[key]) {
                 if (Array.isArray(level) ) {
-                    result += "(" + level[0] + ", " + level[1] + "), ";
+                    result += "(" + escapeHtml(level[0]) + ", " + escapeHtml(level[1]) + "), ";
                 } else {
-                    result += level + ", ";
+                    result += escapeHtml(level) + ", ";
                 }
             }
 
@@ -1323,9 +1323,9 @@ function createEditionGraph(d3, saveAs, Blob) {
             }
 
             if (levelDescription.length < 30) { //Greater than <br><b>Attributes used<b><br>
-                tooltip.selectAll("text").html("<b>" + d.title + "</b>: " + d.tooltip + "<br/>Weight: " + weight + "<br/><b>Source attacks:</b> " + String(source) + "<br /><b>Target attacks:</b> " + String(target));
+                tooltip.selectAll("text").html("<b>" + escapeHtml(d.title) + "</b>: " + escapeHtml(d.tooltip) + "<br/>Weight: " + escapeHtml(weight) + "<br/><b>Source attacks:</b> " + String(source) + "<br /><b>Target attacks:</b> " + String(target));
             } else {
-                tooltip.selectAll("text").html("<b>" + d.title + "</b>: " + d.tooltip  + "<br/>Weight: " + weight + "<br>" + levelDescription + "<br><b>Source attacks:</b> " + String(source) + "<br /><b>Target attacks:</b> " + String(target));
+                tooltip.selectAll("text").html("<b>" + escapeHtml(d.title) + "</b>: " + d.tooltip  + "<br/>Weight: " + escapeHtml(weight) + "<br>" + levelDescription + "<br><b>Source attacks:</b> " + String(source) + "<br /><b>Target attacks:</b> " + String(target));
             }
 
             tooltip.style("visibility", "visible");
