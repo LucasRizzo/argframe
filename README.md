@@ -4,8 +4,6 @@
 - [Tutorial video](#tutorial-video)
 - [Overview](#overview)
 - [Getting started](#getting-started)
-- [Testing](#testing)
-- [Production deployment](#production-deployment-including-shared-hosting)
 - [Citing this project](#citing-this-project)
 - [Contact me](#contact)
 - [References](#references)
@@ -42,17 +40,9 @@ A running example can be seen here https://lucasrizzo.com/framework/index.php
 <a name="getting-started"></a>
 ## Getting started
 
-### Requirements
+### Installation
 
-- Docker Engine or Docker Desktop with Docker Compose v2 (recommended for local development).
-- PHP 8.4, Composer 2 and MySQL 8.0 for a manual installation.
-- PHP extensions: PDO with MySQL, ZIP, GD, mbstring, DOM, SimpleXML, XML, XMLReader and XMLWriter, plus the platform requirements in `www/composer.lock`.
-
-The Docker image supplies the PHP runtime, Composer and these extensions. PhpSpreadsheet replaces the bundled PHPExcel library; PHPUnit is a development dependency.
-
-### Local installation with Docker
-
-From a terminal:
+Install [Docker](https://www.docker.com/) with Docker Compose, then run:
 
 ```bash
 git clone https://github.com/LucasRizzo/argframe.git
@@ -61,55 +51,15 @@ docker compose up -d --build
 docker compose exec www composer install
 ```
 
-Open [ArgFrame](http://localhost:8001/index.php/login). The Guest login provides access to example feature sets and graphs; example datasets can be downloaded from the Compute graph page.
+The Docker image includes PHP 8.4, Composer and the required PHP extensions.
 
-[phpMyAdmin](http://localhost:8000/) is available locally. The default development database is `arg-db`, with user `admin` and password `admin`. These defaults are for local development only. All published Docker ports are bound to localhost.
+Open [ArgFrame](http://localhost:8001/index.php/login) and use the Guest login to explore the example feature sets and graphs. Example datasets are available on the Compute graph page.
 
-To stop the containers while retaining the database:
+### Registered users
 
-```bash
-docker compose down
-```
+Open [phpMyAdmin](http://localhost:8000/) (default local username and password: `admin`).
 
-Do not use `docker compose down -v` unless you intend to remove the database volume and its contents.
-
-### Local database configuration
-
-For a new Docker installation, optionally create a root-level `.env` file before starting the services:
-
-```dotenv
-ARGFRAME_DB_PASSWORD=replace_with_a_strong_password
-ARGFRAME_DB_ROOT_PASSWORD=replace_with_a_different_strong_password
-```
-
-For an existing persistent MySQL volume, changing these values does not change the passwords already stored in MySQL. Change the database accounts explicitly before updating the application credentials. The `.env` file is ignored by Git.
-
-### Upgrading an existing installation
-
-1. Back up the application files and the database, and stop writes during the upgrade.
-2. Update the source files and rebuild/recreate the Docker services:
-
-   ```bash
-   git pull
-   docker compose up -d --build
-   docker compose exec www composer install
-   ```
-
-3. On the existing database, run `migrations/001_expand_password_hash.sql` once before using the updated authentication:
-
-   ```sql
-   ALTER TABLE users MODIFY COLUMN password VARCHAR(255) NOT NULL;
-   ```
-
-   This preserves existing user accounts. The SQL dump already contains the expanded column for new installations. Do not reimport the initial dump into an existing database.
-
-4. Sign in again and validate the application.
-
-Existing MD5 password hashes are upgraded to PHP's `password_hash()` format after a successful login. Do not create new MD5 hashes. Back up the database before migration: older versions cannot authenticate accounts whose hashes have been upgraded.
-
-### Creating registered users
-
-Generate a password hash with PHP's `password_hash($password, PASSWORD_DEFAULT)`. For example, from Git Bash or another Bash shell:
+To create a user, generate a password hash:
 
 ```bash
 read -r -s -p "New password: " password
@@ -118,49 +68,17 @@ printf '%s' "$password" | docker compose exec -T www php -r 'echo password_hash(
 unset password
 ```
 
-In phpMyAdmin, insert the user's email and the generated hash into the `users` table. Feature-set access is controlled by the `user_featureset` table. Feature-set names must be unique across all accounts because the current schema references feature sets by name. Guest users share the Guest account's feature sets; temporary dataset computation results are isolated by session.
+Insert the user's email and the generated hash into the `users` table of the `arg-db` database.
 
-## Testing
+The default database credentials are intended for local development only. Feature-set names must be unique across accounts.
 
-Run the test suite inside the container:
+### Testing
 
 ```bash
 docker compose exec www composer test
-docker compose exec www composer check-platform-reqs
-docker compose exec www composer audit
 ```
 
-The PHPUnit suite includes deterministic regression cases for argumentation semantics and categoriser scores, together with migrated legacy DungAF tests. Composer audit covers Composer-managed dependencies, not the bundled legacy Slim or JavaScript libraries.
-
-Before a release, also test Guest and registered login/logout, feature-set and graph CRUD, JSON import/export, individual semantics, CSV import, inference/statistics export and multi-chunk dataset export. Verify that unauthorised feature-set requests fail, missing CSRF tokens are rejected, and user-defined names display as text.
-
-If an application error occurs, inspect the server logs rather than enabling public diagnostics:
-
-```bash
-docker compose logs --tail=100 www
-```
-
-## Production deployment (including shared hosting)
-
-The Docker setup is intended for local development. A production deployment needs its own database, credentials and HTTPS configuration.
-
-1. Back up the existing site and database. Prepare a staging copy and select PHP 8.4 in the hosting control panel.
-2. Enable the required PHP extensions. Run Composer from the `www` directory using PHP 8.4:
-
-   ```bash
-   composer install --no-dev --optimize-autoloader
-   composer check-platform-reqs --no-dev
-   ```
-
-   If Composer is unavailable on the host, install dependencies in a compatible PHP 8.4 environment and upload the resulting `vendor/` directory along with the application. Do not upload development dependencies.
-3. Deploy the contents of `www/` to the site's application directory, including `.htaccess` and `.user.ini`. Keep the repository metadata, database dumps and migration scripts outside the public web root.
-4. Copy `www/conf/config.local.example.php` to `www/conf/config.local.php` on the deployment and enter the hosting database settings. Alternatively set the corresponding environment variables (`ARGFRAME_DB_HOST`, `ARGFRAME_DB_PORT`, `ARGFRAME_DB_USER`, `ARGFRAME_DB_PASSWORD`, `ARGFRAME_DB_NAME`). Environment variables take precedence. Never commit the local configuration file.
-5. Configure the deployment URL and asset paths in `www/conf/config.inc.php`. The current defaults are for Docker at `http://localhost:8001/`; a deployment under a subdirectory such as `/framework/` must adjust `ADDRESS_PREFIX`, `ADDRESS_CALL`, `ABSOLUTE_CALL` and the root-relative asset constants as needed. Use HTTPS and the actual deployment path, not localhost.
-6. Apply the password-column migration to the production database before the first upgraded login. For a fresh database, import the initial dump into an empty database instead.
-7. Verify that PHP error display is off and logging is enabled. Confirm the hosting server honours the access restrictions in `.htaccess` and appropriate PHP settings in `.user.ini`. Direct requests to `conf/`, `db/`, `tests/`, `vendor/`, `composer.json`, `composer.lock` and `teste.php` must be denied while public JavaScript and CSS remain accessible.
-8. Validate the complete application in staging, including CSV exports, before replacing the live installation.
-
-Do not expose phpMyAdmin, the MySQL port or default development credentials on the public internet. Rotate any production credentials previously committed to Git. The legacy workload-specific XLS export has not been validated end to end; the current dataset interface exports CSV files. A migration to modern Slim and JavaScript dependencies remains a separate maintenance task.
+To stop the containers while keeping your data, run `docker compose down`. Do not use the `-v` option unless you intend to delete the database.
 
 <a name="citing-this-project"></a>
 ## Citing this project
