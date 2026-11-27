@@ -1555,12 +1555,10 @@ function create(d3, saveAs, Blob) {
         popover.$tip.addClass(popover.options.placement);
     };
 
-    GraphCreator.prototype.exportAll = function (
+    GraphCreator.prototype.exportAll = async function (
         currentFeatureset,
         semantics,
-        savetoServer = false,
-        parser = undefined,
-        size = 0
+        output = null
     ) {
 
         var maxComputation = 10000;
@@ -1583,22 +1581,12 @@ function create(d3, saveAs, Blob) {
             doubleBracketSemantics.includes(semantic) ? "[[]]" : "[]"
         ).join(",") + "]";
 
-        var url = addressCall_ + "deleteComputations";
-        var request = new XMLHttpRequest();
-        // When semantics has been computed on server
-        request.onreadystatechange = function () {
-            if (request.readyState == 4 && request.status == 200) {
-                // Save computations from 0 until maxComputation records in SQL.
-                // If more than maxComputation records then recursive call
-                console.log("Progress on computing extensions...");
-                saveComputations(0, maxComputation);
-            }
-        };
+        const reset = await fetch(addressCall_ + "deleteComputations");
+        if (!reset.ok) throw new Error("Could not initialise computation.");
 
-        request.open("GET", url);
-        request.send();
-
+        console.log("Progress on computing extensions...");
         let stats = [];
+        return saveComputations(0, maxComputation);
 
         async function saveComputations(from, to) {
 
@@ -1664,47 +1652,42 @@ function create(d3, saveAs, Blob) {
                 }
             };
 
-            const createCSVs = (infereces, stats, semanticsVector) => {
+            const createCSVs = (inferences, stats, semanticsVector) => {
+                // Store each chunk as a Blob; add headers only once.
+                const combined = output || { inferenceParts: [], statsParts: [] };
+                if (!combined.finish) {
+                    combined.inferenceParts.push(createHeader().join(",") + "\n");
+                    const inferenceName = generateInferenceFileName();
+                    const statsName = generateStatsFileName();
+                    const includeStats = document.getElementById("statsExport").checked;
+                    if (includeStats) combined.statsParts.push(createHeaderStats(semanticsVector).join(",") + "\n");
 
-                // Inference file
-                const csvHeader = createHeader();
-                infereces.unshift(csvHeader);
-
-                const csvContent = infereces.map((row) => row.join(",")).join("\n");
-                const csvBlob = new Blob([csvContent], { type: "text/csv" });
-        
-                const link = document.createElement("a");
-                const csvUrl = URL.createObjectURL(csvBlob);
-                link.href = csvUrl;
-                link.download = generateInferenceFileName();
-                document.body.appendChild(link);
-                link.click();
-
-
-                // Stats file
-                // If stats file is not required, trigger export done and leave
-                if (! document.getElementById('statsExport').checked) {
-                    const exportDoneEvent = new Event("exportDone");
-                    document.dispatchEvent(exportDoneEvent);
-                    return;
+                    combined.finish = () => {
+                        const download = (parts, name) => {
+                            const url = URL.createObjectURL(new Blob(parts, { type: "text/csv" }));
+                            const link = document.createElement("a");
+                            link.href = url;
+                            link.download = name;
+                            document.body.appendChild(link);
+                            link.click();
+                            link.remove();
+                            setTimeout(() => URL.revokeObjectURL(url), 60000);
+                        };
+                        download(combined.inferenceParts, inferenceName);
+                        if (includeStats) download(combined.statsParts, statsName);
+                        document.dispatchEvent(new Event("exportDone"));
+                    };
+                    combined.includeStats = includeStats;
                 }
 
-                const csvStatsHeader = createHeaderStats(semanticsVector);
-                stats.unshift(csvStatsHeader);
-
-                const csvStatsContent = stats.map((row) => row.join(",")).join("\n");
-                const csvStatsBlob = new Blob([csvStatsContent], { type: "text/csv" });
-        
-                const linkStats = document.createElement("a");
-                const csvStatsUrl = URL.createObjectURL(csvStatsBlob);
-                linkStats.href = csvStatsUrl;
-                linkStats.download = generateStatsFileName();
-                document.body.appendChild(linkStats);
-                linkStats.click();
-                
-                // Trigger export done event so app can chage export mode status
-                const exportDoneEvent = new Event("exportDone");
-                document.dispatchEvent(exportDoneEvent);
+                const append = (parts, rows) => {
+                    if (rows.length) {
+                        parts.push(new Blob([rows.map(row => row.join(",")).join("\n") + "\n"]));
+                    }
+                };
+                append(combined.inferenceParts, inferences);
+                if (combined.includeStats) append(combined.statsParts, stats);
+                if (!output) combined.finish();
             };
 
             const createHeaderStats = (semanticsVector) => {
@@ -1822,11 +1805,17 @@ function create(d3, saveAs, Blob) {
                         }
                         
 
-                        if (!savetoServer || await deleteComputations()) {
-                            createCSVs(inferences, stats, semanticsVector);
+                        if (inferences.length !== allData_.length) {
+                            throw new Error("Incomplete computation results.");
                         }
+                        if (!await deleteComputations()) throw new Error("Could not clear computation results.");
+                        createCSVs(inferences, stats, semanticsVector);
+                    } else {
+                        throw new Error("Could not retrieve computation results.");
                     }
                 }
+            } else {
+                throw new Error("Could not save computation results.");
             }
         }
 
@@ -3254,226 +3243,73 @@ d3.select("#exportFile").on("click", function () {
 
     DONT_EXPORT_DATA = false;
 
+    const getCheckedValues = name => Array.from(document.getElementsByName(name))
+        .filter(checkbox => checkbox.checked)
+        .map(checkbox => checkbox.value);
+    const semanticsMap = {
+        "Expert System": "expert",
+        "Preferred": "preferred",
+        "Grounded": "grounded",
+        "Eager": "eager",
+        "Ideal": "ideal",
+        "Stable": "stable",
+        "Semi-stable": "semistable",
+        "Admissible": "admissible",
+        "Categoriser": "categoriser"
+    };
+    const semantics = ";" + getCheckedValues("semanticsExport")
+        .map(value => semanticsMap[value]).join(",") + "-" +
+        getCheckedValues("accrualExport").join("*");
+    const currentFeatureset = document.getElementById("featureset").selectedOptions[0].text;
+    const previewData = allData_;
+    const output = { inferenceParts: [], statsParts: [] };
+    let failed = false;
+    let processed = 0;
+
+    const fail = error => {
+        if (failed) return;
+        failed = true;
+        allData_ = previewData;
+        document.dispatchEvent(new Event("exportDone"));
+        console.error(error);
+        alert("Export failed: " + error.message);
+    };
+
+    $("#modalExport").modal("hide");
+
     if (file_.size <= Papa.LocalChunkSize) {
-
-        function getCheckedValues(name) {
-            return Array.from(document.getElementsByName(name))
-                .filter(checkbox => checkbox.checked)
-                .map(checkbox => checkbox.value);
-        }
-        
-        // Map semantics values to their corresponding labels
-        const semanticsMap = {
-            "Expert System": "expert",
-            "Preferred": "preferred",
-            "Grounded": "grounded",
-            "Eager": "eager",
-            "Ideal": "ideal",
-            "Stable": "stable",
-            "Semi-stable": "semistable",
-            "Admissible": "admissible",
-            "Categoriser": "categoriser",
-        };
-        
-        // Process semantics and accruals
-        let semantics = ";"
-        semantics += getCheckedValues("semanticsExport")
-            .map(value => semanticsMap[value] || "")
-            .join(",");
-        
-        let accruals = getCheckedValues("accrualExport").join("*");
-        if (accruals) accruals = `-${accruals}`;
-        
-        // Add accruals to semantics
-        semantics += accruals;
-
-        //final semantics example
-        //;expert,ideal,preferred-sum*average*median
-        const select = document.getElementById("featureset");
-        const currentFeatureset = select.options[select.selectedIndex].text;
-
-        $("#modalExport").modal("hide");
-        graph.exportAll(currentFeatureset, semantics);
+        graph.exportAll(currentFeatureset, semantics).catch(fail);
     } else {
-        $("#modalExport").modal("hide");
-
-        var firstRow;
-        var size = 0;
-
-        console.log(file_);
-
         Papa.parse(file_, {
             header: true,
             skipEmptyLines: true,
-            chunk: function (results, parser) {
-
-                // Only first 25mb are imported for table
-                allData_ = results.data;
-                if (size <= Papa.LocalChunkSize) {
-                    firstRow = allData_[0];
-                } else {
-                    allData_.unshift(firstRow);
-                }
-
+            chunk: async function (results, parser) {
                 parser.pause();
-
-                size += Papa.LocalChunkSize;
-
-                console.log(
-                    size / 1000000 + "mb of " + file_.size / 1000000 + "mb."
-                );
-
-                var exportControl = document.getElementById("exportControl");
-                exportControl.style.visibility = "visible";
-                document.getElementById("exportControl").innerHTML =
-                    "<br>" +
-                    size / 1000000 +
-                    "mb of " +
-                    file_.size / 1000000 +
-                    "mb being computed.";
-
-                /*var exportControlPercentage = document.getElementById("exportControlPercentage");
-                exportControlPercentage.style.visibility = 'visible';
-                document.getElementById('exportControlPercentage').innerHTML = " (0%)";*/
-
-                var select = document.getElementById("featureset"),
-                    i = select.selectedIndex,
-                    currentFeatureset = select.options[i].text;
-
-                var ignoredColumns = "";
-                var removeColumns = [];
-                var nColumns = 0;
-
-                // New columns of the table
-                var columns = [];
-                // New table data
-
-                // In case weights are importes check if all attributes have an associated
-                // weight. In case not, data will not be allowed.
-                var attributesImported = [];
-                var weightsImported = [];
-
-                var hasWeight = false;
-
-                // Find columns that do not have an associate feature and remove them
-                for (var key in allData_[0]) {
-                    if (key.indexOf("Weight_") !== -1) {
-                        // Remove prefix Weight_ to ease comparisons
-                        weightsImported.push(key.slice(7));
-                        hasWeight = true;
-                    } else if (key != "ID") {
-                        attributesImported.push(key);
+                try {
+                    allData_ = results.data;
+                    if (allData_.length) {
+                        await graph.exportAll(currentFeatureset, semantics, output);
+                        processed += allData_.length;
+                        const control = document.getElementById("exportControl");
+                        control.style.visibility = "visible";
+                        control.textContent = processed + " records computed.";
                     }
-
-                    for (var iAttr = 0; iAttr < attributes_.length; iAttr++) {
-                        // Check whether header is a weight for an existing attribute
-                        var column = key;
-                        if (key.indexOf("Weight_") !== -1) {
-                            column = key.slice(7);
-                        }
-
-                        // Check if header has a relative attribute in the featureset
-                        var inFeatureset =
-                            attributes_[iAttr].featureset ==
-                                currentFeatureset &&
-                            (attributes_[iAttr].attribute === column ||
-                                key.toUpperCase() === "ID" ||
-                                key === "GroundTruth");
-
-                        if (inFeatureset) {
-                            // Create json columns according to the required fields of the table plugin
-                            columns.push({
-                                sTitle: key,
-                                mData: key,
-                                aTargets: [nColumns],
-                            });
-                            nColumns++;
-                            // Save which columns of the csv file will be imported
-                            //iColumns.push(iHeader);
-                            // Break since current colum header have already been saved
-                            break;
-                        }
-
-                        if (iAttr == attributes_.length - 1) {
-                            // If all attributes were checked and header didn't match any of them it will not be imported.
-                            // Print list of not imported column
-                            // TODO: is this really necessary? Maybe import everything and using only valid data
-                            ignoredColumns += key + "\n";
-                            removeColumns.push(key);
-                        }
-                    }
-                }
-
-                // Remove columns that do not have an associated feature
-                for (var i = 0; i < removeColumns.length; i++) {
-                    for (var row = 0; row < allData_.length; row++) {
-                        delete allData_[row][removeColumns[i]];
-                    }
-                }
-
-                var checkboxes = document.getElementsByName("semanticsExport");
-                var accrualCheckboxes =
-                    document.getElementsByName("accrualExport");
-                var semantics = ";";
-
-                var accruals = "-";
-                // loop over all accruals
-                for (var i = 0; i < accrualCheckboxes.length; i++) {
-                    // And stick the checked ones onto an array...
-                    if (accrualCheckboxes[i].checked) {
-                        accruals += accrualCheckboxes[i].value + "*";
-                    }
-                }
-
-                accruals = accruals.slice(0, -1);
-
-                // loop over them all
-                for (var i = 0; i < checkboxes.length; i++) {
-                    // And stick the checked ones onto an array...
-                    if (checkboxes[i].checked) {
-                        if (checkboxes[i].value == "Expert System") {
-                            semantics += "expert,";
-                        } else if (checkboxes[i].value == "Preferred") {
-                            semantics += "preferred,";
-                        } else if (checkboxes[i].value == "Grounded") {
-                            semantics += "grounded,";
-                        } else if (checkboxes[i].value == "Eager") {
-                            semantics += "eager,";
-                        } else if (checkboxes[i].value == "Ideal") {
-                            semantics += "ideal,";
-                        } else if (checkboxes[i].value == "Stable") {
-                            semantics += "stable,";
-                        } else if (checkboxes[i].value == "Semi-stable") {
-                            semantics += "semistable,";
-                        } else if (checkboxes[i].value == "Admissible") {
-                            semantics += "admissible,";
-                        } else if (checkboxes[i].value == "Categoriser") {
-                            semantics += "categoriser,";
-                        }
-                    }
-                }
-
-                var select = document.getElementById("featureset"),
-                    i = select.selectedIndex,
-                    currentFeatureset = select.options[i].text;
-
-                // Remove last coma
-                semantics = semantics.slice(0, -1);
-                semantics += accruals;
-
-                graph.exportAll(
-                    currentFeatureset,
-                    semantics,
-                    true,
-                    parser,
-                    size
-                );
-
-                //parser.resume();
-                if (size >= file_.size) {
-                    console.log("Files on server...");
+                    parser.resume();
+                } catch (error) {
+                    fail(error);
+                    parser.abort();
                 }
             },
+            complete: function () {
+                allData_ = previewData;
+                if (failed) return;
+                if (!output.finish) {
+                    fail(new Error("No records to export."));
+                    return;
+                }
+                output.finish();
+            },
+            error: fail
         });
     }
 });
