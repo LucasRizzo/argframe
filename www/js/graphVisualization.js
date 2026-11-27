@@ -1270,8 +1270,9 @@ function create(d3, saveAs, Blob) {
                 if (!extension.includes(`${node.title}`) || !node.activated) return;
                 
     
-                const tooltipParts = String(node.tooltip).split(" -> ");
-                const conclusion = tooltipParts[1].split(" ")[0].trim();
+                // Accepted arguments without conclusions affect reasoning, not accrual.
+                const conclusion = String(node.tooltip).split(" -> ")[1]?.trim().split(" ")[0];
+                if (!conclusion || conclusion === "NULL") return;
     
                 const conclusionIndex = conclusions.findIndex(c => c.conclusion === conclusion);
                 if (conclusionIndex === -1) return;
@@ -1286,7 +1287,7 @@ function create(d3, saveAs, Blob) {
             });
             
             // Weighted average value of accepted nodes
-            const weightedAvg = totalWeight ? (weightedSum / totalWeight).toFixed(2) : 0;
+            const weightedAvg = totalWeight ? weightedSum / totalWeight : 0;
             return {nConclusions, sumAcceptedValuesPerConclusion, valuesAccepted, weightedAvg, highestConclusionValue};
         };
 
@@ -1356,6 +1357,10 @@ function create(d3, saveAs, Blob) {
         };
 
         const calculateAggregation = (aggregationMethod, metrics) => {
+            // No concluding argument means no numerical inference, for every accrual.
+            if (!metrics.valuesAccepted.length) {
+                return DONT_EXPORT_DATA ? "No argument accepted." : "";
+            }
             switch (aggregationMethod) {
                 case "Sum":
                     if (!metrics.valuesAccepted.length && DONT_EXPORT_DATA) return "No argument accepted.";
