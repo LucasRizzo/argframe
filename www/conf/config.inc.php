@@ -46,7 +46,7 @@ define ("MY_ALTERATIONS", ADDRESS_PREFIX . "style/myAlterations.css");
 define ("BOOTSTRAP_JS", ADDRESS_PREFIX . "style/bootstrap/js/bootstrap.js");
 define ("BOOTSTRAP_MIN_JS", ADDRESS_PREFIX . "style/bootstrap/js/bootstrap.min.js");
 define ("MODALS_JS", ADDRESS_PREFIX . "style/bootstrap/js/modals.js");
-define ("D3", "/js/d3.v3.js");
+define ("D3", ADDRESS_PREFIX . "js/d3.v3.js");
 define ("FILE_SAVER", "//cdn.jsdelivr.net/filesaver.js/0.1/FileSaver.min.js");
 define ("GRAPH_CREATOR", ADDRESS_PREFIX . "js/graphCreator.js");
 define ("GRAPH_VISUALIZATION", ADDRESS_PREFIX . "js/graphVisualization.js");
