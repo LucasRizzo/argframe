@@ -270,7 +270,8 @@ class Controller {
 
     public function handleLogout() {
         clearAuthenticatedSession();
-        header ( "Location: index.php" ); // redirect to the index.php
+        // Stop MVC rendering after clearing the authenticated session.
+        $this->slimApp->redirect($this->slimApp->urlFor("login"), 303);
     }
 
     public function getAction() {
