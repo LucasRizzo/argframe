@@ -44,6 +44,7 @@
     <br><br><br>
     <div class="container">
         <form class="form-signin" method="post" action=<?php echo ADDRESS_PREFIX . "index.php"; ?>>
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
             <h2 class="form-signin-heading text-info" style="text-align:center;">Argumentation Framework *</h2>
             <img style="width:60%;margin-left: 20%;" src=<?php echo ADDRESS_PREFIX . "graph.png" ; ?>>
             <br>
@@ -62,6 +63,7 @@
             <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
         </form>
         <form class="form-signin" method="post" action=<?php echo ADDRESS_PREFIX . "index.php"; ?>>
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
             <input type="hidden" hidden id="usernameHidden" class="form-control" name="username" value="Guest">
             <input type="hidden" hidden name="password" id="passwordHidden" class="form-control" value="guest">
             <button class="btn btn-lg btn-success btn-block" type="submit">Enter as a guest</button>

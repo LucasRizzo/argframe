@@ -35,9 +35,27 @@ Slim\Slim::registerAutoloader ();
 
 $app = new \Slim\Slim (); // slim run-time object
 
+// Synchronizer token; never accept tokens in URLs.
+function csrfToken(): string {
+    if (!isset($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function requireCsrfToken(): void {
+    $provided = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
+    if (!is_string($provided) || !hash_equals(csrfToken(), $provided)) {
+        \Slim\Slim::getInstance()->halt(403, 'Invalid or expired security token. Refresh the page and try again.');
+    }
+}
+
 // Route middleware for session authentication.
 function authenticate(\Slim\Route $route) {
     $app = \Slim\Slim::getInstance();
+    if (!in_array($app->request->getMethod(), ['GET', 'HEAD', 'OPTIONS'], true)) {
+        requireCsrfToken();
+    }
     $hasCredentials = array_key_exists('username', $_POST) || array_key_exists('password', $_POST);
     if (!validateUserKey()) {
         $app->redirect($app->urlFor($hasCredentials ? 'errlogin' : 'login'));
@@ -48,7 +66,7 @@ function establishAuthenticatedSession(string $username): bool {
     if (!session_regenerate_id(true)) {
         return false;
     }
-    unset($_SESSION['password']);
+    unset($_SESSION['password'], $_SESSION['csrf_token']);
     $_SESSION['username'] = $username;
     $_SESSION['authenticated'] = true;
     return true;
@@ -175,8 +193,6 @@ function getDungAf($graph) {
 
 $app->get ( "/login", function () use($app) {
 
-    clearAuthenticatedSession();
-
     $action = ACTION_LOGIN;
     $parameters = null;
 
@@ -184,8 +200,6 @@ $app->get ( "/login", function () use($app) {
 } )->name("login");
 
 $app->get ( "/errlogin", function () use($app) {
-
-    clearAuthenticatedSession();
 
     $action = ACTION_LOGIN_ERR;
     $parameters = null;
@@ -285,9 +299,16 @@ $app->map ( "/", "authenticate", function ($featureset = null, $modelname = null
     if (! empty ( $_GET ['action'] ))
         $action = $_GET ['action'];
     $parameters = null;
+    $readOnlyActions = ['', 'graph', 'compute', 'editFeatureset', 'print', 'create', 'createjson',
+                        'database', 'tutorial', 'exportjson', 'export'];
+    if (!is_string($action)) $app->halt(400, 'Invalid action.');
+    if (in_array($httpMethod, ['GET', 'HEAD', 'OPTIONS'], true)
+        && !in_array($action, $readOnlyActions, true)) {
+        $app->halt(405, 'This action requires POST.');
+    }
 
     return new loadRunMVCComponents ( "Model", "Controller", "View", $action, $app, $parameters);
-} )->via ( "GET", "POST", "PUT", "DELETE" );
+} )->via ( "GET", "POST" );
 
 $app->map ( "/updateFeature(/:featureInfo)", "authenticate", function ($featureInfo = null) use($app) {
     
@@ -308,7 +329,7 @@ $app->map ( "/updateFeature(/:featureInfo)", "authenticate", function ($featureI
     // feature[3] = to
     $app->response->write($dataSetDAO->updateFeature($featureSet, $featureOld, $featureNew));
 
-} )->via ( "GET", "POST", "PUT", "DELETE" );
+} )->via ( "POST" );
 
 
 $app->map ( "/createFeature(/:featureInfo)", "authenticate", function ($featureInfo = null) use($app) {
@@ -329,7 +350,7 @@ $app->map ( "/createFeature(/:featureInfo)", "authenticate", function ($featureI
     // feature[3] = to
     $app->response->write($dataSetDAO->createFeature($featureSet, $feature));
 
-} )->via ( "GET", "POST", "PUT", "DELETE" );
+} )->via ( "POST" );
 
 $app->map ( "/deleteFeature(/:featureInfo)", "authenticate", function ($featureInfo = null) use($app) {
     
@@ -349,7 +370,7 @@ $app->map ( "/deleteFeature(/:featureInfo)", "authenticate", function ($featureI
     // feature[3] = to
     $app->response->write($dataSetDAO->deleteFeature($featureSet, $feature));
 
-} )->via ( "GET", "POST", "PUT", "DELETE" );
+} )->via ( "POST" );
 
 $app->map ( "/deleteFeatureset(/:featureset)", "authenticate", function ($featureset = null) use($app) {
 
@@ -358,7 +379,7 @@ $app->map ( "/deleteFeatureset(/:featureset)", "authenticate", function ($featur
     $dataSetDAO = new DataSetDAO ($dBManager);
     $app->response->write($dataSetDAO->deleteFeatureset($featureset));
 
-} )->via ( "GET", "POST", "PUT", "DELETE" );
+} )->via ( "POST" );
 
 $app->map ( "/deleteConclusion(/:conclusionInfo)", "authenticate", function ($conclusionInfo = null) use($app) {
     
@@ -373,7 +394,7 @@ $app->map ( "/deleteConclusion(/:conclusionInfo)", "authenticate", function ($co
     $dataSetDAO = new DataSetDAO ($dBManager);
     $app->response->write($dataSetDAO->deleteConclusion($featureSet, $conclusion));
 
-} )->via ( "GET", "POST", "PUT", "DELETE" );
+} )->via ( "POST" );
 
 $app->map ( "/getFeaturesetsNames", "authenticate", function () use($app) {
     
@@ -393,7 +414,7 @@ $app->map ( "/newFeatureset(/:featuresetName)", "authenticate", function ($featu
     $dataSetDAO = new DataSetDAO ($dBManager);
     $app->response->write($dataSetDAO->newFeatureset($featuresetName));
 
-} )->via ( "GET", "POST", "PUT", "DELETE" );
+} )->via ( "POST" );
 
 
 $app->map ( "/copyFeatureset(/:featuresetName)", "authenticate", function ($featuresetName = null) use($app) {
@@ -410,7 +431,7 @@ $app->map ( "/copyFeatureset(/:featuresetName)", "authenticate", function ($feat
     $dataSetDAO = new DataSetDAO ($dBManager);
     $app->response->write($dataSetDAO->copyFeatureset($featuresetNameNew, $featuresetNameOld));
 
-} )->via ( "GET", "POST", "PUT", "DELETE" );
+} )->via ( "POST" );
 
 
 $app->map ( "/renameFeatureset(/:featuresetName)", "authenticate", function ($featuresetName = null) use($app) {
@@ -426,7 +447,7 @@ $app->map ( "/renameFeatureset(/:featuresetName)", "authenticate", function ($fe
     $dataSetDAO = new DataSetDAO ($dBManager);
     $app->response->write($dataSetDAO->renameFeatureset($featuresetNameNew, $featuresetNameOld));
 
-} )->via ( "GET", "POST", "PUT", "DELETE" );
+} )->via ( "POST" );
 
 $app->map ( "/newFeaturesetJSON", "authenticate", function () use($app) {
 
@@ -468,7 +489,7 @@ $app->map ( "/newFeaturesetJSON", "authenticate", function () use($app) {
         $app->response->write($model->error);
     }
 
-} )->via ( "GET", "POST", "PUT", "DELETE" );
+} )->via ( "POST" );
 
 $app->map ( "/updateConclusion(/:conclusionInfo)", "authenticate", function ($conclusionInfo = null) use($app) {
     
@@ -490,7 +511,7 @@ $app->map ( "/updateConclusion(/:conclusionInfo)", "authenticate", function ($co
     // conclusion[3] = to
     $app->response->write($dataSetDAO->updateConclusion($featureSet, $conclusionOld, $conclusionNew));
 
-} )->via ( "GET", "POST", "PUT", "DELETE" );
+} )->via ( "POST" );
 
 $app->map ( "/createConclusion(/:conclusionInfo)", "authenticate", function ($conclusionInfo = null) use($app) {
     
@@ -510,7 +531,7 @@ $app->map ( "/createConclusion(/:conclusionInfo)", "authenticate", function ($co
     // conclusion[3] = to
     $app->response->write($dataSetDAO->createConclusion($featureSet, $conclusion));
 
-} )->via ( "GET", "POST", "PUT", "DELETE" );
+} )->via ( "POST" );
 
 $app->map ( "/preferred(/:graph)", "authenticate", function ($graph = null) use($app) {
 
@@ -669,7 +690,7 @@ $app->map ( "/deleteComputations", "authenticate", function ($graph = null) use(
     // Pass username so multiple users can use computation table
     $dataSetDAO->deleteComputations(hash("sha256", session_id()));
 
-} )->via ( "GET", "POST", "PUT", "DELETE" );
+} )->via ( "POST" );
 
 
 $app->map ( "/getComputations", "authenticate", function ($graph = null) use($app) {
@@ -745,7 +766,7 @@ $app->map ( "/saveComputations", "authenticate", function ($graph = null) use($a
     // Pass username so multiple users can use computation table
     $dataSetDAO->saveComputations($response, hash("sha256", session_id()));
 
-} )->via ( "GET", "POST", "PUT", "DELETE" );
+} )->via ( "POST" );
 
 
 $app->map ( "/levels", "authenticate", function ($featureset = null) use($app) {

@@ -1581,7 +1581,7 @@ function create(d3, saveAs, Blob) {
             doubleBracketSemantics.includes(semantic) ? "[[]]" : "[]"
         ).join(",") + "]";
 
-        const reset = await fetch(addressCall_ + "deleteComputations");
+        const reset = await fetch(addressCall_ + "deleteComputations", { method: "POST", headers: csrfHeaders() });
         if (!reset.ok) throw new Error("Could not initialise computation.");
 
         console.log("Progress on computing extensions...");
@@ -1596,6 +1596,7 @@ function create(d3, saveAs, Blob) {
         
                 const response = await fetch(`${addressCall_}saveComputations`, {
                     method: "POST",
+                    headers: csrfHeaders(),
                     body: dataPost,
                 });
                 return response.ok;
@@ -1607,7 +1608,7 @@ function create(d3, saveAs, Blob) {
             };
 
             const deleteComputations = async () => {
-                const response = await fetch(`${addressCall_}deleteComputations`);
+                const response = await fetch(`${addressCall_}deleteComputations`, { method: "POST", headers: csrfHeaders() });
                 return response.ok;
             };
 

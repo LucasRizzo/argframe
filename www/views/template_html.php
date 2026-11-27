@@ -3,6 +3,12 @@
 <head>
 <link rel="icon" href="graph.png">
 <meta charset="utf-8">
+<meta name="csrf-token" content="<?php echo htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
+<script>
+function csrfHeaders() {
+    return { "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content };
+}
+</script>
 
 <script src="http://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.2/modernizr.js"></script>
 <script type="text/javascript" src="//code.jquery.com/jquery-1.12.0.min.js"></script>

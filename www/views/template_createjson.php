@@ -8,6 +8,7 @@
   <br>
 
    <form class="form-horizontal" action="index.php?action=insertjson" id="form1" method="post" role="form">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
     <div class="form-group">
       <label for="comment">JSON code:</label>
       <textarea class="form-control" rows="10" name="jsonfile" id="jsonfile"></textarea>

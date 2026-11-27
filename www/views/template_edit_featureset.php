@@ -356,7 +356,8 @@ document.getElementById("delete-featureset").addEventListener("click", function(
                 }
             }
         };
-        xmlhttp.open("GET","index.php/deleteFeatureset/" + currentFeatureset, true);
+        xmlhttp.open("POST","index.php/deleteFeatureset/" + currentFeatureset, true);
+        xmlhttp.setRequestHeader("X-CSRF-Token", csrfHeaders()["X-CSRF-Token"]);
         xmlhttp.send();
     }); 
 });
@@ -405,7 +406,8 @@ document.getElementById("createConclusion").addEventListener("click", function(e
             }
         }
      };
-     xmlhttp.open("GET","index.php/createConclusion/" + conclusion, true);
+     xmlhttp.open("POST","index.php/createConclusion/" + conclusion, true);
+        xmlhttp.setRequestHeader("X-CSRF-Token", csrfHeaders()["X-CSRF-Token"]);
      xmlhttp.send();
 });
 
@@ -482,7 +484,8 @@ document.getElementById("saveNewFeature").addEventListener("click", function(e){
             }
         }
      };
-     xmlhttp.open("GET","index.php/createFeature/" + featureString, true);
+     xmlhttp.open("POST","index.php/createFeature/" + featureString, true);
+        xmlhttp.setRequestHeader("X-CSRF-Token", csrfHeaders()["X-CSRF-Token"]);
      xmlhttp.send();
 });
 
@@ -570,7 +573,8 @@ document.getElementById("saveCopyFeatureset").addEventListener("click", function
                 }
             }
             
-            xmlhttpCreate.open("GET","index.php/copyFeatureset/" + new_name + ";" + currentFeatureset, true);
+            xmlhttpCreate.open("POST","index.php/copyFeatureset/" + new_name + ";" + currentFeatureset, true);
+        xmlhttpCreate.setRequestHeader("X-CSRF-Token", csrfHeaders()["X-CSRF-Token"]);
             xmlhttpCreate.send();
         }
     };
@@ -658,7 +662,8 @@ document.getElementById("saveRenameFeatureset").addEventListener("click", functi
                 }
             }
             
-            xmlhttpCreate.open("GET","index.php/renameFeatureset/" + new_name + ";" + currentFeatureset, true);
+            xmlhttpCreate.open("POST","index.php/renameFeatureset/" + new_name + ";" + currentFeatureset, true);
+        xmlhttpCreate.setRequestHeader("X-CSRF-Token", csrfHeaders()["X-CSRF-Token"]);
             xmlhttpCreate.send();
         }
     };
@@ -732,7 +737,8 @@ document.getElementById("saveNewFeatureset").addEventListener("click", function(
                 }
             }
             
-            xmlhttpCreate.open("GET","index.php/newFeatureset/" + new_name, true);
+            xmlhttpCreate.open("POST","index.php/newFeatureset/" + new_name, true);
+        xmlhttpCreate.setRequestHeader("X-CSRF-Token", csrfHeaders()["X-CSRF-Token"]);
             xmlhttpCreate.send();
         }
     };
@@ -800,6 +806,7 @@ document.getElementById("saveNewJSONFeatureset").addEventListener("click", funct
             
             var oReq = new XMLHttpRequest();
             oReq.open("POST", "index.php/newFeaturesetJSON", true);
+        oReq.setRequestHeader("X-CSRF-Token", csrfHeaders()["X-CSRF-Token"]);
 
             oReq.onreadystatechange = function() {
                 if (oReq.readyState !== 4) return;
@@ -998,7 +1005,8 @@ function deleteConclusion(index) {
                 }
             }
         };
-        xmlhttp.open("GET","index.php/deleteConclusion/" + conclusionString, true);
+        xmlhttp.open("POST","index.php/deleteConclusion/" + conclusionString, true);
+        xmlhttp.setRequestHeader("X-CSRF-Token", csrfHeaders()["X-CSRF-Token"]);
         xmlhttp.send();
     });    
 }
@@ -1035,7 +1043,8 @@ function deleteFeature(index) {
                 }
             }
         };
-        xmlhttp.open("GET","index.php/deleteFeature/" + featureString, true);
+        xmlhttp.open("POST","index.php/deleteFeature/" + featureString, true);
+        xmlhttp.setRequestHeader("X-CSRF-Token", csrfHeaders()["X-CSRF-Token"]);
         xmlhttp.send();
     });
 }
@@ -1115,7 +1124,8 @@ document.getElementById("updateFeature").addEventListener("click", function(e){
             }
         }
      };
-     xmlhttp.open("GET","index.php/updateFeature/" + featureOldAndNew, true);
+     xmlhttp.open("POST","index.php/updateFeature/" + featureOldAndNew, true);
+        xmlhttp.setRequestHeader("X-CSRF-Token", csrfHeaders()["X-CSRF-Token"]);
      xmlhttp.send();
 });
 
@@ -1184,7 +1194,8 @@ document.getElementById("updateConclusion").addEventListener("click", function(e
             }
         }
      };
-     xmlhttp.open("GET","index.php/updateConclusion/" + conclusionOldAndNew, true);
+     xmlhttp.open("POST","index.php/updateConclusion/" + conclusionOldAndNew, true);
+        xmlhttp.setRequestHeader("X-CSRF-Token", csrfHeaders()["X-CSRF-Token"]);
      xmlhttp.send();
 });
 

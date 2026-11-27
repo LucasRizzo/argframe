@@ -37,6 +37,7 @@
     </div>
 
     <form class="form-horizontal" action="index.php?action=insert" id="form1" method="post" role="form">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
 
             <div class="form-group has-feedback page-header">
                 <!-- <label class="control-label col-sm-2" for="name">feature set name: </label> -->

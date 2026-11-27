@@ -1,6 +1,7 @@
 <div class='col-md-5 col-md-push-7' id='righ-side'>
     <span id="breakexpand"></span>
     <form class="form-inline" id="deleteGraphForm" action="index.php?action=deleteGraph" method="post" role="form">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
         <div class="controls"> 
             <input type="hidden" maxlength="2000" name="featuresetName" id="featuresetName">
             <input type="hidden" maxlength="2000" name="graphName" id="graphName">
@@ -8,6 +9,7 @@
     </form>
 
     <form class="form-inline" id="editGraphForm" action="index.php?action=update" method="post" role="form">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
         <!-- <input type="hidden" maxlength="40" name="semantic" id="hiddenSemantic"> -->
         <div class="controlsEdit"> 
             <input type="hidden" maxlength="2000" name="editFeaturesetName" id="editFeaturesetName">
@@ -209,6 +211,7 @@
             </div>
             <div class="modal-body">
                 <form class="form-inline" action="index.php?action=copyGraph" method="post" role="form">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
                     <input type="text" form="editGraphForm" class="form-control" name="copyNameGraph" id="copyNameGraph" style="width:75%;" placeholder="Enter new copy name">
                     &nbsp
                     <button type="submit" form="editGraphForm" class="btn btn-primary pull-right" id="editCopyGraph"
@@ -230,6 +233,7 @@
             </div>
              <div class="modal-body ">
                 <form class="form-inline" action="index.php?action=newGraph" method="post" role="form">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
                     <label for="sel1">Select feature set: &nbsp</label>
                     <select class="form-control" name="featuresetNewGraph" id="featuresetNewGraph">
                         <?php foreach ($view_featuresets as $d) {
