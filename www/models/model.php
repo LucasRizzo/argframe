@@ -253,7 +253,7 @@ class Model {
         $featuresets = $this->dataSetDAO->getFeaturesets();
         foreach ($featuresets as $d) {
             if ($newFeatureset["featureset"] == $d) {
-                $this->error = "Feature set " . $newFeatureset["featureset"] . " already exists. Please try again.";
+                $this->error = "This feature set name cannot be used. Feature set names must be unique across all accounts. Please choose a different name.";
                 $this->errorType = "create";
                 return;
             }

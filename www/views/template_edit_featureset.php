@@ -523,7 +523,7 @@ document.getElementById("saveCopyFeatureset").addEventListener("click", function
             
             for (var i = 0; i < current_featuresets.length; i++) {
                 if (new_name == current_featuresets[i]) {
-                    window.alert("Featureset with this name already exists. Please choose a new name.", "Duplicate name error.");
+                    window.alert("This feature set name cannot be used. Feature set names must be unique across all accounts. Please choose a different name.");
                     return;
                 }
             }
@@ -531,7 +531,20 @@ document.getElementById("saveCopyFeatureset").addEventListener("click", function
             var xmlhttpCreate = new XMLHttpRequest();
             
             xmlhttpCreate.onreadystatechange = function() {
-                if (this.readyState == 4 && this.status == 200) {
+                if (this.readyState !== 4) return;
+                if (this.status === 409) {
+                    window.alert("This feature set name cannot be used. Feature set names must be unique across all accounts. Please choose a different name.");
+                    return;
+                }
+                if (this.status === 403) {
+                    window.alert("You do not have permission to perform this operation.");
+                    return;
+                }
+                if (this.status !== 200) {
+                    window.alert("The feature set operation failed. Please check the name and try again.");
+                    return;
+                }
+                if (this.status == 200) {
                     
                     if (this.responseText != "ok") {
                         window.alert("Error in the database. Featureset not created!", "Wrong response error.");
@@ -588,7 +601,7 @@ document.getElementById("saveRenameFeatureset").addEventListener("click", functi
             
             for (var i = 0; i < current_featuresets.length; i++) {
                 if (new_name == current_featuresets[i]) {
-                    window.alert("Featureset with this name already exists. Please choose a new name.", "Duplicate name error.");
+                    window.alert("This feature set name cannot be used. Feature set names must be unique across all accounts. Please choose a different name.");
                     return;
                 }
             }
@@ -596,7 +609,20 @@ document.getElementById("saveRenameFeatureset").addEventListener("click", functi
             var xmlhttpCreate = new XMLHttpRequest();
             
             xmlhttpCreate.onreadystatechange = function() {
-                if (this.readyState == 4 && this.status == 200) {
+                if (this.readyState !== 4) return;
+                if (this.status === 409) {
+                    window.alert("This feature set name cannot be used. Feature set names must be unique across all accounts. Please choose a different name.");
+                    return;
+                }
+                if (this.status === 403) {
+                    window.alert("You do not have permission to perform this operation.");
+                    return;
+                }
+                if (this.status !== 200) {
+                    window.alert("The feature set operation failed. Please check the name and try again.");
+                    return;
+                }
+                if (this.status == 200) {
                     
                     if (this.responseText != "ok") {
                         window.alert("Error in the database. Featureset not created!", "Wrong response error.");
@@ -659,7 +685,7 @@ document.getElementById("saveNewFeatureset").addEventListener("click", function(
             
             for (var i = 0; i < current_featuresets.length; i++) {
                 if (new_name == current_featuresets[i]) {
-                    window.alert("Featureset with this name already exists. Please choose a new name.", "Duplicate name error.");
+                    window.alert("This feature set name cannot be used. Feature set names must be unique across all accounts. Please choose a different name.");
                     return;
                 }
             }
@@ -667,7 +693,20 @@ document.getElementById("saveNewFeatureset").addEventListener("click", function(
             var xmlhttpCreate = new XMLHttpRequest();
             
             xmlhttpCreate.onreadystatechange = function() {
-                if (this.readyState == 4 && this.status == 200) {
+                if (this.readyState !== 4) return;
+                if (this.status === 409) {
+                    window.alert("This feature set name cannot be used. Feature set names must be unique across all accounts. Please choose a different name.");
+                    return;
+                }
+                if (this.status === 403) {
+                    window.alert("You do not have permission to perform this operation.");
+                    return;
+                }
+                if (this.status !== 200) {
+                    window.alert("The feature set operation failed. Please check the name and try again.");
+                    return;
+                }
+                if (this.status == 200) {
                     if (this.responseText != "ok") {
                         window.alert("Error in the database. Featureset not created!", "Wrong response error.");
                         return;
@@ -753,7 +792,7 @@ document.getElementById("saveNewJSONFeatureset").addEventListener("click", funct
             
             for (var i = 0; i < current_featuresets.length; i++) {
                 if (featuresetParse.featureset == current_featuresets[i]) {
-                    window.alert("Featureset with this name already exists. Please choose a new name.", "Duplicate name error.");
+                    window.alert("This feature set name cannot be used. Feature set names must be unique across all accounts. Please choose a different name.");
                     return;
                 }
             }
@@ -763,7 +802,16 @@ document.getElementById("saveNewJSONFeatureset").addEventListener("click", funct
             oReq.open("POST", "index.php/newFeaturesetJSON", true);
 
             oReq.onreadystatechange = function() {
-                if (oReq.readyState == 4 && oReq.status == 200) {
+                if (oReq.readyState !== 4) return;
+                if (oReq.status === 409) {
+                    window.alert("This feature set name cannot be used. Feature set names must be unique across all accounts. Please choose a different name.");
+                    return;
+                }
+                if (oReq.status !== 200) {
+                    window.alert("The feature set could not be imported. Please check the data and try again.");
+                    return;
+                }
+                if (oReq.status == 200) {
                     if (this.responseText != "ok") {
                         window.alert(this.responseText, "Wrong response error.");
                         return;

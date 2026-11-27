@@ -38,7 +38,7 @@ class DataSetDAO {
         }
         $this->dbManager->executeQuery($stmt);
         if ($this->dbManager->getNextRow($stmt)) {
-            \Slim\Slim::getInstance()->halt(409, 'Feature set name already exists.');
+            \Slim\Slim::getInstance()->halt(409, 'This feature set name cannot be used. Feature set names must be unique across all accounts. Please choose a different name.');
         }
     }
 
