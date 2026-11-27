@@ -667,7 +667,7 @@ $app->map ( "/deleteComputations", "authenticate", function ($graph = null) use(
     $dbLink = $dBManager->openConnection ();
     $dataSetDAO = new DataSetDAO ($dBManager);
     // Pass username so multiple users can use computation table
-    $dataSetDAO->deleteComputations($_SESSION ["username"]);
+    $dataSetDAO->deleteComputations(hash("sha256", session_id()));
 
 } )->via ( "GET", "POST", "PUT", "DELETE" );
 
@@ -682,7 +682,7 @@ $app->map ( "/getComputations", "authenticate", function ($graph = null) use($ap
     $dbLink = $dBManager->openConnection ();
     $dataSetDAO = new DataSetDAO ($dBManager);
     // Pass username so multiple users can use computation table
-    $app->response->write(json_encode($dataSetDAO->getComputations($_SESSION ["username"]), JSON_PRETTY_PRINT));
+    $app->response->write(json_encode($dataSetDAO->getComputations(hash("sha256", session_id())), JSON_PRETTY_PRINT));
 
 } )->via ( "GET", "POST", "PUT", "DELETE" );
 
@@ -743,7 +743,7 @@ $app->map ( "/saveComputations", "authenticate", function ($graph = null) use($a
     $dbLink = $dBManager->openConnection ();
     $dataSetDAO = new DataSetDAO ($dBManager);
     // Pass username so multiple users can use computation table
-    $dataSetDAO->saveComputations($response, $_SESSION["username"]);
+    $dataSetDAO->saveComputations($response, hash("sha256", session_id()));
 
 } )->via ( "GET", "POST", "PUT", "DELETE" );
 
