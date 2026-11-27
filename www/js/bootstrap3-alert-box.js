@@ -16,7 +16,7 @@ window.alert = function(message, title) {
         </div>');
     }
     $("#bootstrap-alert-box-modal .modal-header h4").text(title || "");
-    $("#bootstrap-alert-box-modal .modal-body p").text(message || "");
+    $("#bootstrap-alert-box-modal .modal-body p").css("white-space", "pre-wrap").text(message || "");
     $("#bootstrap-alert-box-modal").modal('show');
 };
 

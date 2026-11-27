@@ -812,7 +812,6 @@ function fillTable() {
         i = select.selectedIndex,
         currentFeatureset = select.options[i].text;
 
-    var ignoredColumns = "<ul>";
     var removeColumns = []
     var nColumns = 0;
 
@@ -867,11 +866,9 @@ function fillTable() {
                 // If all attributes were checked and header didn't match any of them it will not be imported.
                 // Print list of not imported column
                 // TODO: is this really necessary? Maybe import everything and using only valid data
-                ignoredColumns += "<li>" + escapeHtml(key) + "</li>";
                 removeColumns.push(key);
             }
 
-            ignoredColumns += "</ul>"
         }
     }
 
@@ -897,9 +894,9 @@ function fillTable() {
     }
 
     if (error == 0) {
-        if (ignoredColumns.length > 0) {
+        if (removeColumns.length > 0) {
             window.alert("The following columns were ignored because they " +
-                         "do not have a relative feature in the feature set: <br>" + ignoredColumns, "Import data alert!");
+                         "do not have a corresponding feature in the feature set:\n\n" + removeColumns.map(name => "• " + name).join("\n"), "Import data alert!");
         }
 
         var maxTableHeight = (document.getElementById('left-side').clientHeight / 2).toString() + "px";
