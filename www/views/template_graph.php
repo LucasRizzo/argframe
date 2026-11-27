@@ -1273,7 +1273,15 @@ function editAddConclusion() {
 function setPrevious(){
     <?php if ($view_successType == "createGraph") {
     ?> 
-        $('#warningrenamed').html('<font color=\"red\"> ' + escapeHtml(<?php echo json_encode($view_success, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>) + ' </font>');
+        const message = <?php echo json_encode($view_success, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+        const prefix = "Graph created with success! Now working on graph ";
+        const notice = $('<span>').css('color', 'red');
+        if (message.startsWith(prefix)) {
+            notice.text(prefix).append($('<b>').text(message.slice(prefix.length)));
+        } else {
+            notice.text(message);
+        }
+        $('#warningrenamed').empty().append(notice);
         setTimeout(function() {$('#warningrenamed').html('');}, 5000);
 
         // Set current graph as the graph created

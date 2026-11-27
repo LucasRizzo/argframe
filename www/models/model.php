@@ -120,7 +120,7 @@ class Model {
     
     public function createNewGraph($newGraph) {
         $this->dataSetDAO->createNewGraph($newGraph);
-        $this->success = "Graph created with success! Now working on graph <b>" . $newGraph["newGraph"] . ".</b>";
+        $this->success = "Graph created with success! Now working on graph " . $newGraph["newGraph"] . ".";
         $this->successType = "createGraph";
         $this->currentGraph = $newGraph["newGraph"];
         $this->currentFeatureset = $newGraph["featuresetNewGraph"];
