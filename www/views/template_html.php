@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<base href="<?php echo htmlspecialchars(ADDRESS_PREFIX, ENT_QUOTES, 'UTF-8'); ?>">
 <link rel="icon" href="graph.png">
 <meta charset="utf-8">
 <meta name="csrf-token" content="<?php echo htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">

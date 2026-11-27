@@ -22,32 +22,45 @@ define("DB_DEBUGMODE", false);
 
 define ("TITLE_WEB_APP", "Web dev. & dep.");
 
+// Resolve the application directory from the executing script, not the request host.
+// Use same-origin URLs so cookies and CSRF headers remain on the deployment origin.
+$scriptDirectory = dirname($_SERVER['SCRIPT_NAME'] ?? '/index.php');
+$basePath = trim((string) argframeConfig('ARGFRAME_BASE_PATH', $scriptDirectory), '/');
+if ($basePath === '.') $basePath = '';
+if (!preg_match('~^(?:[a-zA-Z0-9._-]+/)*[a-zA-Z0-9._-]*$~D', $basePath)
+    || in_array('..', explode('/', $basePath), true)) {
+    throw new RuntimeException('Invalid application base path.');
+}
+define("ADDRESS_PREFIX", $basePath === '' ? '/' : '/' . $basePath . '/');
+define("ADDRESS_CALL", ADDRESS_PREFIX . "index.php/");
+define("ABSOLUTE_CALL", ADDRESS_PREFIX);
+
 /* paths */
-define ("BOOTSTRAP_PATH", "/style/bootstrap/css/bootstrap.css");
-define ("BOOTSTRAP_MIN_PATH", "/style/bootstrap/css/bootstrap.min.css");
-define ("BOOTSTRAP_RESPONSIVE_PATH", "/style/bootstrap/css/bootstrap-responsive.css");
-define ("BOOTSTRAP_EDITABLE", "/style/bootstrap3-editable/css/bootstrap-editable.css");
-define ("BOOTSTRAP_EDITABLE_JS", "/style/bootstrap3-editable/js/bootstrap-editable.js");
-define ("GRAPH_STYLE", "/style/graphCreator.css");
-define ("MY_ALTERATIONS", "/style/myAlterations.css");
-define ("BOOTSTRAP_JS", "/style/bootstrap/js/bootstrap.js");
-define ("BOOTSTRAP_MIN_JS", "/style/bootstrap/js/bootstrap.min.js");
-define ("MODALS_JS", "/style/bootstrap/js/modals.js");
+define ("BOOTSTRAP_PATH", ADDRESS_PREFIX . "style/bootstrap/css/bootstrap.css");
+define ("BOOTSTRAP_MIN_PATH", ADDRESS_PREFIX . "style/bootstrap/css/bootstrap.min.css");
+define ("BOOTSTRAP_RESPONSIVE_PATH", ADDRESS_PREFIX . "style/bootstrap/css/bootstrap-responsive.css");
+define ("BOOTSTRAP_EDITABLE", ADDRESS_PREFIX . "style/bootstrap3-editable/css/bootstrap-editable.css");
+define ("BOOTSTRAP_EDITABLE_JS", ADDRESS_PREFIX . "style/bootstrap3-editable/js/bootstrap-editable.js");
+define ("GRAPH_STYLE", ADDRESS_PREFIX . "style/graphCreator.css");
+define ("MY_ALTERATIONS", ADDRESS_PREFIX . "style/myAlterations.css");
+define ("BOOTSTRAP_JS", ADDRESS_PREFIX . "style/bootstrap/js/bootstrap.js");
+define ("BOOTSTRAP_MIN_JS", ADDRESS_PREFIX . "style/bootstrap/js/bootstrap.min.js");
+define ("MODALS_JS", ADDRESS_PREFIX . "style/bootstrap/js/modals.js");
 define ("D3", "/js/d3.v3.js");
 define ("FILE_SAVER", "//cdn.jsdelivr.net/filesaver.js/0.1/FileSaver.min.js");
-define ("GRAPH_CREATOR", "/js/graphCreator.js");
-define ("GRAPH_VISUALIZATION", "/js/graphVisualization.js");
-define ("GRAPH_EDITION", "/js/graphEdition.js");
-define ("GRAPH_SMALL_VISUALIZATION", "/js/smallGraphVisualization.js");
-define ("ATTRIBUTE_RANGE_VISUALIZATION", "/js/attributesRangeVisualization.js");
-define ("VALIDATOR", "/js/validator.min.js");
+define ("GRAPH_CREATOR", ADDRESS_PREFIX . "js/graphCreator.js");
+define ("GRAPH_VISUALIZATION", ADDRESS_PREFIX . "js/graphVisualization.js");
+define ("GRAPH_EDITION", ADDRESS_PREFIX . "js/graphEdition.js");
+define ("GRAPH_SMALL_VISUALIZATION", ADDRESS_PREFIX . "js/smallGraphVisualization.js");
+define ("ATTRIBUTE_RANGE_VISUALIZATION", ADDRESS_PREFIX . "js/attributesRangeVisualization.js");
+define ("VALIDATOR", ADDRESS_PREFIX . "js/validator.min.js");
 define ("JQUERY", "https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js");
-define ("TABLE", "/js/table.js");
-define ("BOOTSTRAP_CONFIRMATION", "/js/bootstrap-confirmation.js");
-define ("BOOTSTRAP_TOOLTIP", "/js/bootstrap-tooltip.js");
-define ("JQUERY_CSV", "/js/jquery.csv.js");
-define ("REQUIRE_JS", "/js/require.js");
-define ("BOOLEAN_PARSER", "/js/boolean-parser.js");
+define ("TABLE", ADDRESS_PREFIX . "js/table.js");
+define ("BOOTSTRAP_CONFIRMATION", ADDRESS_PREFIX . "js/bootstrap-confirmation.js");
+define ("BOOTSTRAP_TOOLTIP", ADDRESS_PREFIX . "js/bootstrap-tooltip.js");
+define ("JQUERY_CSV", ADDRESS_PREFIX . "js/jquery.csv.js");
+define ("REQUIRE_JS", ADDRESS_PREFIX . "js/require.js");
+define ("BOOLEAN_PARSER", ADDRESS_PREFIX . "js/boolean-parser.js");
 
 /* HTTP status codes 2xx*/
 define("HTTPSTATUS_OK", 200);
@@ -102,9 +115,7 @@ define("GENERAL_RESOURCE_UPDATED", "Resource has been updated");
 define("GENERAL_RESOURCE_DELETED", "Resource has been deleted");
 define("GENERAL_INVALIDBODY", "Request is ok but transmitted body is invalid");
 
-define("ADDRESS_PREFIX", "/");
-define("ADDRESS_CALL", "http://localhost:8001/index.php/");
-define("ABSOLUTE_CALL", "/");
+
 
 
 define ("N_SYSTEMS", 8);

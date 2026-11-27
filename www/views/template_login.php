@@ -9,7 +9,7 @@
 <meta name="description" content="">
 <meta name="author" content="">
 <!-- JS -->
-<script src="/js/jquery.js"></script>
+<script src="<?php echo ADDRESS_PREFIX; ?>js/jquery.js"></script>
 <script src='<?php echo JQUERY; ?>'></script>
 <!-- Using 3.3.5 for implementing confimation plugin
 <script src='<?php //echo BOOTSTRAP_MIN_JS; ?>'></script>
@@ -26,7 +26,7 @@
 <!-- <script type="text/javascript" src='<?php //echo BOOTSTRAP_TOOLTIP; ?>'></script> -->
 <!-- bootstrap 3.3.5 for confirmation plugin -->
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.js"></script>
-<script src="/js/bootstrap-confirmation.min.js"></script>
+<script src="<?php echo ADDRESS_PREFIX; ?>js/bootstrap-confirmation.min.js"></script>
 
   <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
   <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script> -->
