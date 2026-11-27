@@ -192,7 +192,7 @@ ini_set('php_max_size', '100M');
     <div class="form-inline">
         <label for="file" style="float:left;margin-right:5px;">Import data for current feature set: &nbsp</label><input class="custom-file-input" id="files" type="file" accept=".csv" name="file" />
         <br>
-        <label for="sel1">Select chunk size (<a href="#" data-toggle="popover" title="CSV chunk size" data-content="The imported file will be stored and processed locally. Any size file can be imported. However, it might need to be broken into chunks so the browser does not crash or freeze. If your file size is smaller than the default chunk size, just ignore this option. When computing the whole dataset (through the Export option), chunks will be processed one at a time, returning one file for each chunk. For example, if a 200mb file is imported, and the chunk size is set to 50mb, the file will be broken into 4 chunks. When exported, the results will be given in 4 files with only the first one containing a header.">?</a>): &nbsp</label>
+        <label for="sel1">Select chunk size (<a href="#" data-toggle="popover" title="CSV chunk size" data-content="The imported file will be stored and processed locally. Any size file can be imported. However, it might need to be broken into chunks so the browser does not crash or freeze. If your file size is smaller than the default chunk size, just ignore this option. When computing the whole dataset (through the Export option), chunks will be processed one at a time and combined into a single inference CSV, plus one statistics CSV if selected. For example, a 200mb file with a 50mb chunk size is read in four chunks.">?</a>): &nbsp</label>
         <select class="form-control" id="chunkSize">
             <option>50mb (default)</option>
             <option>5mb</option>
@@ -701,35 +701,19 @@ function isAPIAvailable() {
 var allData_ = [];
 var iColumns = [];
 
-function handleFileSelect(event) {
+function selectedCsvChunkSize() {
+    return parseInt(document.getElementById('chunkSize').value, 10) * 1000000;
+}
 
-    var select = document.getElementById('chunkSize'),
-        i = select.selectedIndex,
-        chunkSize = select.options[i].text;
-        
-    Papa.LocalChunkSize = 50000000;
-    
-    if (chunkSize == "25mb") {
-        Papa.LocalChunkSize = 25000000;
-    } else if (chunkSize == "10mb") {
-        Papa.LocalChunkSize = 10000000;
-    } else if (chunkSize == "5mb") {
-        Papa.LocalChunkSize = 5000000;
-    } else if (chunkSize == "75mb") {
-        Papa.LocalChunkSize = 75000000;
-    } else if (chunkSize == "100mb") {
-        Papa.LocalChunkSize = 100000000;
-    } else if (chunkSize == "150mb") {
-        Papa.LocalChunkSize = 150000000;
-    } else if (chunkSize == "200mb") {
-        Papa.LocalChunkSize = 200000000;
-    }
+function handleFileSelect(event) {
+    Papa.LocalChunkSize = selectedCsvChunkSize();
 
     var size = 0;
     file_ = event.target.files[0];
 
     Papa.parse(event.target.files[0], {
         worker: true,
+        chunkSize: Papa.LocalChunkSize,
         header: true,
         skipEmptyLines: true,
         chunk: function(results, parser) {

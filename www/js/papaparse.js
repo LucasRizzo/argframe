@@ -531,8 +531,25 @@ License: MIT
             else if (isFunction(this._config.chunk) && !isFakeChunk)
             {
                 this._config.chunk(results, this._handle);
-                if (this._handle.paused() || this._handle.aborted())
+                if (this._handle.aborted())
                     return;
+                if (this._handle.paused()) {
+                    // A chunk callback already consumed these records. Resume at the
+                    // next file chunk without re-parsing the buffered partial record.
+                    var streamer = this;
+                    this._resumeCompletedChunk = function() {
+                        streamer._completeResults = undefined;
+                        if (finishedIncludingPreview) {
+                            if (!streamer._completed && isFunction(streamer._config.complete)) {
+                                streamer._completed = true;
+                                streamer._config.complete(undefined, streamer._input);
+                            }
+                        } else {
+                            streamer._nextChunk();
+                        }
+                    };
+                    return;
+                }
                 results = undefined;
                 this._completeResults = undefined;
             }
@@ -1090,7 +1107,13 @@ License: MIT
         this.resume = function()
         {
             _paused = false;
-            self.streamer.parseChunk(_input, true);
+            if (self.streamer._resumeCompletedChunk) {
+                var resume = self.streamer._resumeCompletedChunk;
+                self.streamer._resumeCompletedChunk = null;
+                resume();
+            } else {
+                self.streamer.parseChunk(_input, true);
+            }
         };
 
         this.aborted = function()

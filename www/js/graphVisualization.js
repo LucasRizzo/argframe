@@ -3265,6 +3265,9 @@ d3.select("#exportFile").on("click", function () {
     const output = { inferenceParts: [], statsParts: [] };
     let failed = false;
     let processed = 0;
+    let chunkNumber = 0;
+    const chunkSize = selectedCsvChunkSize();
+    console.info("CSV export:", file_.size, "bytes; chunk size:", chunkSize, "bytes");
 
     const fail = error => {
         if (failed) return;
@@ -3277,10 +3280,9 @@ d3.select("#exportFile").on("click", function () {
 
     $("#modalExport").modal("hide");
 
-    if (file_.size <= Papa.LocalChunkSize) {
-        graph.exportAll(currentFeatureset, semantics).catch(fail);
-    } else {
+    {
         Papa.parse(file_, {
+            chunkSize: chunkSize,
             header: true,
             skipEmptyLines: true,
             chunk: async function (results, parser) {
@@ -3288,11 +3290,14 @@ d3.select("#exportFile").on("click", function () {
                 try {
                     allData_ = results.data;
                     if (allData_.length) {
+                        const rowCount = allData_.length;
+                        chunkNumber++;
+                        console.info("Computing CSV chunk", chunkNumber, "rows:", rowCount);
                         await graph.exportAll(currentFeatureset, semantics, output);
-                        processed += allData_.length;
+                        processed += rowCount;
                         const control = document.getElementById("exportControl");
                         control.style.visibility = "visible";
-                        control.textContent = processed + " records computed.";
+                        control.textContent = "Chunk " + chunkNumber + ": " + rowCount + " records; " + processed + " records computed in total.";
                     }
                     parser.resume();
                 } catch (error) {
@@ -3308,6 +3313,7 @@ d3.select("#exportFile").on("click", function () {
                     return;
                 }
                 output.finish();
+                document.getElementById("exportControl").textContent = "Export complete: " + processed + " records across " + chunkNumber + " chunks.";
             },
             error: fail
         });
