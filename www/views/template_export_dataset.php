@@ -6,7 +6,7 @@
             <label for="sel1">&nbsp Select dataset: &nbsp</label>
             <select class="form-control" name="dataset" id="dataset">
                 <?php foreach ($view_datasets as $d) {
-                    echo "<option value='" . $d . "'>" . $d . "</option>";
+                    echo "<option value='" . htmlspecialchars((string) $d, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . "'>" . htmlspecialchars((string) $d, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . "</option>";
                 }
                 ?>
             </select>
@@ -31,9 +31,9 @@ foreach ($view_allDatasets as $record => $row) {
 
 <script>
 
-var datasets = <?php echo json_encode($rowContent, JSON_PRETTY_PRINT); ?>;
-var conclusions_ = <?php echo json_encode($view_conclusionsByDataset, JSON_PRETTY_PRINT); ?>;
-var firstDataset = <?php echo json_encode($view_datasets[0], JSON_PRETTY_PRINT); ?>;
+var datasets = <?php echo json_encode($rowContent, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+var conclusions_ = <?php echo json_encode($view_conclusionsByDataset, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+var firstDataset = <?php echo json_encode($view_datasets[0], JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
 Object.size = function(obj) {
     var size = 0, key;
@@ -175,10 +175,10 @@ document.getElementById("exportjson").addEventListener("click", function(event) 
                            {"category":"overload"}]
             }*/
 
-    window.open('data:text/html;charset=utf-8,' +
-    encodeURIComponent( // Escape for URL formatting
-        json
-    ));
+    const link = document.createElement("a");
+    link.href = "data:text/plain;charset=utf-8," + encodeURIComponent(json.replace(/^<pre>|<\/pre>$/g, "").replaceAll("<br>", "\n"));
+    link.download = currentDataSet + ".json";
+    link.click();
 });
 
 function addDataset(dataset) {
@@ -220,9 +220,9 @@ function addDataset(dataset) {
             }
         }
 
-        var id = dataset + "_" + attributes[att];
+        var id = "dataset_range_" + att;
 
-        $('#datasetBox').append("<tr><td width='100' style='text-align: center;color: rgb(120, 0, 0)'>" + attributes[att] +
+        $('#datasetBox').append("<tr><td width='100' style='text-align: center;color: rgb(120, 0, 0)'>" + escapeHtml(attributes[att]) +
                                 "</td><td id=\'" + id + "\' width='400' style='padding:5px;'></td></tr>");
 
         drawBars(id, ranges[att], min, max);
@@ -233,7 +233,7 @@ function addDataset(dataset) {
     if (conclusions_[dataset].length > 0) {
         rowConclusion += "<td style='color: rgb(0, 0, 174)'><font color='blue'> ";
         for (var c = 0; c < conclusions_[dataset].length; c++) {
-            rowConclusion += conclusions_[dataset][c];
+            rowConclusion += escapeHtml(conclusions_[dataset][c]);
             if (c < conclusions_[dataset].length - 1) {
                 rowConclusion += ", ";
             } else {

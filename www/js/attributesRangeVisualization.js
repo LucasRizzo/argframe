@@ -117,7 +117,7 @@ function drawBars(position, attribute, min, max) {
             div.transition()
                 .duration(200)
                 .style("opacity", .9);
-            div.html(d.level)
+            div.text(d.level)
                 .style("left", (d3.event.pageX) + "px")
                 .style("top", (d3.event.pageY - 28) + "px");
 

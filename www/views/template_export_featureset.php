@@ -6,7 +6,7 @@
             <label for="sel1">&nbsp Select feature set: &nbsp</label>
             <select class="form-control" name="featureset" id="featureset">
                 <?php foreach ($view_featuresets as $d) {
-                    echo "<option value='" . $d . "'>" . $d . "</option>";
+                    echo "<option value='" . htmlspecialchars((string) $d, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . "'>" . htmlspecialchars((string) $d, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . "</option>";
                 }
                 ?>
             </select>
@@ -31,9 +31,9 @@ foreach ($view_allFeaturesets as $record => $row) {
 
 <script>
 
-var featuresets = <?php echo json_encode($rowContent, JSON_PRETTY_PRINT); ?>;
-var conclusions_ = <?php echo json_encode($view_conclusionsByFeatureset, JSON_PRETTY_PRINT); ?>;
-var firstFeatureset = <?php echo json_encode($view_featuresets[0], JSON_PRETTY_PRINT); ?>;
+var featuresets = <?php echo json_encode($rowContent, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+var conclusions_ = <?php echo json_encode($view_conclusionsByFeatureset, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+var firstFeatureset = <?php echo json_encode($view_featuresets[0], JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
 Object.size = function(obj) {
     var size = 0, key;
@@ -236,9 +236,9 @@ function addFeatureset(featureset) {
             }
         }
 
-        var id = featureset + "_" + attributes[att];
+        var id = "featureset_range_" + att;
 
-        $('#featuresetBox').append("<tr><td width='100' style='text-align: center;color: rgb(120, 0, 0)'>" + attributes[att] +
+        $('#featuresetBox').append("<tr><td width='100' style='text-align: center;color: rgb(120, 0, 0)'>" + escapeHtml(attributes[att]) +
                                 "</td><td id=\'" + id + "\' width='400' style='padding:5px;'></td></tr>");
 
         drawBars(id, ranges[att], min, max);
@@ -249,7 +249,7 @@ function addFeatureset(featureset) {
     if (conclusions_[featureset].length > 0) {
         rowConclusion += "<td style='color: rgb(0, 0, 174)'><font color='blue'> ";
         for (var c = 0; c < conclusions_[featureset].length; c++) {
-            rowConclusion += conclusions_[featureset][c];
+            rowConclusion += escapeHtml(conclusions_[featureset][c]);
             if (c < conclusions_[featureset].length - 1) {
                 rowConclusion += ", ";
             } else {

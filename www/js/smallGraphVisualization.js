@@ -588,7 +588,7 @@ function create(d3, saveAs, Blob, id, position, cell, featureset, graph) {
             tooltip.selectAll("text").remove();
             tooltip.append("text");
 
-            tooltip.selectAll("text").html("<b>Argument</b>: " + d.tooltip + "<br /><br /><b>Source edges:</b> " + String(source) + "<br /><b>Target edges:</b> " + String(target));
+            tooltip.selectAll("text").html("<b>Argument</b>: " + escapeHtml(d.tooltip) + "<br /><br /><b>Source edges:</b> " + String(source) + "<br /><b>Target edges:</b> " + String(target));
 
             tooltip.style("visibility", "visible");
         })
