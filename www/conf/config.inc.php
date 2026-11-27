@@ -1,14 +1,24 @@
 <?php
 
-/* database constants */
-define ( "DB_HOST", "db" ); // set database host
-define ( "DB_USER", "admin" ); // set database user
-define ( "DB_PASS", "admin" ); // set database password
-define ( "DB_PORT", "3306" ); // set database port
-define ( "DB_NAME", "arg-db" ); // set database name
-define ( "DB_CHARSET", "utf8" ); // set database charset
-define ( "DB_DEBUGMODE", true ); // set database charset
+/* Deployment configuration: environment variables override an optional local file. */
+$localConfigPath = __DIR__ . '/config.local.php';
+$localConfig = is_file($localConfigPath) ? require $localConfigPath : [];
+if (!is_array($localConfig)) {
+    throw new RuntimeException('Invalid local configuration.');
+}
+function argframeConfig(string $name, $default = null) {
+    global $localConfig;
+    $value = getenv($name);
+    return $value !== false ? $value : ($localConfig[$name] ?? $default);
+}
 
+define("DB_HOST", argframeConfig("ARGFRAME_DB_HOST", "db"));
+define("DB_USER", argframeConfig("ARGFRAME_DB_USER", "admin"));
+define("DB_PASS", argframeConfig("ARGFRAME_DB_PASSWORD", ""));
+define("DB_PORT", argframeConfig("ARGFRAME_DB_PORT", "3306"));
+define("DB_NAME", argframeConfig("ARGFRAME_DB_NAME", "arg-db"));
+define("DB_CHARSET", "utf8");
+define("DB_DEBUGMODE", false);
 
 define ("TITLE_WEB_APP", "Web dev. & dep.");
 
@@ -96,7 +106,6 @@ define("ADDRESS_PREFIX", "/");
 define("ADDRESS_CALL", "http://localhost:8001/index.php/");
 define("ABSOLUTE_CALL", "/");
 
-$userList = array("luca"=>"pw1", "lucas@gmail.com" => "pw2", "luiz" => "benga");
 
 define ("N_SYSTEMS", 8);
 

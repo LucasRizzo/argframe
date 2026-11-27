@@ -1,2 +1,4 @@
 /www/vendor/
 /www/.phpunit.cache/
+/www/conf/config.local.php
+/.env

@@ -1,4 +1,8 @@
 <?php
+// Never expose PHP diagnostics in an HTTP response.
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+error_reporting(E_ALL);
 ini_set('session.use_strict_mode', '1');
 ini_set('session.use_only_cookies', '1');
 session_set_cookie_params([
@@ -33,7 +37,11 @@ ini_set('max_input_vars', '100000');
 
 Slim\Slim::registerAutoloader ();
 
-$app = new \Slim\Slim (); // slim run-time object
+$app = new \Slim\Slim (['debug' => false, 'mode' => 'production']);
+$app->error(function ($error) {
+    error_log('ArgFrame request failed: ' . get_class($error));
+    echo 'An internal application error occurred. Please contact the administrator.';
+});
 
 // Synchronizer token; never accept tokens in URLs.
 function csrfToken(): string {

@@ -15,7 +15,7 @@ function csrfHeaders() {
 }
 </script>
 
-<script src="http://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.2/modernizr.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.2/modernizr.js"></script>
 <script type="text/javascript" src="//code.jquery.com/jquery-1.12.0.min.js"></script>
 
 <script>
@@ -47,7 +47,7 @@ function csrfHeaders() {
 <script type="text/javascript" src="https://cdn.datatables.net/t/dt/dt-1.10.11/datatables.min.js"></script>
 <script type="text/javascript" src="https://cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript" src="https://cdn.datatables.net/1.10.11/js/dataTables.bootstrap.min.js"></script>
-<script type="text/javascript" src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+<script type="text/javascript" src="https://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 <script src='<?php echo ADDRESS_PREFIX . "js/papaparse.js"; ?>'></script>
 <script src='<?php echo REQUIRE_JS; ?>'></script>
 <script src='<?php echo BOOLEAN_PARSER; ?>'></script>

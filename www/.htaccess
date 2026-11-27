@@ -1,7 +1,23 @@
-php_value memory_limit 1024M
-php_value post_max_size 500M
-php_value upload_max_filesize 500M
-php_value max_execution_time 300
-php_value max_input_vars 100000
-php_value display_errors 1
-php_value error_reporting E_ALL
+# Internal PHP code and dependency files are not public endpoints.
+Options -Indexes
+RewriteEngine On
+RewriteRule ^(?:conf|controllers|db|models|views|semantics|expertSystem|Slim|sql|tests|vendor|\.vscode|\.phpunit\.cache)(?:/|$) - [F,L,NC]
+RewriteRule (^|/)\. - [F,L]
+RewriteRule ^(?:composer\.(?:json|lock)|phpunit\.xml|php\.ini|error\.txt|output\.json|teste\.php)(?:/|$) - [F,L,NC]
+
+<IfModule php_module>
+    php_value memory_limit 1024M
+    php_value post_max_size 500M
+    php_value upload_max_filesize 500M
+    php_value max_execution_time 300
+    php_value max_input_vars 100000
+    php_flag display_errors Off
+    php_flag log_errors On
+    php_value error_reporting 32767
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
