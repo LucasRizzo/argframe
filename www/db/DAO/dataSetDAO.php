@@ -402,8 +402,9 @@ class DataSetDAO {
 
     public function featuresetGraphs() {
         $sql = 'SELECT featureset, name, edges, font_size FROM graphs WHERE featureset ' .
-               'IN (SELECT DISTINCT featureset FROM user_featureset WHERE email = "' . $_SESSION["username"] . '") ORDER BY name;';
+               'IN (SELECT DISTINCT featureset FROM user_featureset WHERE email = ?) ORDER BY name;';
         $stmt = $this->dbManager->prepareQuery ($sql);
+        $this->dbManager->bindValue($stmt, 1, $_SESSION["username"], $this->dbManager->STRING_TYPE);
         $this->dbManager->executeQuery ($stmt);
         $featuresetGraphs = $this->dbManager->fetchResults($stmt);
         return $featuresetGraphs;
@@ -411,8 +412,9 @@ class DataSetDAO {
 
     public function featuresetArguments() {
         $sql = 'SELECT argument, conclusion, x, y, label, graph, featureset, weight FROM arguments WHERE featureset '  .
-               'IN (SELECT DISTINCT featureset FROM user_featureset WHERE email = "' . $_SESSION["username"] . '");';
+               'IN (SELECT DISTINCT featureset FROM user_featureset WHERE email = ?);';
         $stmt = $this->dbManager->prepareQuery ($sql);
+        $this->dbManager->bindValue($stmt, 1, $_SESSION["username"], $this->dbManager->STRING_TYPE);
         $this->dbManager->executeQuery ($stmt);
         $featuresetArguments = $this->dbManager->fetchResults($stmt);
         return $featuresetArguments;
@@ -590,20 +592,21 @@ class DataSetDAO {
         
         $labels = array();
         $graphs = array();
-        $ids = "";
+        $ids = array();
         foreach ($arguments as $key => $value) {
             array_push($labels, $value["label"]);
             array_push($graphs, $value["graph"]);
-            $ids .= $value["id"] . ",";
+            $ids[] = (int) $value["id"];
         }
-        
-        // Remove last comma
-        $ids = rtrim($ids, ",");
-        
-        // Delete arguments
-        if (strlen($ids) > 0) {
-            $sql = "DELETE FROM arguments WHERE id IN (" . $ids . ")";
+
+        // Delete arguments using one placeholder per database ID.
+        if (count($ids) > 0) {
+            $placeholders = implode(",", array_fill(0, count($ids), "?"));
+            $sql = "DELETE FROM arguments WHERE id IN (" . $placeholders . ")";
             $stmt = $this->dbManager->prepareQuery ( $sql );
+            foreach ($ids as $index => $id) {
+                $this->dbManager->bindValue($stmt, $index + 1, $id, $this->dbManager->INT_TYPE);
+            }
             $this->dbManager->executeQuery ( $stmt );
         }
         
@@ -687,20 +690,21 @@ class DataSetDAO {
         
         $labels = array();
         $graphs = array();
-        $ids = "";
+        $ids = array();
         foreach ($arguments as $key => $value) {
             array_push($labels, $value["label"]);
             array_push($graphs, $value["graph"]);
-            $ids .= $value["id"] . ",";
+            $ids[] = (int) $value["id"];
         }
-        
-        // Remove last comma
-        $ids = rtrim($ids, ",");
-        
-        // Delete arguments
-        if (strlen($ids) > 0) {
-            $sql = "DELETE FROM arguments WHERE id IN (" . $ids . ")";
+
+        // Delete arguments using one placeholder per database ID.
+        if (count($ids) > 0) {
+            $placeholders = implode(",", array_fill(0, count($ids), "?"));
+            $sql = "DELETE FROM arguments WHERE id IN (" . $placeholders . ")";
             $stmt = $this->dbManager->prepareQuery ( $sql );
+            foreach ($ids as $index => $id) {
+                $this->dbManager->bindValue($stmt, $index + 1, $id, $this->dbManager->INT_TYPE);
+            }
             $this->dbManager->executeQuery ( $stmt );
         }
         
@@ -1014,16 +1018,18 @@ class DataSetDAO {
     }
 
     public function attributesByFeatureset($featureset) {
-        $sql = 'SELECT DISTINCT attribute, a_level, a_from, a_to FROM attributes WHERE featureset = \'' . $featureset . '\'';
+        $sql = 'SELECT DISTINCT attribute, a_level, a_from, a_to FROM attributes WHERE featureset = ?';
         $stmt = $this->dbManager->prepareQuery ($sql);
+        $this->dbManager->bindValue($stmt, 1, $featureset, $this->dbManager->STRING_TYPE);
         $this->dbManager->executeQuery ($stmt);
         $attributes = $this->dbManager->fetchResults($stmt);
         return $attributes;
     }
 
     public function conclusionsByFeatureset($featureset) {
-        $sql = 'SELECT conclusion, c_from, c_to FROM conclusions WHERE featureset = \'' . $featureset . '\'';
+        $sql = 'SELECT conclusion, c_from, c_to FROM conclusions WHERE featureset = ?';
         $stmt = $this->dbManager->prepareQuery ($sql);
+        $this->dbManager->bindValue($stmt, 1, $featureset, $this->dbManager->STRING_TYPE);
         $this->dbManager->executeQuery ($stmt);
         $conclusions = $this->dbManager->fetchResults($stmt);
         return $conclusions;
@@ -1046,7 +1052,7 @@ class DataSetDAO {
         WHERE BINARY featureset IN (
             SELECT DISTINCT BINARY featureset 
             FROM user_featureset 
-            WHERE email = "' . $_SESSION["username"] . '"
+            WHERE email = ?
         )
         UNION
         SELECT DISTINCT featureset 
@@ -1054,18 +1060,21 @@ class DataSetDAO {
         WHERE BINARY featureset IN (
             SELECT DISTINCT BINARY featureset 
             FROM user_featureset 
-            WHERE email = "' . $_SESSION["username"] . '"
+            WHERE email = ?
         );
         ';
         $stmt = $this->dbManager->prepareQuery ($sql);
+        $this->dbManager->bindValue($stmt, 1, $_SESSION["username"], $this->dbManager->STRING_TYPE);
+        $this->dbManager->bindValue($stmt, 2, $_SESSION["username"], $this->dbManager->STRING_TYPE);
         $this->dbManager->executeQuery ($stmt);
         $featuresets = $stmt->fetchAll (PDO::FETCH_COLUMN, 0);
         return $featuresets; 
     }
     
     public function allUserFeaturesets() {
-        $sql = 'SELECT featureset FROM user_featureset WHERE email = "' . $_SESSION["username"] . '";';
+        $sql = 'SELECT featureset FROM user_featureset WHERE email = ?;';
         $stmt = $this->dbManager->prepareQuery ($sql);
+        $this->dbManager->bindValue($stmt, 1, $_SESSION["username"], $this->dbManager->STRING_TYPE);
         $this->dbManager->executeQuery ($stmt);
         $featuresets = $stmt->fetchAll (PDO::FETCH_COLUMN, 0);
         return $featuresets; 
@@ -1075,16 +1084,18 @@ class DataSetDAO {
     public function featuresetsWithGraphs() {
 
         $sql = 'SELECT DISTINCT featureset FROM graphs WHERE featureset ' .
-               'IN (SELECT DISTINCT featureset FROM user_featureset WHERE email = "' . $_SESSION["username"] . '");';
+               'IN (SELECT DISTINCT featureset FROM user_featureset WHERE email = ?);';
         $stmt = $this->dbManager->prepareQuery ($sql);
+        $this->dbManager->bindValue($stmt, 1, $_SESSION["username"], $this->dbManager->STRING_TYPE);
         $this->dbManager->executeQuery ($stmt);
         $featuresets = $stmt->fetchAll (PDO::FETCH_COLUMN, 0);
         return $featuresets; 
     }
 
     public function getLevels($attribute) {
-        $sql = 'SELECT DISTINCT a_level FROM attributes WHERE attribute = ' . $attribute;
+        $sql = 'SELECT DISTINCT a_level FROM attributes WHERE attribute = ?';
         $stmt = $this->dbManager->prepareQuery ($sql);
+        $this->dbManager->bindValue($stmt, 1, $attribute, $this->dbManager->STRING_TYPE);
         $this->dbManager->executeQuery ($stmt);
         $levels = $stmt->fetchAll (PDO::FETCH_COLUMN, 0);
         return $levels; 
