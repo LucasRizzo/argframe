@@ -16,23 +16,41 @@ class pdoDbManager {
 
     function openConnection() {
         try {
-            $connectionStr = "mysql:host=" . $this->hostname . ";
-                              dbname=" . $this->dbname . ";
-                              charset=" . $this->charset;
+            $connectionStr = "mysql:host=" . $this->hostname . ";port=" . DB_PORT . ";dbname=" . $this->dbname . ";charset=" . $this->charset;
 
             $this->db_link = new PDO ($connectionStr,
           			       $this->username,
             			       $this->password,
             						  array (PDO::ATTR_ERRMODE => PDO::ERRMODE_WARNING));
  
-        } catch ( PDOException $e ) {
-            if ($this->debugMode) {
-                echo 'Connection failed: ' . $e->getMessage ();
-            }
-            exit ();
+        } catch (PDOException $e) {
+            error_log('ArgFrame database connection failed (SQLSTATE ' . $e->getCode() . ')');
+            throw new RuntimeException('Database connection failed.');
         }
     }
     
+    // Run a group of statements atomically, treating SQL failures as exceptions.
+    public function transaction(callable $operation) {
+        $previousMode = $this->db_link->getAttribute(PDO::ATTR_ERRMODE);
+        $this->db_link->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+        try {
+            $this->db_link->beginTransaction();
+            try {
+                $result = $operation();
+                $this->db_link->commit();
+                return $result;
+            } catch (\Throwable $error) {
+                if ($this->db_link->inTransaction()) {
+                    $this->db_link->rollBack();
+                }
+                throw $error;
+            }
+        } finally {
+            $this->db_link->setAttribute(PDO::ATTR_ERRMODE, $previousMode);
+        }
+    }
+
     function prepareQuery($query) {
         $stmt = $this->db_link->prepare ( $query );
         return $stmt;

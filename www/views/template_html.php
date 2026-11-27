@@ -1,10 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<base href="<?php echo htmlspecialchars(ADDRESS_PREFIX, ENT_QUOTES, 'UTF-8'); ?>">
 <link rel="icon" href="graph.png">
 <meta charset="utf-8">
+<meta name="csrf-token" content="<?php echo htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
+<script>
+function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    })[char]);
+}
+function csrfHeaders() {
+    return { "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content };
+}
+</script>
 
-<script src="http://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.2/modernizr.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.2/modernizr.js"></script>
 <script type="text/javascript" src="//code.jquery.com/jquery-1.12.0.min.js"></script>
 
 <script>
@@ -36,7 +48,7 @@
 <script type="text/javascript" src="https://cdn.datatables.net/t/dt/dt-1.10.11/datatables.min.js"></script>
 <script type="text/javascript" src="https://cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript" src="https://cdn.datatables.net/1.10.11/js/dataTables.bootstrap.min.js"></script>
-<script type="text/javascript" src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+<script type="text/javascript" src="https://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 <script src='<?php echo ADDRESS_PREFIX . "js/papaparse.js"; ?>'></script>
 <script src='<?php echo REQUIRE_JS; ?>'></script>
 <script src='<?php echo BOOLEAN_PARSER; ?>'></script>
@@ -131,8 +143,11 @@
         </li> -->
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        <li class="navbar-text">Logged as <span class="bg-info "><?php echo $_SESSION["username"]; ?></span></li>
-        <li><a href=<?php echo ADDRESS_PREFIX . "index.php/login"; ?>><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
+        <li class="navbar-text">Logged as <span class="bg-info "><?php echo htmlspecialchars($_SESSION["username"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8"); ?></span></li>
+        <li><form action="<?php echo ADDRESS_PREFIX . 'index.php?action=logout'; ?>" method="post" class="navbar-form">
+            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
+            <button type="submit" class="btn btn-link"><span class="glyphicon glyphicon-log-out"></span> Logout</button>
+        </form></li>
       </ul>
   </div>
 </div>
@@ -169,7 +184,7 @@
                 // Generic error modal included in the index page
                 $(function(){
                     $('#messages').removeClass('hide').addClass('alert alert-danger alert-dismissible fade in').slideDown().show();
-                    $('#messages_content').html('<h4> <strong>Error!</strong> <?php echo $view_apiResponse["message"]; ?> </h4>');
+                    $('#messages_content').html('<h4> <strong>Error!</strong> ' + escapeHtml(<?php echo json_encode($view_apiResponse["message"], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>) + ' </h4>');
                     $('#modal').modal('show');
                 });
                 </script> <?php
@@ -185,7 +200,7 @@
                     // Generic error modal included in the index page
                     $(function(){
                         $('#messages').removeClass('hide').addClass('alert alert-danger alert-dismissible fade in').slideDown().show();
-                        $('#messages_content').html('<h4> <strong>Error!</strong> <?php echo $view_error; ?> </h4>');
+                        $('#messages_content').html('<h4> <strong>Error!</strong> ' + escapeHtml(<?php echo json_encode($view_error, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>) + ' </h4>');
                         $('#modal').modal('show');
                     });
                     </script> <?php
@@ -196,7 +211,7 @@
                         ?> <script>
                             $(function(){
                                 $('#messages').removeClass('hide').addClass('alert alert-success alert-dismissible fade in').slideDown().show();
-                                $('#messages_content').html('<h4><?php echo $view_success; ?> </h4>');
+                                $('#messages_content').html('<h4>' + escapeHtml(<?php echo json_encode($view_success, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>) + ' </h4>');
                                 $('#modal').modal('show');
                             });
                         </script> <?php

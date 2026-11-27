@@ -16,7 +16,7 @@ window.alert = function(message, title) {
         </div>');
     }
     $("#bootstrap-alert-box-modal .modal-header h4").text(title || "");
-    $("#bootstrap-alert-box-modal .modal-body p").html(message || "");
+    $("#bootstrap-alert-box-modal .modal-body p").css("white-space", "pre-wrap").text(message || "");
     $("#bootstrap-alert-box-modal").modal('show');
 };
 
@@ -33,7 +33,7 @@ window.confirm = function(message, title, yes_label, callback) {
                     <div class="modal-body"><p></p></div>\
                     <div class="modal-footer">\
                         <a href="#" data-dismiss="modal" class="btn btn-default">Cancel</a>\
-                        <a href="#" class="btn btn-primary">' + (yes_label || 'OK') + '</a>\
+                        <a href="#" class="btn btn-primary">OK</a>\
                     </div>\
                 </div>\
             </div>\
@@ -49,8 +49,9 @@ window.confirm = function(message, title, yes_label, callback) {
         });
     }
  
+    $("#bootstrap-confirm-box-modal .modal-footer .btn-primary").text(yes_label || "OK");
     $("#bootstrap-confirm-box-modal .modal-header h4").text(title || "");
-    $("#bootstrap-confirm-box-modal .modal-body p").html(message || "");
+    $("#bootstrap-confirm-box-modal .modal-body p").text(message || "");
     $("#bootstrap-confirm-box-modal").modal('show');
 };
 

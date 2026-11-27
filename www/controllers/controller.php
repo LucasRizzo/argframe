@@ -6,7 +6,7 @@ class Controller {
     private $slimApp;
     private $requestBody;
 
-    public function __construct($model, $action = null, $slimApp, $parameters = null) {
+    public function __construct($model, $action, $slimApp, $parameters = null) {
     //public function __construct($model, $action) {
 
         $this->model = $model;
@@ -141,7 +141,8 @@ class Controller {
     }
 
     public function exportResults() {
-        $objPHPExcel = $this->model->getXlsObject();
+        require_once __DIR__ . '/../vendor/autoload.php';
+        $objPHPExcel = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
 
         // Write overall indexes
         $this->model->writeXlsData($objPHPExcel, 0);
@@ -172,8 +173,10 @@ class Controller {
         header ('Cache-Control: cache, must-revalidate');
         header ('Pragma: public');
 
-        $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel5');
-        ob_end_clean();
+        $objWriter = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($objPHPExcel, 'Xls');
+        if (ob_get_level() > 0) {
+            ob_end_clean();
+        }
         $objWriter->save('php://output');
     }
 
@@ -266,8 +269,9 @@ class Controller {
     }
 
     public function handleLogout() {
-        session_unset (); // unset the session (and the $_SESSION)
-        header ( "Location: index.php" ); // redirect to the index.php
+        clearAuthenticatedSession();
+        // Stop MVC rendering after clearing the authenticated session.
+        $this->slimApp->redirect($this->slimApp->urlFor("login"), 303);
     }
 
     public function getAction() {

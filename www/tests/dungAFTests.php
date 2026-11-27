@@ -1,25 +1,26 @@
 <?php
 
-require_once ('../simpletest/autorun.php');
+use PHPUnit\Framework\TestCase;
 
-class DungAFTests extends UnitTestCase
+require_once __DIR__ . '/../semantics/dungAF.php';
+
+class DungAFTests extends TestCase
 {
 
     private $af;
 
-    public function setUp () {
-        require_once ("../semantics/dungAF.php");
+    protected function setUp(): void {
 
         // Empty af
         $this -> af = DungAF::PopulatedDungAF(array(), "");
     }
 
-    public function tearDown () {
+    protected function tearDown(): void {
         $this-> af = NULL ;
     }
 
 
-    public function testConflictFunc () {
+    public function testConflictFunc(): void {
 
         // Empty af
         $this->assertTrue($this->af->hasAsConflictFreeSet(array()) &&
@@ -37,7 +38,7 @@ class DungAFTests extends UnitTestCase
         $this->assertTrue(! $this->af->hasUnionOfAsConflictFreeSet(array(array('a','g'), array('e'))) && $this->af->containsNoConflictAmongUnionOf(array(array('a','g'),array('e'))));
     }
 
-    public function testAcceptabilityFunc() {
+    public function testAcceptabilityFunc(): void {
 
         $atts = array(0=>array('a'=>'b'), 1=>array('c'=>'d'), 2=>array('e'=>'f'));
         $this->af = DungAF::PopulatedDungAF($atts, "");
@@ -52,7 +53,7 @@ class DungAFTests extends UnitTestCase
         $this->assertTrue($this->af->argsAccept(array('e'), array('a','c','e','g')));
     }
 
-    public function testDefenceSets() {
+    public function testDefenceSets(): void {
 
         // argpool from 'a' to 'z'
         $argPool = array();
@@ -173,7 +174,7 @@ class DungAFTests extends UnitTestCase
         }
     }
 
-    public function testSetComparison() {
+    public function testSetComparison(): void {
 
         $setColl = array();
         $setStr0 = array("a");
@@ -268,14 +269,4 @@ class DungAFTests extends UnitTestCase
         $this->assertTrue($listSetStr == array($setStr1, $setStr2));
     }
 
-    /**
-    * Test to multiply two numbers
-    */
-    public function testMultiply () {}
-
-    /**
-    * Test to divide two numbers
-    */
-    public function testDivide () {}
 }
-?>

@@ -3,8 +3,9 @@
 class LucaModel extends Model {
 	
     public function getXlsObject () {
+        require_once __DIR__ . '/../vendor/autoload.php';
 
-        $objPHPExcel = new PHPExcel();
+        $objPHPExcel = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
 
         // Set document properties
         $objPHPExcel->getProperties()->setCreator("Lucas Rizzo")
@@ -61,14 +62,14 @@ class LucaModel extends Model {
 
         // Style of the spreadsheet header
         $styleHeader = array('font' => array('bold' => true, 'size' => 9),
-                             'alignment' => array('horizontal' => PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
-                                                  'vertical' => PHPExcel_Style_Alignment::HORIZONTAL_CENTER,),
-                             'borders' => array('outline' => array('style' => PHPExcel_Style_Border::BORDER_THIN,),));
+                             'alignment' => array('horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                                                  'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,),
+                             'borders' => array('outline' => array('borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,),));
 
         // Style of the spreadsheet body
         $styleBody = array('font' => array('size' => 9),
-                            'alignment' => array('horizontal' => PHPExcel_Style_Alignment::HORIZONTAL_RIGHT),
-                            'borders' => array('outline' => array('style' => PHPExcel_Style_Border::BORDER_THIN,),));
+                            'alignment' => array('horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT),
+                            'borders' => array('outline' => array('borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,),));
 
         // Apply header style
         $objPHPExcel->getActiveSheet()->getStyle($columnId . $line . ":" . $columnES[N_SYSTEMS - 1] . $line)

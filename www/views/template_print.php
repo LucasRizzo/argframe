@@ -29,19 +29,19 @@
 
 <script>
 
-var levels_ = <?php echo json_encode($view_levels, JSON_PRETTY_PRINT); ?>;
+var levels_ = <?php echo json_encode($view_levels, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
-var graphs_ = <?php echo json_encode($view_featuresetGraphs, JSON_PRETTY_PRINT); ?>;
+var graphs_ = <?php echo json_encode($view_featuresetGraphs, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
-var args_ = <?php echo json_encode($view_featuresetArguments, JSON_PRETTY_PRINT); ?>;
+var args_ = <?php echo json_encode($view_featuresetArguments, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
-var conclusions_ = <?php echo json_encode($view_conclusionsByFeatureset, JSON_PRETTY_PRINT); ?>;
+var conclusions_ = <?php echo json_encode($view_conclusionsByFeatureset, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
-var featuresets_ = <?php echo json_encode($view_featuresets, JSON_PRETTY_PRINT); ?>;
+var featuresets_ = <?php echo json_encode($view_featuresets, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
-var attributesByFeatureset_ = <?php echo json_encode($view_attributesByFeatureset, JSON_PRETTY_PRINT); ?>;
+var attributesByFeatureset_ = <?php echo json_encode($view_attributesByFeatureset, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
-var conclusionsByFeatureset_ = <?php echo json_encode($view_conclusionsByFeatureset, JSON_PRETTY_PRINT); ?>;
+var conclusionsByFeatureset_ = <?php echo json_encode($view_conclusionsByFeatureset, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
 document.getElementById("featureset").addEventListener("change", function(event) {
     event.preventDefault();
@@ -76,12 +76,12 @@ function printArguments() {
         }
 
         if (args_[i].conclusion != "NULL") {
-            html += "<i>" + args_[i].label + "</i>: " + 
-                    args_[i].argument + " <b>&#8594;</b> " +
-                    args_[i].conclusion + "<br>";
+            html += "<i>" + escapeHtml(args_[i].label) + "</i>: " + 
+                    escapeHtml(args_[i].argument) + " <b>&#8594;</b> " +
+                    escapeHtml(args_[i].conclusion) + "<br>";
         } else {
-            html += "<i>" + args_[i].label + "</i>: " + 
-                    args_[i].argument + "<br>";
+            html += "<i>" + escapeHtml(args_[i].label) + "</i>: " + 
+                    escapeHtml(args_[i].argument) + "<br>";
         }
 
         argumentsN++;
@@ -113,8 +113,8 @@ function printAttacks() {
         var graphObj = JSON.parse(graphs_[i].edges);
 
         for (var j = 0; j < graphObj.length; j++) {
-            html += "<i>" + graphObj[j].source + "</i>  &rArr; " + 
-                    "<i>" + graphObj[j].target + "</i><br>";
+            html += "<i>" + escapeHtml(graphObj[j].source) + "</i>  &rArr; " + 
+                    "<i>" + escapeHtml(graphObj[j].target) + "</i><br>";
 
             attacksN++;
         }
@@ -139,18 +139,18 @@ function printFeatureSet() {
     // to find the current premise's range
     var currentAttribute = attributesByFeatureset_[currentFeatureset][0].attribute;
     var attributesN = 1;
-    html += "<i>Attribute</i>: " + attributesByFeatureset_[currentFeatureset][0].attribute + "<br>";
+    html += "<i>Attribute</i>: " + escapeHtml(attributesByFeatureset_[currentFeatureset][0].attribute) + "<br>";
     for (var attr = 0; attr < attributesByFeatureset_[currentFeatureset].length; attr++) {
 
         if (attributesByFeatureset_[currentFeatureset][attr].attribute != currentAttribute) {
-            html += "<br><i>Attribute</i>: " + attributesByFeatureset_[currentFeatureset][attr].attribute + "<br>";
+            html += "<br><i>Attribute</i>: " + escapeHtml(attributesByFeatureset_[currentFeatureset][attr].attribute) + "<br>";
             currentAttribute = attributesByFeatureset_[currentFeatureset][attr].attribute;
             attributesN++;
         }
 
-        html += "<i>Level</i>: " + attributesByFeatureset_[currentFeatureset][attr].a_level +
-                ", <i>From:</i> " + attributesByFeatureset_[currentFeatureset][attr].a_from +
-                ", <i>To:</i> " + attributesByFeatureset_[currentFeatureset][attr].a_to +
+        html += "<i>Level</i>: " + escapeHtml(attributesByFeatureset_[currentFeatureset][attr].a_level) +
+                ", <i>From:</i> " + escapeHtml(attributesByFeatureset_[currentFeatureset][attr].a_from) +
+                ", <i>To:</i> " + escapeHtml(attributesByFeatureset_[currentFeatureset][attr].a_to) +
                 "<br>";
     }
 
@@ -159,9 +159,9 @@ function printFeatureSet() {
             html += "<br>";
         }
 
-        html += "<i>Conclusion</i>: " + conclusionsByFeatureset_[currentFeatureset][conc].conclusion + "<br>" +
-                "<i>From:</i> " + conclusionsByFeatureset_[currentFeatureset][conc].c_from +
-                ", <i>To:</i> " + conclusionsByFeatureset_[currentFeatureset][conc].c_to + "<br>";
+        html += "<i>Conclusion</i>: " + escapeHtml(conclusionsByFeatureset_[currentFeatureset][conc].conclusion) + "<br>" +
+                "<i>From:</i> " + escapeHtml(conclusionsByFeatureset_[currentFeatureset][conc].c_from) +
+                ", <i>To:</i> " + escapeHtml(conclusionsByFeatureset_[currentFeatureset][conc].c_to) + "<br>";
 
         if (conc != conclusionsByFeatureset_[currentFeatureset].length - 1) {
             html += "<br>";

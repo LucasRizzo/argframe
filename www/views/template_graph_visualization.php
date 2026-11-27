@@ -1,8 +1,8 @@
 <script src='<?php echo GRAPH_SMALL_VISUALIZATION; ?>' charset="utf-8"></script>
 
 <script> 
-var graphs_ = <?php echo json_encode($view_datasetGraphs, JSON_PRETTY_PRINT); ?>;
-var args_ = <?php echo json_encode($view_datasetArguments, JSON_PRETTY_PRINT); ?>;
+var graphs_ = <?php echo json_encode($view_datasetGraphs, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+var args_ = <?php echo json_encode($view_datasetArguments, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 </script>
 
 <?php 
@@ -19,7 +19,7 @@ foreach ($view_apiResponse as $record => $row) {
 
     foreach ($row as $index => $column) {
         if ($index != "edges") {
-            echo "<th style='padding:15px;text-align: center;'>$index</th>";
+            echo "<th style='padding:15px;text-align: center;'>" . htmlspecialchars((string) $index, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . "</th>";
         } else {
             echo "<th style='padding:15px;text-align: center;'>attack relations</th>";
         }
@@ -35,15 +35,15 @@ foreach ($view_apiResponse as $record => $row) {
             ?> <script> 
 
             var id = <?php echo $irow; ?>;
-            var dataset = <?php echo json_encode($row["dataset"]); ?>;
-            var graph = <?php echo json_encode($row["name"]); ?>;
+            var dataset = <?php echo json_encode($row["dataset"], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+            var graph = <?php echo json_encode($row["name"], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
             var position = "graph_" + id;
             var cell = "cell_" + id;
             create(window.d3, window.saveAs, window.Blob, id, position, cell, dataset, graph) 
 
             </script> <?php
         } else {
-            echo "<td style='padding: 0 15px;'>$column</td>";
+            echo "<td style='padding: 0 15px;'>" . htmlspecialchars((string) $column, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . "</td>";
         }
     }
     

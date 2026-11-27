@@ -9,7 +9,7 @@
 <meta name="description" content="">
 <meta name="author" content="">
 <!-- JS -->
-<script src="/js/jquery.js"></script>
+<script src="<?php echo ADDRESS_PREFIX; ?>js/jquery.js"></script>
 <script src='<?php echo JQUERY; ?>'></script>
 <!-- Using 3.3.5 for implementing confimation plugin
 <script src='<?php //echo BOOTSTRAP_MIN_JS; ?>'></script>
@@ -26,7 +26,7 @@
 <!-- <script type="text/javascript" src='<?php //echo BOOTSTRAP_TOOLTIP; ?>'></script> -->
 <!-- bootstrap 3.3.5 for confirmation plugin -->
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.js"></script>
-<script src="/js/bootstrap-confirmation.min.js"></script>
+<script src="<?php echo ADDRESS_PREFIX; ?>js/bootstrap-confirmation.min.js"></script>
 
   <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
   <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script> -->
@@ -44,31 +44,26 @@
     <br><br><br>
     <div class="container">
         <form class="form-signin" method="post" action=<?php echo ADDRESS_PREFIX . "index.php"; ?>>
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
             <h2 class="form-signin-heading text-info" style="text-align:center;">Argumentation Framework *</h2>
             <img style="width:60%;margin-left: 20%;" src=<?php echo ADDRESS_PREFIX . "graph.png" ; ?>>
             <br>
             <br>
             <h3 class="form-signin-heading">Please sign in</h3>
                 <label for="username" class="sr-only">Login</label>
-                <input type="text" id="username" class="form-control" name="username" placeholder="Login" required autofocus 
-                value="<?php if(isset($_COOKIE["member_login"])) { echo $_COOKIE["member_login"]; }?>">
+                <input type="text" id="username" class="form-control" name="username" placeholder="Login" required autofocus autocomplete="username">
                 <label for="password" class="sr-only">Password</label>
-                <input type="password" name="password" id="password" class="form-control" placeholder="Password" required value="<?php if(isset($_COOKIE["member_pass"])) { echo $_COOKIE["member_pass"]; }?>">
+                <input type="password" name="password" id="password" class="form-control" placeholder="Password" required autocomplete="current-password">
                 <?php
                     if (! empty($view_loggedErr)) {
                         echo "<font color=\"red\">$view_loggedErr</font>";
                     }
                 ?>
                 
-                <div class="checkbox">
-                    <label>
-                        <!-- TODO implement this functionallity -->
-                        <input type="checkbox" name="remember" id="remember" <?php if(isset($_COOKIE["member_login"])) { ?> checked <?php } ?> />  Remember me
-                    </label>
-                </div>
             <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
         </form>
         <form class="form-signin" method="post" action=<?php echo ADDRESS_PREFIX . "index.php"; ?>>
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
             <input type="hidden" hidden id="usernameHidden" class="form-control" name="username" value="Guest">
             <input type="hidden" hidden name="password" id="passwordHidden" class="form-control" value="guest">
             <button class="btn btn-lg btn-success btn-block" type="submit">Enter as a guest</button>

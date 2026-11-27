@@ -37,6 +37,7 @@
     </div>
 
     <form class="form-horizontal" action="index.php?action=insert" id="form1" method="post" role="form">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
 
             <div class="form-group has-feedback page-header">
                 <!-- <label class="control-label col-sm-2" for="name">feature set name: </label> -->
@@ -234,7 +235,7 @@ $(function() //Document ready event
     <?php if ($view_errorType == "create") {
     ?> // Generic modal included in the index page
         $('#messages').removeClass('hide').addClass('alert alert-danger alert-dismissible fade in').slideDown().show();
-        $('#messages_content').html('<h4> <strong>Error!</strong> <?php echo $view_error; ?> </h4>');
+        $('#messages_content').html('<h4> <strong>Error!</strong> ' + escapeHtml(<?php echo json_encode($view_error, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>) + ' </h4>');
         $('#modal').modal('show');
     <?php
     }

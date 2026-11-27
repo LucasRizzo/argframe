@@ -3,8 +3,43 @@
 class DataSetDAO {
     private $dbManager;
 
-    function DataSetDAO($DBMngr) {
+    public function __construct($DBMngr) {
         $this->dbManager = $DBMngr;
+    }
+
+    private function requireFeaturesetAccess($featureset, bool $exclusive = false): void {
+        if (!is_string($featureset) || $featureset === '') {
+            \Slim\Slim::getInstance()->halt(400, 'Invalid feature set.');
+        }
+        $stmt = $this->dbManager->prepareQuery(
+            'SELECT email FROM user_featureset WHERE featureset = ?'
+        );
+        $this->dbManager->bindValue($stmt, 1, $featureset, $this->dbManager->STRING_TYPE);
+        $this->dbManager->executeQuery($stmt);
+        $members = array_column($this->dbManager->fetchResults($stmt), 'email');
+        if (!in_array($_SESSION['username'] ?? null, $members, true)
+            || ($exclusive && count($members) !== 1)) {
+            \Slim\Slim::getInstance()->halt(403, 'Feature set access denied.');
+        }
+    }
+
+    private function requireUnusedFeatureset($featureset): void {
+        if (!is_string($featureset) || trim($featureset) === '' || strlen($featureset) > 40) {
+            \Slim\Slim::getInstance()->halt(400, 'Invalid feature set name.');
+        }
+        $sql = 'SELECT featureset FROM user_featureset WHERE featureset = ?
+                UNION SELECT featureset FROM attributes WHERE featureset = ?
+                UNION SELECT featureset FROM conclusions WHERE featureset = ?
+                UNION SELECT featureset FROM graphs WHERE featureset = ?
+                UNION SELECT featureset FROM arguments WHERE featureset = ?';
+        $stmt = $this->dbManager->prepareQuery($sql);
+        for ($i = 1; $i <= 5; $i++) {
+            $this->dbManager->bindValue($stmt, $i, $featureset, $this->dbManager->STRING_TYPE);
+        }
+        $this->dbManager->executeQuery($stmt);
+        if ($this->dbManager->getNextRow($stmt)) {
+            \Slim\Slim::getInstance()->halt(409, 'This feature set name cannot be used. Feature set names must be unique across all accounts. Please choose a different name.');
+        }
     }
 
     public function deleteComputations($user) {
@@ -32,7 +67,7 @@ class DataSetDAO {
 
         $sql = "SELECT extensions ";
         $sql .= "FROM computations ";
-        $sql .= "WHERE user = ?";
+        $sql .= "WHERE user = ? ORDER BY id";
 
         $stmt = $this->dbManager->prepareQuery ($sql);
         $this->dbManager->bindValue ($stmt, 1, $user, $this->dbManager->STRING_TYPE);
@@ -42,16 +77,19 @@ class DataSetDAO {
         return ($rows);
     }
 
-    public function getGraph($graphname) {
+    public function getGraph($graphname, $featureset = null) {
 
-        $graphname = "%" . $graphname . "%";
+        if ($featureset !== null) $this->requireFeaturesetAccess($featureset);
 
         $sql = "SELECT * ";
         $sql .= "FROM graphs ";
-        $sql .= "WHERE name LIKE ?";
+        $sql .= "WHERE name = ? AND featureset IN (SELECT featureset FROM user_featureset WHERE email = ?)";
+        if ($featureset !== null) $sql .= " AND featureset = ?";
 
         $stmt = $this->dbManager->prepareQuery ( $sql );
         $this->dbManager->bindValue ( $stmt, 1, $graphname, $this->dbManager->STRING_TYPE );
+        $this->dbManager->bindValue($stmt, 2, $_SESSION["username"], $this->dbManager->STRING_TYPE);
+        if ($featureset !== null) $this->dbManager->bindValue($stmt, 3, $featureset, $this->dbManager->STRING_TYPE);
         $this->dbManager->executeQuery ( $stmt );
         $rows = $this->dbManager->fetchResults ( $stmt );
 
@@ -59,12 +97,12 @@ class DataSetDAO {
     }
 
     public function getFeaturesetAllGraphs($featureset) {
+        $this->requireFeaturesetAccess($featureset);
 
-        $featureset = "%" . $featureset . "%";
 
         $sql = "SELECT * ";
         $sql .= "FROM graphs ";
-        $sql .= "WHERE featureset LIKE ? ";
+        $sql .= "WHERE featureset = ? ";
         $sql .= "ORDER BY name";
 
         $stmt = $this->dbManager->prepareQuery ($sql);
@@ -76,12 +114,12 @@ class DataSetDAO {
     }
 
     public function getFeatureset($featureset) {
+        $this->requireFeaturesetAccess($featureset);
 
-        $featureset = "%" . $featureset . "%";
 
         $sql = "SELECT DISTINCT * ";
         $sql .= "FROM attributes ";
-        $sql .= "WHERE featureset LIKE ? ";
+        $sql .= "WHERE featureset = ? ";
         $sql .= "ORDER BY featureset, attribute";
 
         $stmt = $this->dbManager->prepareQuery ($sql);
@@ -113,6 +151,7 @@ class DataSetDAO {
     }
     
     public function newFeatureset($featuresetName) {
+        $this->requireUnusedFeatureset($featuresetName);
         
         $sql = " INSERT INTO user_featureset (email, featureset) VALUES ";
         $sql .= "(?, ?);";
@@ -127,6 +166,8 @@ class DataSetDAO {
     
     
     public function copyFeatureset($featuresetNameNew, $featuresetNameOld) {
+        $this->requireFeaturesetAccess($featuresetNameOld);
+        $this->requireUnusedFeatureset($featuresetNameNew);
         
         // Create new name in the user_featureset table
         $sql = " INSERT INTO user_featureset (email, featureset) VALUES ";
@@ -157,6 +198,8 @@ class DataSetDAO {
     
     
     public function renameFeatureset($featuresetNameNew, $featuresetNameOld) {
+        $this->requireFeaturesetAccess($featuresetNameOld, true);
+        $this->requireUnusedFeatureset($featuresetNameNew);
         
         // Update user feature set
         $sql = " UPDATE user_featureset SET featureset = ? WHERE featureset = ? AND email = ?";
@@ -197,6 +240,7 @@ class DataSetDAO {
     }
     
     public function getFeature($featureset, $featureName, $featureLevel) {
+        $this->requireFeaturesetAccess($featureset);
 
         $sql = "SELECT * ";
         $sql .= "FROM attributes ";
@@ -213,6 +257,7 @@ class DataSetDAO {
     }
     
     public function getConclusion($featureset, $conclusion) {
+        $this->requireFeaturesetAccess($featureset);
 
         $sql = "SELECT * ";
         $sql .= "FROM conclusions ";
@@ -228,6 +273,7 @@ class DataSetDAO {
     }
     
     public function getArgumentGivenFeature($featureset, $featureName, $featureLevel) {
+        $this->requireFeaturesetAccess($featureset);
         
         
         $premise = "%\"" . $featureLevel . " " . $featureName . "\"%";
@@ -246,6 +292,7 @@ class DataSetDAO {
     }
     
     public function getArgumentGivenConclusion($featureset, $conclusion) {
+        $this->requireFeaturesetAccess($featureset);
         
         
         $conclusion = "%" . $conclusion . "%";
@@ -264,6 +311,7 @@ class DataSetDAO {
     }
 
     public function deleteFeatureset($featureset) {
+        $this->requireFeaturesetAccess($featureset, true);
         // Delete from user feature set
         $sql = " DELETE FROM user_featureset WHERE featureset = ? AND email = ?";
         $stmt = $this->dbManager->prepareQuery ($sql);
@@ -300,9 +348,11 @@ class DataSetDAO {
     public function getAllFeaturesets() {
         $sql = "SELECT * ";
         $sql .= "FROM attributes ";
+        $sql .= "WHERE featureset IN (SELECT featureset FROM user_featureset WHERE email = ?) ";
         $sql .= "ORDER BY featureset, attribute";
 
         $stmt = $this->dbManager->prepareQuery ($sql);
+        $this->dbManager->bindValue($stmt, 1, $_SESSION["username"], $this->dbManager->STRING_TYPE);
         $this->dbManager->executeQuery ($stmt);
         $rows = $this->dbManager->fetchResults ($stmt);
 
@@ -312,9 +362,11 @@ class DataSetDAO {
     public function getAllGraphs() {
         $sql = "SELECT * ";
         $sql .= "FROM graphs ";
+        $sql .= "WHERE featureset IN (SELECT featureset FROM user_featureset WHERE email = ?) ";
         $sql .= "ORDER BY featureset, name";
 
         $stmt = $this->dbManager->prepareQuery ($sql);
+        $this->dbManager->bindValue($stmt, 1, $_SESSION["username"], $this->dbManager->STRING_TYPE);
         $this->dbManager->executeQuery ($stmt);
         $rows = $this->dbManager->fetchResults ($stmt);
 
@@ -323,6 +375,7 @@ class DataSetDAO {
 
 
     public function insertFeatureset($newFeatureset) {
+        $this->requireUnusedFeatureset($newFeatureset["featureset"] ?? null);
 
         $sql = "";
 
@@ -402,8 +455,9 @@ class DataSetDAO {
 
     public function featuresetGraphs() {
         $sql = 'SELECT featureset, name, edges, font_size FROM graphs WHERE featureset ' .
-               'IN (SELECT DISTINCT featureset FROM user_featureset WHERE email = "' . $_SESSION["username"] . '") ORDER BY name;';
+               'IN (SELECT DISTINCT featureset FROM user_featureset WHERE email = ?) ORDER BY name;';
         $stmt = $this->dbManager->prepareQuery ($sql);
+        $this->dbManager->bindValue($stmt, 1, $_SESSION["username"], $this->dbManager->STRING_TYPE);
         $this->dbManager->executeQuery ($stmt);
         $featuresetGraphs = $this->dbManager->fetchResults($stmt);
         return $featuresetGraphs;
@@ -411,14 +465,16 @@ class DataSetDAO {
 
     public function featuresetArguments() {
         $sql = 'SELECT argument, conclusion, x, y, label, graph, featureset, weight FROM arguments WHERE featureset '  .
-               'IN (SELECT DISTINCT featureset FROM user_featureset WHERE email = "' . $_SESSION["username"] . '");';
+               'IN (SELECT DISTINCT featureset FROM user_featureset WHERE email = ?);';
         $stmt = $this->dbManager->prepareQuery ($sql);
+        $this->dbManager->bindValue($stmt, 1, $_SESSION["username"], $this->dbManager->STRING_TYPE);
         $this->dbManager->executeQuery ($stmt);
         $featuresetArguments = $this->dbManager->fetchResults($stmt);
         return $featuresetArguments;
     }
 
     public function createNewGraph($newGraph) {
+        $this->requireFeaturesetAccess($_POST["featuresetNewGraph"] ?? null);
 
         $sql = "";
         $sql .= " INSERT INTO graphs (featureset, name, edges, font_size) VALUES ";
@@ -436,6 +492,7 @@ class DataSetDAO {
     }
 
     public function insertFeaturesetGraph($jsonEdges) {
+        $this->requireFeaturesetAccess($_POST["featuresetName"] ?? null);
 
         // Insert arguments
         $sql = "";
@@ -488,6 +545,7 @@ class DataSetDAO {
     
     
     public function updateFeature($featureset, $featureOld, $featureNew) {
+        $this->requireFeaturesetAccess($featureset);
     
         // $featureset is a string
         // $featureOld and $featureNew structure
@@ -550,6 +608,7 @@ class DataSetDAO {
     }
     
     public function createFeature($featureset, $feature) {
+        $this->requireFeaturesetAccess($featureset);
     
         // $featureset is a string
         // $feature structure
@@ -579,6 +638,7 @@ class DataSetDAO {
     }
     
     public function deleteFeature($featureset, $feature) {
+        $this->requireFeaturesetAccess($featureset);
     
         // $featureset is a string
         // $feature structure
@@ -590,27 +650,28 @@ class DataSetDAO {
         
         $labels = array();
         $graphs = array();
-        $ids = "";
+        $ids = array();
         foreach ($arguments as $key => $value) {
             array_push($labels, $value["label"]);
             array_push($graphs, $value["graph"]);
-            $ids .= $value["id"] . ",";
+            $ids[] = (int) $value["id"];
         }
-        
-        // Remove last comma
-        $ids = rtrim($ids, ",");
-        
-        // Delete arguments
-        if (strlen($ids) > 0) {
-            $sql = "DELETE FROM arguments WHERE id IN (" . $ids . ")";
+
+        // Delete arguments using one placeholder per database ID.
+        if (count($ids) > 0) {
+            $placeholders = implode(",", array_fill(0, count($ids), "?"));
+            $sql = "DELETE FROM arguments WHERE id IN (" . $placeholders . ")";
             $stmt = $this->dbManager->prepareQuery ( $sql );
+            foreach ($ids as $index => $id) {
+                $this->dbManager->bindValue($stmt, $index + 1, $id, $this->dbManager->INT_TYPE);
+            }
             $this->dbManager->executeQuery ( $stmt );
         }
         
         // Delete edges from graphs that contain arguments deleted
         foreach ($labels as $key => $value) {
             
-            $graphInfo = $this->getGraph($graphs[$key]);
+            $graphInfo = $this->getGraph($graphs[$key], $featureset);
             
             // Not beautiful regex but works. There is problem some way to do it in one line =)
             $patternSourceUndercut = '/{"source":"' . $value . '","target":"[^,{}]+","type":"rebuttal"}/i';
@@ -679,6 +740,7 @@ class DataSetDAO {
     
     
     public function deleteConclusion($featureset, $conclusion) {
+        $this->requireFeaturesetAccess($featureset);
     
         // $featureset and $conclusion are strings
         
@@ -687,27 +749,28 @@ class DataSetDAO {
         
         $labels = array();
         $graphs = array();
-        $ids = "";
+        $ids = array();
         foreach ($arguments as $key => $value) {
             array_push($labels, $value["label"]);
             array_push($graphs, $value["graph"]);
-            $ids .= $value["id"] . ",";
+            $ids[] = (int) $value["id"];
         }
-        
-        // Remove last comma
-        $ids = rtrim($ids, ",");
-        
-        // Delete arguments
-        if (strlen($ids) > 0) {
-            $sql = "DELETE FROM arguments WHERE id IN (" . $ids . ")";
+
+        // Delete arguments using one placeholder per database ID.
+        if (count($ids) > 0) {
+            $placeholders = implode(",", array_fill(0, count($ids), "?"));
+            $sql = "DELETE FROM arguments WHERE id IN (" . $placeholders . ")";
             $stmt = $this->dbManager->prepareQuery ( $sql );
+            foreach ($ids as $index => $id) {
+                $this->dbManager->bindValue($stmt, $index + 1, $id, $this->dbManager->INT_TYPE);
+            }
             $this->dbManager->executeQuery ( $stmt );
         }
         
         // Delete edges from graphs that contain arguments deleted
         foreach ($labels as $key => $value) {
             
-            $graphInfo = $this->getGraph($graphs[$key]);
+            $graphInfo = $this->getGraph($graphs[$key], $featureset);
             
             // Not beautiful regex but works. There is problem some way to do it in one line =)
             $patternSourceUndercut = '/{"source":"' . $value . '","target":"[^,{}]+","type":"rebuttal"}/i';
@@ -774,6 +837,7 @@ class DataSetDAO {
     }
 
     public function updateConclusion($featureset, $conclusionOld, $conclusionNew) {
+        $this->requireFeaturesetAccess($featureset);
     
         // $featureset is a string
         // $conclusionOld and $conclusionNew structure
@@ -848,6 +912,7 @@ class DataSetDAO {
     
     
     public function createConclusion($featureset, $conclusion) {
+        $this->requireFeaturesetAccess($featureset);
     
         // $featureset is a string
         // $conclusion
@@ -877,83 +942,81 @@ class DataSetDAO {
     }
 
     public function updateFeaturesetGraph($jsonEdges) {
+        $this->requireFeaturesetAccess($_POST["editFeaturesetName"] ?? null);
+        $this->dbManager->transaction(function () use ($jsonEdges) {
 
-        // First remove old graph. Since it is too complicated to update
-        // all the arguments it is better to remove everything and add as a
-        // new graph.
-        $sql = "DELETE FROM arguments ";
-        $sql .= "WHERE featureset=? AND graph=? ";
+            // First remove old graph. Since it is too complicated to update
+            // all the arguments it is better to remove everything and add as a
+            // new graph.
+            $sql = "DELETE FROM arguments ";
+            $sql .= "WHERE featureset=? AND graph=? ";
 
-        $stmt = $this->dbManager->prepareQuery ( $sql );
-        $this->dbManager->bindValue ( $stmt, 1, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
-        $this->dbManager->bindValue ( $stmt, 2, $_POST["oldGraphName"], $this->dbManager->STRING_TYPE);
-        $this->dbManager->executeQuery ( $stmt );
+            $stmt = $this->dbManager->prepareQuery ( $sql );
+            $this->dbManager->bindValue ( $stmt, 1, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
+            $this->dbManager->bindValue ( $stmt, 2, $_POST["oldGraphName"], $this->dbManager->STRING_TYPE);
+            $this->dbManager->executeQuery ( $stmt );
 
-        $sql = "DELETE FROM graphs ";
-        $sql .= "WHERE featureset=? AND name=? ";
+            $sql = "DELETE FROM graphs ";
+            $sql .= "WHERE featureset=? AND name=? ";
 
-        $stmt = $this->dbManager->prepareQuery ( $sql );
-        $this->dbManager->bindValue ( $stmt, 1, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
-        $this->dbManager->bindValue ( $stmt, 2, $_POST["oldGraphName"], $this->dbManager->STRING_TYPE);
-        $this->dbManager->executeQuery ( $stmt );
+            $stmt = $this->dbManager->prepareQuery ( $sql );
+            $this->dbManager->bindValue ( $stmt, 1, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
+            $this->dbManager->bindValue ( $stmt, 2, $_POST["oldGraphName"], $this->dbManager->STRING_TYPE);
+            $this->dbManager->executeQuery ( $stmt );
+            $this->insertEditedArguments($_POST["editGraphName"]);
 
-        // Insert arguments
-        $sql = "";
+            $sql = "";
+            $sql .= " INSERT INTO graphs (featureset, name, edges, font_size) VALUES ";
+            $sql .= "(?, ?, ?, ?);";
+
+            $stmt = $this->dbManager->prepareQuery ($sql);
+
+            $this->dbManager->bindValue($stmt, 1, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
+            $this->dbManager->bindValue($stmt, 2, $_POST["editGraphName"], $this->dbManager->STRING_TYPE);
+            $this->dbManager->bindValue($stmt, 3, $jsonEdges, $this->dbManager->STRING_TYPE);
+            $this->dbManager->bindValue($stmt, 4, $_POST["fontsize"], $this->dbManager->STRING_TYPE);
+
+            $this->dbManager->executeQuery ($stmt);
+        });
+    }
+
+    // Execute each INSERT separately so an error in any argument rolls back the graph.
+    private function insertEditedArguments($graphName) {
+        $sql = "INSERT INTO arguments (argument, conclusion, x, y, label, graph, featureset, weight) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        $stmt = null;
         foreach ($_POST["editArgument"] as $key => $value) {
-            // The last position of argument is empty because it is the template filled by
-            // the javascript
-            if($value != "") {
-                $sql .= " INSERT INTO arguments (argument, conclusion, x, y, label, graph, featureset, weight) VALUES ";
-                $sql .= "(?, ?, ?, ?, ?, ?, ?, ?);";
+            if ($value == "") {
+                continue;
             }
-        }
-
-        $stmt = $this->dbManager->prepareQuery ($sql);
-        $bindPosition = 1;
-        foreach ($_POST["editArgument"] as $key => $value) {
-            // The last position of argument is empty because it is the template filled by
-            // the javascript
-            if($value != "") {
-                $this->dbManager->bindValue($stmt, $bindPosition, $value, $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editConclusion"][$key], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editX"][$key], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editY"][$key], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editLabel"][$key], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editGraphName"], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                if ($_POST["editWeight"][$key] == "NULL") {
-                    $this->dbManager->bindValue($stmt, $bindPosition, null, $this->dbManager->STRING_TYPE);
-                } else {
-                    $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editWeight"][$key], $this->dbManager->STRING_TYPE);
-                }
-                $bindPosition++;
+            if ($stmt === null) {
+                $stmt = $this->dbManager->prepareQuery($sql);
             }
+
+            $values = array(
+                $value,
+                $_POST["editConclusion"][$key],
+                $_POST["editX"][$key],
+                $_POST["editY"][$key],
+                $_POST["editLabel"][$key],
+                $graphName,
+                $_POST["editFeaturesetName"]
+            );
+            foreach ($values as $position => $field) {
+                $this->dbManager->bindValue($stmt, $position + 1, $field, $this->dbManager->STRING_TYPE);
+            }
+
+            $weight = trim((string) ($_POST["editWeight"][$key] ?? ''));
+            if ($weight === '' || strcasecmp($weight, 'NULL') === 0) {
+                $this->dbManager->bindValue($stmt, 8, null, PDO::PARAM_NULL);
+            } else {
+                $this->dbManager->bindValue($stmt, 8, $weight, $this->dbManager->STRING_TYPE);
+            }
+            $this->dbManager->executeQuery($stmt);
         }
-
-        $this->dbManager->executeQuery ($stmt);
-
-        $sql = "";
-        $sql .= " INSERT INTO graphs (featureset, name, edges, font_size) VALUES ";
-        $sql .= "(?, ?, ?, ?);";
-
-        $stmt = $this->dbManager->prepareQuery ($sql);
-
-        $this->dbManager->bindValue($stmt, 1, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
-        $this->dbManager->bindValue($stmt, 2, $_POST["editGraphName"], $this->dbManager->STRING_TYPE);
-        $this->dbManager->bindValue($stmt, 3, $jsonEdges, $this->dbManager->STRING_TYPE);
-        $this->dbManager->bindValue($stmt, 4, $_POST["fontsize"], $this->dbManager->STRING_TYPE);
-
-        $this->dbManager->executeQuery ($stmt);
     }
 
     public function updateFeaturesetGraphEdges($jsonEdges) {
+        $this->requireFeaturesetAccess($_POST["editFeaturesetName"] ?? null);
         $sql = "UPDATE graphs ";
         $sql .= "SET edges = ? WHERE featureset = ? AND name = ? ;";
 
@@ -965,69 +1028,35 @@ class DataSetDAO {
     }
 
     public function createGraphCopy($jsonEdges) {
-        // Insert arguments
-        $sql = "";
-        foreach ($_POST["editArgument"] as $key => $value) {
-            // The last position of argument is empty because it is the template filled by
-            // the javascript
-            if($value != "") {
-                $sql .= " INSERT INTO arguments (argument, conclusion, x, y, label, graph, featureset, weight) VALUES ";
-                $sql .= "(?, ?, ?, ?, ?, ?, ?, ?);";
-            }
-        }
+        $this->requireFeaturesetAccess($_POST["editFeaturesetName"] ?? null);
+        $this->dbManager->transaction(function () use ($jsonEdges) {
+            $this->insertEditedArguments($_POST["copyNameGraph"]);
 
-        $stmt = $this->dbManager->prepareQuery ($sql);
-        $bindPosition = 1;
-        foreach ($_POST["editArgument"] as $key => $value) {
-            // The last position of argument is empty because it is the template filled by
-            // the javascript
-            if($value != "") {
-                $this->dbManager->bindValue($stmt, $bindPosition, $value, $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editConclusion"][$key], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editX"][$key], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editY"][$key], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editLabel"][$key], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["copyNameGraph"], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
-                $bindPosition++;
-                if ($_POST["editWeight"][$key] == "NULL") {
-                    $this->dbManager->bindValue($stmt, $bindPosition, null, $this->dbManager->STRING_TYPE);
-                } else {
-                    $this->dbManager->bindValue($stmt, $bindPosition, $_POST["editWeight"][$key], $this->dbManager->STRING_TYPE);
-                }
-            }
-        }
+            $sql = "";
+            $sql .= " INSERT INTO graphs (featureset, name, edges) VALUES ";
+            $sql .= "(?, ?, ?);";
 
-        $this->dbManager->executeQuery ($stmt);
+            $stmt = $this->dbManager->prepareQuery ($sql);
 
-        $sql = "";
-        $sql .= " INSERT INTO graphs (featureset, name, edges) VALUES ";
-        $sql .= "(?, ?, ?);";
+            $this->dbManager->bindValue($stmt, 1, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
+            $this->dbManager->bindValue($stmt, 2, $_POST["copyNameGraph"], $this->dbManager->STRING_TYPE);
+            $this->dbManager->bindValue($stmt, 3, $jsonEdges, $this->dbManager->STRING_TYPE);
 
-        $stmt = $this->dbManager->prepareQuery ($sql);
-
-        $this->dbManager->bindValue($stmt, 1, $_POST["editFeaturesetName"], $this->dbManager->STRING_TYPE);
-        $this->dbManager->bindValue($stmt, 2, $_POST["copyNameGraph"], $this->dbManager->STRING_TYPE);
-        $this->dbManager->bindValue($stmt, 3, $jsonEdges, $this->dbManager->STRING_TYPE);
-
-        $this->dbManager->executeQuery ($stmt);
+            $this->dbManager->executeQuery ($stmt);
+        });
     }
 
     public function getAttributes() {
-        $sql = 'SELECT attribute FROM attributes';
+        $sql = 'SELECT attribute FROM attributes WHERE featureset IN (SELECT featureset FROM user_featureset WHERE email = ?)';
         $stmt = $this->dbManager->prepareQuery ($sql);
+        $this->dbManager->bindValue($stmt, 1, $_SESSION["username"], $this->dbManager->STRING_TYPE);
         $this->dbManager->executeQuery ($stmt);
         $attributes = $stmt->fetchAll (PDO::FETCH_COLUMN, 0);
         return $attributes; 
     }
 
     public function deleteGraph($idGraph) {
+        $this->requireFeaturesetAccess($idGraph["featuresetName"] ?? null);
 
         $sql = "DELETE FROM arguments WHERE featureset=? AND graph=?";
         $stmt = $this->dbManager->prepareQuery ($sql);
@@ -1047,24 +1076,29 @@ class DataSetDAO {
     // Return distinct attributes and featureset. This will avoid of having the same attribute
     // for the same featureset in case the attribute has different levels
     public function attributes() {
-        $sql = 'SELECT DISTINCT attribute, featureset FROM attributes';
+        $sql = 'SELECT DISTINCT attribute, featureset FROM attributes WHERE featureset IN (SELECT featureset FROM user_featureset WHERE email = ?)';
         $stmt = $this->dbManager->prepareQuery ($sql);
+        $this->dbManager->bindValue($stmt, 1, $_SESSION["username"], $this->dbManager->STRING_TYPE);
         $this->dbManager->executeQuery ($stmt);
         $attributes = $this->dbManager->fetchResults($stmt);
         return $attributes;
     }
 
     public function attributesByFeatureset($featureset) {
-        $sql = 'SELECT DISTINCT attribute, a_level, a_from, a_to FROM attributes WHERE featureset = \'' . $featureset . '\'';
+        $this->requireFeaturesetAccess($featureset);
+        $sql = 'SELECT DISTINCT attribute, a_level, a_from, a_to FROM attributes WHERE featureset = ?';
         $stmt = $this->dbManager->prepareQuery ($sql);
+        $this->dbManager->bindValue($stmt, 1, $featureset, $this->dbManager->STRING_TYPE);
         $this->dbManager->executeQuery ($stmt);
         $attributes = $this->dbManager->fetchResults($stmt);
         return $attributes;
     }
 
     public function conclusionsByFeatureset($featureset) {
-        $sql = 'SELECT conclusion, c_from, c_to FROM conclusions WHERE featureset = \'' . $featureset . '\'';
+        $this->requireFeaturesetAccess($featureset);
+        $sql = 'SELECT conclusion, c_from, c_to FROM conclusions WHERE featureset = ?';
         $stmt = $this->dbManager->prepareQuery ($sql);
+        $this->dbManager->bindValue($stmt, 1, $featureset, $this->dbManager->STRING_TYPE);
         $this->dbManager->executeQuery ($stmt);
         $conclusions = $this->dbManager->fetchResults($stmt);
         return $conclusions;
@@ -1073,8 +1107,9 @@ class DataSetDAO {
     // Return distinct attribute, featureset and level. This will return the attribute multiple
     // time for the same featureset in case the attribute has more than on level.
     public function levels() {
-        $sql = 'SELECT DISTINCT attribute, featureset, a_level, a_from, a_to FROM attributes';
+        $sql = 'SELECT DISTINCT attribute, featureset, a_level, a_from, a_to FROM attributes WHERE featureset IN (SELECT featureset FROM user_featureset WHERE email = ?)';
         $stmt = $this->dbManager->prepareQuery ($sql);
+        $this->dbManager->bindValue($stmt, 1, $_SESSION["username"], $this->dbManager->STRING_TYPE);
         $this->dbManager->executeQuery ($stmt);
         $levels = $this->dbManager->fetchResults($stmt);
         return $levels;
@@ -1087,7 +1122,7 @@ class DataSetDAO {
         WHERE BINARY featureset IN (
             SELECT DISTINCT BINARY featureset 
             FROM user_featureset 
-            WHERE email = "' . $_SESSION["username"] . '"
+            WHERE email = ?
         )
         UNION
         SELECT DISTINCT featureset 
@@ -1095,18 +1130,21 @@ class DataSetDAO {
         WHERE BINARY featureset IN (
             SELECT DISTINCT BINARY featureset 
             FROM user_featureset 
-            WHERE email = "' . $_SESSION["username"] . '"
+            WHERE email = ?
         );
         ';
         $stmt = $this->dbManager->prepareQuery ($sql);
+        $this->dbManager->bindValue($stmt, 1, $_SESSION["username"], $this->dbManager->STRING_TYPE);
+        $this->dbManager->bindValue($stmt, 2, $_SESSION["username"], $this->dbManager->STRING_TYPE);
         $this->dbManager->executeQuery ($stmt);
         $featuresets = $stmt->fetchAll (PDO::FETCH_COLUMN, 0);
         return $featuresets; 
     }
     
     public function allUserFeaturesets() {
-        $sql = 'SELECT featureset FROM user_featureset WHERE email = "' . $_SESSION["username"] . '";';
+        $sql = 'SELECT featureset FROM user_featureset WHERE email = ?;';
         $stmt = $this->dbManager->prepareQuery ($sql);
+        $this->dbManager->bindValue($stmt, 1, $_SESSION["username"], $this->dbManager->STRING_TYPE);
         $this->dbManager->executeQuery ($stmt);
         $featuresets = $stmt->fetchAll (PDO::FETCH_COLUMN, 0);
         return $featuresets; 
@@ -1116,16 +1154,19 @@ class DataSetDAO {
     public function featuresetsWithGraphs() {
 
         $sql = 'SELECT DISTINCT featureset FROM graphs WHERE featureset ' .
-               'IN (SELECT DISTINCT featureset FROM user_featureset WHERE email = "' . $_SESSION["username"] . '");';
+               'IN (SELECT DISTINCT featureset FROM user_featureset WHERE email = ?);';
         $stmt = $this->dbManager->prepareQuery ($sql);
+        $this->dbManager->bindValue($stmt, 1, $_SESSION["username"], $this->dbManager->STRING_TYPE);
         $this->dbManager->executeQuery ($stmt);
         $featuresets = $stmt->fetchAll (PDO::FETCH_COLUMN, 0);
         return $featuresets; 
     }
 
     public function getLevels($attribute) {
-        $sql = 'SELECT DISTINCT a_level FROM attributes WHERE attribute = ' . $attribute;
+        $sql = 'SELECT DISTINCT a_level FROM attributes WHERE attribute = ? AND featureset IN (SELECT featureset FROM user_featureset WHERE email = ?)';
         $stmt = $this->dbManager->prepareQuery ($sql);
+        $this->dbManager->bindValue($stmt, 2, $_SESSION["username"], $this->dbManager->STRING_TYPE);
+        $this->dbManager->bindValue($stmt, 1, $attribute, $this->dbManager->STRING_TYPE);
         $this->dbManager->executeQuery ($stmt);
         $levels = $stmt->fetchAll (PDO::FETCH_COLUMN, 0);
         return $levels; 

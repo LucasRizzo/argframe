@@ -192,7 +192,7 @@ ini_set('php_max_size', '100M');
     <div class="form-inline">
         <label for="file" style="float:left;margin-right:5px;">Import data for current feature set: &nbsp</label><input class="custom-file-input" id="files" type="file" accept=".csv" name="file" />
         <br>
-        <label for="sel1">Select chunk size (<a href="#" data-toggle="popover" title="CSV chunk size" data-content="The imported file will be stored and processed locally. Any size file can be imported. However, it might need to be broken into chunks so the browser does not crash or freeze. If your file size is smaller than the default chunk size, just ignore this option. When computing the whole dataset (through the Export option), chunks will be processed one at a time, returning one file for each chunk. For example, if a 200mb file is imported, and the chunk size is set to 50mb, the file will be broken into 4 chunks. When exported, the results will be given in 4 files with only the first one containing a header.">?</a>): &nbsp</label>
+        <label for="sel1">Select chunk size (<a href="#" data-toggle="popover" title="CSV chunk size" data-content="The imported file will be stored and processed locally. Any size file can be imported. However, it might need to be broken into chunks so the browser does not crash or freeze. If your file size is smaller than the default chunk size, just ignore this option. When computing the whole dataset (through the Export option), chunks will be processed one at a time and combined into a single inference CSV, plus one statistics CSV if selected. For example, a 200mb file with a 50mb chunk size is read in four chunks.">?</a>): &nbsp</label>
         <select class="form-control" id="chunkSize">
             <option>50mb (default)</option>
             <option>5mb</option>
@@ -437,6 +437,7 @@ ini_set('php_max_size', '100M');
     </div>
     <div id="toolboxtopright">
         <span id="warningfeatureset"></span>
+        <div id="warningMissingRanges" role="status" style="color:red; font-weight:bold;" hidden></div>
         <svg height="75" width="200">
             <circle cx="160" cy="45" r="20" stroke="black" stroke-width="2" fill="none" stroke-dasharray="10 10"/>
             <text font-size="12" x="110" y="10" fill="black">No conclusion</text>
@@ -495,19 +496,19 @@ ini_set('php_max_size', '100M');
 
     <script>
 
-    var graphs_ = <?php echo json_encode($view_featuresetGraphs, JSON_PRETTY_PRINT); ?>;
+    var graphs_ = <?php echo json_encode($view_featuresetGraphs, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
-    var args_ = <?php echo json_encode($view_featuresetArguments, JSON_PRETTY_PRINT); ?>;
+    var args_ = <?php echo json_encode($view_featuresetArguments, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
-    var attributesByFeatureset_ = <?php echo json_encode($view_attributesByFeatureset, JSON_PRETTY_PRINT); ?>;
+    var attributesByFeatureset_ = <?php echo json_encode($view_attributesByFeatureset, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
-    var conclusionsByFeatureset_ = <?php echo json_encode($view_conclusionsByFeatureset, JSON_PRETTY_PRINT); ?>;
+    var conclusionsByFeatureset_ = <?php echo json_encode($view_conclusionsByFeatureset, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
     
-    var featuresets_ = <?php echo json_encode($view_featuresets, JSON_PRETTY_PRINT); ?>;
+    var featuresets_ = <?php echo json_encode($view_featuresets, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
     var file_;
 
-    var attributes_ = <?php echo json_encode($view_attributes, JSON_PRETTY_PRINT); ?>;
+    var attributes_ = <?php echo json_encode($view_attributes, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
     </script>
 
@@ -525,8 +526,8 @@ $(document).ready(function(){
 
 //console.log(conclusionsByFeatureset_);
 
-var addressCall_ = <?php echo json_encode(ADDRESS_CALL, JSON_PRETTY_PRINT); ?>;
-var absoluteCall_ = <?php echo json_encode(ABSOLUTE_CALL, JSON_PRETTY_PRINT); ?>;
+var addressCall_ = <?php echo json_encode(ADDRESS_CALL, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+var absoluteCall_ = <?php echo json_encode(ABSOLUTE_CALL, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
 function addGraphs() {
 
@@ -701,35 +702,19 @@ function isAPIAvailable() {
 var allData_ = [];
 var iColumns = [];
 
-function handleFileSelect(event) {
+function selectedCsvChunkSize() {
+    return parseInt(document.getElementById('chunkSize').value, 10) * 1000000;
+}
 
-    var select = document.getElementById('chunkSize'),
-        i = select.selectedIndex,
-        chunkSize = select.options[i].text;
-        
-    Papa.LocalChunkSize = 50000000;
-    
-    if (chunkSize == "25mb") {
-        Papa.LocalChunkSize = 25000000;
-    } else if (chunkSize == "10mb") {
-        Papa.LocalChunkSize = 10000000;
-    } else if (chunkSize == "5mb") {
-        Papa.LocalChunkSize = 5000000;
-    } else if (chunkSize == "75mb") {
-        Papa.LocalChunkSize = 75000000;
-    } else if (chunkSize == "100mb") {
-        Papa.LocalChunkSize = 100000000;
-    } else if (chunkSize == "150mb") {
-        Papa.LocalChunkSize = 150000000;
-    } else if (chunkSize == "200mb") {
-        Papa.LocalChunkSize = 200000000;
-    }
+function handleFileSelect(event) {
+    Papa.LocalChunkSize = selectedCsvChunkSize();
 
     var size = 0;
     file_ = event.target.files[0];
 
     Papa.parse(event.target.files[0], {
         worker: true,
+        chunkSize: Papa.LocalChunkSize,
         header: true,
         skipEmptyLines: true,
         chunk: function(results, parser) {
@@ -819,7 +804,7 @@ function chartFileData(fileToParse, callback) {
 
 function fillTable() {
 
-    var attributes = <?php echo json_encode($view_attributes, JSON_PRETTY_PRINT); ?>;
+    var attributes = <?php echo json_encode($view_attributes, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
     //console.log(attributes);
 
@@ -827,7 +812,6 @@ function fillTable() {
         i = select.selectedIndex,
         currentFeatureset = select.options[i].text;
 
-    var ignoredColumns = "<ul>";
     var removeColumns = []
     var nColumns = 0;
 
@@ -870,7 +854,7 @@ function fillTable() {
 
             if (inFeatureset) {
                 // Create json columns according to the required fields of the table plugin
-                columns.push({sTitle: key, mData: key, aTargets: [nColumns]});
+                columns.push({sTitle: escapeHtml(key), mData: key, aTargets: [nColumns], render: function(data, type) { return type === "display" ? escapeHtml(data) : data; }});
                 nColumns++;
                 // Save which columns of the csv file will be imported
                 //iColumns.push(iHeader);
@@ -882,11 +866,9 @@ function fillTable() {
                 // If all attributes were checked and header didn't match any of them it will not be imported.
                 // Print list of not imported column
                 // TODO: is this really necessary? Maybe import everything and using only valid data
-                ignoredColumns += "<li>" + key + "</li>";
                 removeColumns.push(key);
             }
 
-            ignoredColumns += "</ul>"
         }
     }
 
@@ -912,9 +894,9 @@ function fillTable() {
     }
 
     if (error == 0) {
-        if (ignoredColumns.length > 0) {
+        if (removeColumns.length > 0) {
             window.alert("The following columns were ignored because they " +
-                         "do not have a relative feature in the feature set: <br>" + ignoredColumns, "Import data alert!");
+                         "do not have a corresponding feature in the feature set:\n\n" + removeColumns.map(name => "• " + name).join("\n"), "Import data alert!");
         }
 
         var maxTableHeight = (document.getElementById('left-side').clientHeight / 2).toString() + "px";

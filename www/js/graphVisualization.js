@@ -1124,13 +1124,13 @@ function create(d3, saveAs, Blob) {
         function formatArgumentString(d) {
             const [premise, conclusion] = String(d.tooltip).split(" -> ");
             return conclusion && conclusion !== "NULL"
-                ? `<i>${d.title}</i>: ${premise} <b>&#8594;</b> ${conclusion}<br>`
-                : `<i>${d.title}</i>: ${d.tooltip}<br>`;
+                ? `<i>${escapeHtml(d.title)}</i>: ${escapeHtml(premise)} <b>&#8594;</b> ${escapeHtml(conclusion)}<br>`
+                : `<i>${escapeHtml(d.title)}</i>: ${escapeHtml(d.tooltip)}<br>`;
         }
         
         // Helper to add attack details
         function addAttackDetails(fromNode, toNode) {
-            return `<i>${fromNode.title}</i>  &rArr; <i>${toNode.title}</i><br>`;
+            return `<i>${escapeHtml(fromNode.title)}</i>  &rArr; <i>${escapeHtml(toNode.title)}</i><br>`;
         }
         
         // Main logic
@@ -1270,8 +1270,9 @@ function create(d3, saveAs, Blob) {
                 if (!extension.includes(`${node.title}`) || !node.activated) return;
                 
     
-                const tooltipParts = String(node.tooltip).split(" -> ");
-                const conclusion = tooltipParts[1].split(" ")[0].trim();
+                // Accepted arguments without conclusions affect reasoning, not accrual.
+                const conclusion = String(node.tooltip).split(" -> ")[1]?.trim().split(" ")[0];
+                if (!conclusion || conclusion === "NULL") return;
     
                 const conclusionIndex = conclusions.findIndex(c => c.conclusion === conclusion);
                 if (conclusionIndex === -1) return;
@@ -1286,7 +1287,7 @@ function create(d3, saveAs, Blob) {
             });
             
             // Weighted average value of accepted nodes
-            const weightedAvg = totalWeight ? (weightedSum / totalWeight).toFixed(2) : 0;
+            const weightedAvg = totalWeight ? weightedSum / totalWeight : 0;
             return {nConclusions, sumAcceptedValuesPerConclusion, valuesAccepted, weightedAvg, highestConclusionValue};
         };
 
@@ -1356,6 +1357,10 @@ function create(d3, saveAs, Blob) {
         };
 
         const calculateAggregation = (aggregationMethod, metrics) => {
+            // No concluding argument means no numerical inference, for every accrual.
+            if (!metrics.valuesAccepted.length) {
+                return DONT_EXPORT_DATA ? "No argument accepted." : "";
+            }
             switch (aggregationMethod) {
                 case "Sum":
                     if (!metrics.valuesAccepted.length && DONT_EXPORT_DATA) return "No argument accepted.";
@@ -1527,13 +1532,13 @@ function create(d3, saveAs, Blob) {
             metrics.nConclusions.forEach((count, i) => {
                 if (! count) return;
                 const avgValue = (metrics.sumAcceptedValuesPerConclusion[i] / count).toFixed(2);
-                accrual += `Average arguments with <i>${conclusionsByFeatureset_[currentFeatureset][i].conclusion}</i> (${count}): ${avgValue}<br>`;
+                accrual += `Average arguments with <i>${escapeHtml(conclusionsByFeatureset_[currentFeatureset][i].conclusion)}</i> (${count}): ${avgValue}<br>`;
             });
 
             if (rankBased) {
                 accrual += "<br>Rank based info<br>";
                 for (let key in ranks) {
-                    accrual += `${key}: ${ranks[key]}<br>`;
+                    accrual += `${escapeHtml(key)}: ${escapeHtml(ranks[key])}<br>`;
                 }
             }
 
@@ -1544,18 +1549,16 @@ function create(d3, saveAs, Blob) {
         $("#results").remove(); // Why?
         const popover = $("#resultsContent")
             .attr("data-content", accrual)
-            .html(overall)
+            .text(overall)
             .data("bs.popover");
         popover.setContent();
         popover.$tip.addClass(popover.options.placement);
     };
 
-    GraphCreator.prototype.exportAll = function (
+    GraphCreator.prototype.exportAll = async function (
         currentFeatureset,
         semantics,
-        savetoServer = false,
-        parser = undefined,
-        size = 0
+        output = null
     ) {
 
         var maxComputation = 10000;
@@ -1578,22 +1581,12 @@ function create(d3, saveAs, Blob) {
             doubleBracketSemantics.includes(semantic) ? "[[]]" : "[]"
         ).join(",") + "]";
 
-        var url = addressCall_ + "deleteComputations";
-        var request = new XMLHttpRequest();
-        // When semantics has been computed on server
-        request.onreadystatechange = function () {
-            if (request.readyState == 4 && request.status == 200) {
-                // Save computations from 0 until maxComputation records in SQL.
-                // If more than maxComputation records then recursive call
-                console.log("Progress on computing extensions...");
-                saveComputations(0, maxComputation);
-            }
-        };
+        const reset = await fetch(addressCall_ + "deleteComputations", { method: "POST", headers: csrfHeaders() });
+        if (!reset.ok) throw new Error("Could not initialise computation.");
 
-        request.open("GET", url);
-        request.send();
-
+        console.log("Progress on computing extensions...");
         let stats = [];
+        return saveComputations(0, maxComputation);
 
         async function saveComputations(from, to) {
 
@@ -1603,6 +1596,7 @@ function create(d3, saveAs, Blob) {
         
                 const response = await fetch(`${addressCall_}saveComputations`, {
                     method: "POST",
+                    headers: csrfHeaders(),
                     body: dataPost,
                 });
                 return response.ok;
@@ -1614,7 +1608,7 @@ function create(d3, saveAs, Blob) {
             };
 
             const deleteComputations = async () => {
-                const response = await fetch(`${addressCall_}deleteComputations`);
+                const response = await fetch(`${addressCall_}deleteComputations`, { method: "POST", headers: csrfHeaders() });
                 return response.ok;
             };
 
@@ -1659,47 +1653,42 @@ function create(d3, saveAs, Blob) {
                 }
             };
 
-            const createCSVs = (infereces, stats, semanticsVector) => {
+            const createCSVs = (inferences, stats, semanticsVector) => {
+                // Store each chunk as a Blob; add headers only once.
+                const combined = output || { inferenceParts: [], statsParts: [] };
+                if (!combined.finish) {
+                    combined.inferenceParts.push(createHeader().join(",") + "\n");
+                    const inferenceName = generateInferenceFileName();
+                    const statsName = generateStatsFileName();
+                    const includeStats = document.getElementById("statsExport").checked;
+                    if (includeStats) combined.statsParts.push(createHeaderStats(semanticsVector).join(",") + "\n");
 
-                // Inference file
-                const csvHeader = createHeader();
-                infereces.unshift(csvHeader);
-
-                const csvContent = infereces.map((row) => row.join(",")).join("\n");
-                const csvBlob = new Blob([csvContent], { type: "text/csv" });
-        
-                const link = document.createElement("a");
-                const csvUrl = URL.createObjectURL(csvBlob);
-                link.href = csvUrl;
-                link.download = generateInferenceFileName();
-                document.body.appendChild(link);
-                link.click();
-
-
-                // Stats file
-                // If stats file is not required, trigger export done and leave
-                if (! document.getElementById('statsExport').checked) {
-                    const exportDoneEvent = new Event("exportDone");
-                    document.dispatchEvent(exportDoneEvent);
-                    return;
+                    combined.finish = () => {
+                        const download = (parts, name) => {
+                            const url = URL.createObjectURL(new Blob(parts, { type: "text/csv" }));
+                            const link = document.createElement("a");
+                            link.href = url;
+                            link.download = name;
+                            document.body.appendChild(link);
+                            link.click();
+                            link.remove();
+                            setTimeout(() => URL.revokeObjectURL(url), 60000);
+                        };
+                        download(combined.inferenceParts, inferenceName);
+                        if (includeStats) download(combined.statsParts, statsName);
+                        document.dispatchEvent(new Event("exportDone"));
+                    };
+                    combined.includeStats = includeStats;
                 }
 
-                const csvStatsHeader = createHeaderStats(semanticsVector);
-                stats.unshift(csvStatsHeader);
-
-                const csvStatsContent = stats.map((row) => row.join(",")).join("\n");
-                const csvStatsBlob = new Blob([csvStatsContent], { type: "text/csv" });
-        
-                const linkStats = document.createElement("a");
-                const csvStatsUrl = URL.createObjectURL(csvStatsBlob);
-                linkStats.href = csvStatsUrl;
-                linkStats.download = generateStatsFileName();
-                document.body.appendChild(linkStats);
-                linkStats.click();
-                
-                // Trigger export done event so app can chage export mode status
-                const exportDoneEvent = new Event("exportDone");
-                document.dispatchEvent(exportDoneEvent);
+                const append = (parts, rows) => {
+                    if (rows.length) {
+                        parts.push(new Blob([rows.map(row => row.join(",")).join("\n") + "\n"]));
+                    }
+                };
+                append(combined.inferenceParts, inferences);
+                if (combined.includeStats) append(combined.statsParts, stats);
+                if (!output) combined.finish();
             };
 
             const createHeaderStats = (semanticsVector) => {
@@ -1817,11 +1806,21 @@ function create(d3, saveAs, Blob) {
                         }
                         
 
-                        if (!savetoServer || await deleteComputations()) {
-                            createCSVs(inferences, stats, semanticsVector);
+                        if (inferences.length !== allData_.length || stats.length !== allData_.length) {
+                            throw new Error("Incomplete computation results.");
                         }
+                        const expectedStatsColumns = createHeaderStats(semanticsVector).length;
+                        if (stats.some(row => row.length !== expectedStatsColumns)) {
+                            throw new Error("Statistics export column count does not match its header.");
+                        }
+                        if (!await deleteComputations()) throw new Error("Could not clear computation results.");
+                        createCSVs(inferences, stats, semanticsVector);
+                    } else {
+                        throw new Error("Could not retrieve computation results.");
                     }
                 }
+            } else {
+                throw new Error("Could not save computation results.");
             }
         }
 
@@ -1869,11 +1868,14 @@ function create(d3, saveAs, Blob) {
             // Magic
             enxtensionVector[0] = "[" + enxtensionVector[0];
 
-            var preferred_stats = []; // number of extensions
-            var categoriser_stats = []; // number of ties at the top
+            const includePreferredStats = semanticsVector.includes("preferred");
+            const includeCategoriserStats = semanticsVector.includes("categoriser");
 
             for (var index = from; index < Math.min(to, allData_.length); index++) {
                 var row_inferences = []; // row of inferences.
+                // A missing statistic must retain its own column and row.
+                let preferredCount = "";
+                let categoriserCount = "";
 
                 for (var key in allData_[index]) {
                     if (key.toUpperCase() == "ID" || key == "GroundTruth") {
@@ -1908,21 +1910,14 @@ function create(d3, saveAs, Blob) {
                     }
 
                     // Add stats
-                    if (semanticsVector[ei] == "preferred") {
-                        if (jsonExtension[ei].length == undefined) {
-                            preferred_stats.push(0);
-                        } else {
-                            // Number of extensions
-                            preferred_stats.push(jsonExtension[ei].length);
-                        }
+                    if (semanticsVector[ei] === "preferred") {
+                        preferredCount = Array.isArray(jsonExtension[ei]) ? jsonExtension[ei].length : "";
                     }
 
-                    if (semanticsVector[ei] == "categoriser") {
-                        if (jsonExtension[ei].length == undefined) {
-                            categoriser_stats.push(0);
-                        } else {
-                            categoriser_stats.push(categoriserTiesAtTop(jsonExtension[ei][0]))
-                        }
+                    if (semanticsVector[ei] === "categoriser") {
+                        categoriserCount = Array.isArray(jsonExtension[ei])
+                            ? categoriserTiesAtTop(jsonExtension[ei][0] ?? {})
+                            : "";
                     }
 
                     if (jsonExtension[ei].length == 1 && jsonExtension[ei][0].length == 0) {
@@ -1992,21 +1987,10 @@ function create(d3, saveAs, Blob) {
                     }
                 }
 
-                infereces.push(row_inferences);                
-            }
-
-            // Add categoriser and/or preferred stats
-            for (let index = 0; index < stats.length; index++) {
-                if (categoriser_stats.length > 0 && preferred_stats.length > 0) {
-                    stats[index].push(preferred_stats[index], categoriser_stats[index]);
-                } else {
-                    if (categoriser_stats.length > 0) {
-                        stats[index].push(categoriser_stats[index]);
-                    }
-                    if (categoriser_stats.length == 0) {
-                        stats[index].push(preferred_stats[index]);
-                    }
-                }
+                infereces.push(row_inferences);
+                // Append to this record only, in the same order as createHeaderStats().
+                if (includePreferredStats) stats[index].push(preferredCount);
+                if (includeCategoriserStats) stats[index].push(categoriserCount);
             }
         }
     };
@@ -2355,6 +2339,7 @@ function create(d3, saveAs, Blob) {
 
     // call to propagate changes to graph
     GraphCreator.prototype.updateGraph = function () {
+        this.updateRangeWarning();
         var thisGraph = this,
             consts = thisGraph.consts,
             state = thisGraph.state;
@@ -2695,24 +2680,24 @@ function create(d3, saveAs, Blob) {
                     .selectAll("text")
                     .html(
                         "<b>" +
-                            d.title +
+                            escapeHtml(d.title) +
                             "</b>: " +
-                            d.tooltip +
+                            escapeHtml(d.tooltip) +
                             "<br/>" + 
-                            "<b>Weight</b>: " + weight + "<br/><br/>" +
+                            "<b>Weight</b>: " + escapeHtml(weight) + "<br/><br/>" +
                             "<b>Attacks info</b><br><i># Source attack activated:</i> " +
                             String(nSourceActive) +
                             ". " +
-                            sourceActive +
+                            escapeHtml(sourceActive) +
                             "<br/><i># Target attack activated:</i> " +
                             String(nTargetActive) +
                             ". " +
-                            targetActive +
+                            escapeHtml(targetActive) +
                             "<br/><br/>" +
                             "<i>All source attacks (" + String(nSourceOriginal) + "):</i> " +
-                            sourceOriginal +
+                            escapeHtml(sourceOriginal) +
                             "<br/><i>All target attacks(" + String(nTargetOriginal) + "):</i> " +
-                            targetOriginal +
+                            escapeHtml(targetOriginal) +
                             "<br/>" +
                             thisGraph.getLevelsDescription(d.tooltip) +
                             "<br/>"
@@ -2758,19 +2743,20 @@ function create(d3, saveAs, Blob) {
             return;
         }
 
-        currentFeatureset = select.options[i].text;
+        const currentFeatureset = select.options[i].text;
+        const attributes = attributesByFeatureset_[currentFeatureset] ?? [];
 
         // Run through all attributes and their respective level in order
         // to find the current premise's range
-        for (var attr = 0; attr < attributesByFeatureset_[currentFeatureset].length; attr++) {
+        for (var attr = 0; attr < attributes.length; attr++) {
 
-            var correctAttributeLevel = attributesByFeatureset_[currentFeatureset][attr].attribute == attribute &&
-                                        attributesByFeatureset_[currentFeatureset][attr].a_level == level;
+            var correctAttributeLevel = attributes[attr].attribute == attribute &&
+                                        attributes[attr].a_level == level;
 
             if (correctAttributeLevel) {
 
-                var from = attributesByFeatureset_[currentFeatureset][attr].a_from;
-                var to = attributesByFeatureset_[currentFeatureset][attr].a_to;
+                var from = attributes[attr].a_from;
+                var to = attributes[attr].a_to;
 
                 return [from, to];
             }
@@ -2778,91 +2764,65 @@ function create(d3, saveAs, Blob) {
     }
 
 
-    GraphCreator.prototype.getLevelsDescription = function(argument) {
-
-        var result = "<br><b>Attributes used</b><br>";
-        
-        // Remove conclusion
-        var premiseAndConclusion = String(argument).split(" -> ");
-        argument = premiseAndConclusion[0];
-
-        // Run through all premises of the node's argument
-        var premises = argument.split(" AND ");
-
-        // Dictionary to be built with attributes as keys, and numeric levels as values
-        var attribute_values = {};
-
-        // Each premise can have zero or many OR clauses. For example "('low fatigue' OR 'high fatigue')"
-        for(let premise of premises){
-
-            // Remove parathesis and quotes from the premise
-            premise = premise.replace("(", "").replace(")", "").replace(/"/g, "");
-
-            // Check if premise has OR operator
-            if (premise.includes(" OR ")) {
-
-                // Break the premise in all the level-attribute pairs
-                var allLevelandAttributes = premise.split(" OR ");
-
-                // Get the attribute of the premise (it should be the same attribute for all level-attribute pairs)
-                var attribute = allLevelandAttributes[1].split(" ")[1];
-
-                // Concatenate all the levels (as ranges) of this attribute to the tooltip
-                for (let levelAndAttribute of allLevelandAttributes) {
-
-                    // Split level-attribute pairs
-                    levelAndAttribute = levelAndAttribute.split(" ")
-                    
-                    if (! attribute_values[levelAndAttribute[1]]) {
-                        attribute_values[levelAndAttribute[1]] = []
-                    }
-
-                    // Get the min-max of the level of the attribtue
-                    var from_to = graph.get_from_to(levelAndAttribute[0], levelAndAttribute[1]);
-                    
-                    // From and to are the same. Categorical level
-                    if (Math.abs(from_to[0] - from_to[1]) < 0.00001) {
-                        attribute_values[levelAndAttribute[1]].push(from_to[0])
-                    } else {
-                        attribute_values[levelAndAttribute[1]].push(from_to)
-                    }
-                }
-
-            } else {  // There is no " OR " operator. It is a single level-attribute pair
-                var level = premise.split(" ")[0];
-                var attribute = premise.split(" ")[1];
-                var from_to = graph.get_from_to(level, attribute);
-
-                if (! attribute_values[attribute]) {
-                    attribute_values[attribute] = []
-                }
-
-                if (Math.abs(from_to[0] - from_to[1]) < 0.00001) {
-                    attribute_values[attribute].push(from_to[0]);
-                } else {
-                    attribute_values[attribute].push(from_to);
-                }
+    GraphCreator.prototype.resolvePremiseRanges = function(argument) {
+        const premise = String(argument ?? "").split(" -> ")[0];
+        const attributeValues = Object.create(null);
+        const unavailable = [];
+        // Resolve each premise independently; this is display-only, not inference.
+        for (const clause of premise.split(/\s+(?:AND|OR)\s+/)) {
+            const pair = clause.replace(/[()"]/g, "").trim();
+            if (!pair) continue;
+            const match = pair.match(/^(\S+)\s+(.+)$/);
+            if (!match) {
+                unavailable.push(pair);
+                continue;
             }
+            const [, level, attribute] = match;
+            const range = this.get_from_to(level, attribute);
+            if (!Array.isArray(range) || range.length !== 2) {
+                unavailable.push(pair);
+                continue;
+            }
+            if (!attributeValues[attribute]) attributeValues[attribute] = [];
+            attributeValues[attribute].push(
+                Math.abs(range[0] - range[1]) < 0.00001 ? range[0] : range
+            );
         }
 
-        // Go over the dictionary and add it to the correspoding resulting html
-        Object.keys(attribute_values).forEach(key => {
-            result += "<i>" + key + "</i>: ";
+        return { attributeValues, unavailable };
+    }
 
-            for (let level of attribute_values[key]) {
-                if (Array.isArray(level) ) {
-                    result += "(" + level[0] + ", " + level[1] + "), ";
-                } else {
-                    result += level + ", ";
-                }
+    GraphCreator.prototype.updateRangeWarning = function() {
+        const warning = document.getElementById("warningMissingRanges");
+        if (!warning) return;
+        const affected = [];
+        for (const node of this.nodes) {
+            const { unavailable } = this.resolvePremiseRanges(node.tooltip);
+            if (unavailable.length) {
+                affected.push(String(node.title ?? node.id) + ": " + unavailable.join(", "));
             }
+        }
+        warning.hidden = affected.length === 0;
+        warning.textContent = affected.length
+            ? "Warning: " + affected.length + " argument(s) use unavailable attribute ranges."
+            : "";
+        warning.title = affected.join("\n");
+    }
 
-            // Remove last ", "
-            result = result.slice(0, -2);
-            result += "<br>";
-
-        });
-
+    GraphCreator.prototype.getLevelsDescription = function(argument) {
+        const { attributeValues, unavailable } = this.resolvePremiseRanges(argument);
+        let result = "<br><b>Attributes used</b><br>";
+        for (const attribute of Object.keys(attributeValues)) {
+            const ranges = attributeValues[attribute].map(range =>
+                Array.isArray(range)
+                    ? "(" + escapeHtml(range[0]) + ", " + escapeHtml(range[1]) + ")"
+                    : escapeHtml(range)
+            );
+            result += "<i>" + escapeHtml(attribute) + "</i>: " + ranges.join(", ") + "<br>";
+        }
+        if (unavailable.length) {
+            result += '<span style="color:red"><b>Range unavailable:</b> ' + unavailable.map(escapeHtml).join(", ") + "</span><br>";
+        }
         return result;
     }
 
@@ -3249,231 +3209,79 @@ d3.select("#exportFile").on("click", function () {
 
     DONT_EXPORT_DATA = false;
 
-    if (file_.size <= Papa.LocalChunkSize) {
+    const getCheckedValues = name => Array.from(document.getElementsByName(name))
+        .filter(checkbox => checkbox.checked)
+        .map(checkbox => checkbox.value);
+    const semanticsMap = {
+        "Expert System": "expert",
+        "Preferred": "preferred",
+        "Grounded": "grounded",
+        "Eager": "eager",
+        "Ideal": "ideal",
+        "Stable": "stable",
+        "Semi-stable": "semistable",
+        "Admissible": "admissible",
+        "Categoriser": "categoriser"
+    };
+    const semantics = ";" + getCheckedValues("semanticsExport")
+        .map(value => semanticsMap[value]).join(",") + "-" +
+        getCheckedValues("accrualExport").join("*");
+    const currentFeatureset = document.getElementById("featureset").selectedOptions[0].text;
+    const previewData = allData_;
+    const output = { inferenceParts: [], statsParts: [] };
+    let failed = false;
+    let processed = 0;
+    let chunkNumber = 0;
+    const chunkSize = selectedCsvChunkSize();
+    console.info("CSV export:", file_.size, "bytes; chunk size:", chunkSize, "bytes");
 
-        function getCheckedValues(name) {
-            return Array.from(document.getElementsByName(name))
-                .filter(checkbox => checkbox.checked)
-                .map(checkbox => checkbox.value);
-        }
-        
-        // Map semantics values to their corresponding labels
-        const semanticsMap = {
-            "Expert System": "expert",
-            "Preferred": "preferred",
-            "Grounded": "grounded",
-            "Eager": "eager",
-            "Ideal": "ideal",
-            "Stable": "stable",
-            "Semi-stable": "semistable",
-            "Admissible": "admissible",
-            "Categoriser": "categoriser",
-        };
-        
-        // Process semantics and accruals
-        let semantics = ";"
-        semantics += getCheckedValues("semanticsExport")
-            .map(value => semanticsMap[value] || "")
-            .join(",");
-        
-        let accruals = getCheckedValues("accrualExport").join("*");
-        if (accruals) accruals = `-${accruals}`;
-        
-        // Add accruals to semantics
-        semantics += accruals;
+    const fail = error => {
+        if (failed) return;
+        failed = true;
+        allData_ = previewData;
+        document.dispatchEvent(new Event("exportDone"));
+        console.error(error);
+        alert("Export failed: " + error.message);
+    };
 
-        //final semantics example
-        //;expert,ideal,preferred-sum*average*median
-        const select = document.getElementById("featureset");
-        const currentFeatureset = select.options[select.selectedIndex].text;
+    $("#modalExport").modal("hide");
 
-        $("#modalExport").modal("hide");
-        graph.exportAll(currentFeatureset, semantics);
-    } else {
-        $("#modalExport").modal("hide");
-
-        var firstRow;
-        var size = 0;
-
-        console.log(file_);
-
-        var url = absoluteCall_ + "deleteCsv.php";
-        var request = new XMLHttpRequest();
-        request.open("GET", url);
-        request.send();
-
+    {
         Papa.parse(file_, {
+            chunkSize: chunkSize,
             header: true,
             skipEmptyLines: true,
-            chunk: function (results, parser) {
-
-                // Only first 25mb are imported for table
-                allData_ = results.data;
-                if (size <= Papa.LocalChunkSize) {
-                    firstRow = allData_[0];
-                } else {
-                    allData_.unshift(firstRow);
-                }
-
+            chunk: async function (results, parser) {
                 parser.pause();
-
-                size += Papa.LocalChunkSize;
-
-                console.log(
-                    size / 1000000 + "mb of " + file_.size / 1000000 + "mb."
-                );
-
-                var exportControl = document.getElementById("exportControl");
-                exportControl.style.visibility = "visible";
-                document.getElementById("exportControl").innerHTML =
-                    "<br>" +
-                    size / 1000000 +
-                    "mb of " +
-                    file_.size / 1000000 +
-                    "mb being computed.";
-
-                /*var exportControlPercentage = document.getElementById("exportControlPercentage");
-                exportControlPercentage.style.visibility = 'visible';
-                document.getElementById('exportControlPercentage').innerHTML = " (0%)";*/
-
-                var select = document.getElementById("featureset"),
-                    i = select.selectedIndex,
-                    currentFeatureset = select.options[i].text;
-
-                var ignoredColumns = "";
-                var removeColumns = [];
-                var nColumns = 0;
-
-                // New columns of the table
-                var columns = [];
-                // New table data
-
-                // In case weights are importes check if all attributes have an associated
-                // weight. In case not, data will not be allowed.
-                var attributesImported = [];
-                var weightsImported = [];
-
-                var hasWeight = false;
-
-                // Find columns that do not have an associate feature and remove them
-                for (var key in allData_[0]) {
-                    if (key.indexOf("Weight_") !== -1) {
-                        // Remove prefix Weight_ to ease comparisons
-                        weightsImported.push(key.slice(7));
-                        hasWeight = true;
-                    } else if (key != "ID") {
-                        attributesImported.push(key);
+                try {
+                    allData_ = results.data;
+                    if (allData_.length) {
+                        const rowCount = allData_.length;
+                        chunkNumber++;
+                        console.info("Computing CSV chunk", chunkNumber, "rows:", rowCount);
+                        await graph.exportAll(currentFeatureset, semantics, output);
+                        processed += rowCount;
+                        const control = document.getElementById("exportControl");
+                        control.style.visibility = "visible";
+                        control.textContent = "Chunk " + chunkNumber + ": " + rowCount + " records; " + processed + " records computed in total.";
                     }
-
-                    for (var iAttr = 0; iAttr < attributes_.length; iAttr++) {
-                        // Check whether header is a weight for an existing attribute
-                        var column = key;
-                        if (key.indexOf("Weight_") !== -1) {
-                            column = key.slice(7);
-                        }
-
-                        // Check if header has a relative attribute in the featureset
-                        var inFeatureset =
-                            attributes_[iAttr].featureset ==
-                                currentFeatureset &&
-                            (attributes_[iAttr].attribute === column ||
-                                key.toUpperCase() === "ID" ||
-                                key === "GroundTruth");
-
-                        if (inFeatureset) {
-                            // Create json columns according to the required fields of the table plugin
-                            columns.push({
-                                sTitle: key,
-                                mData: key,
-                                aTargets: [nColumns],
-                            });
-                            nColumns++;
-                            // Save which columns of the csv file will be imported
-                            //iColumns.push(iHeader);
-                            // Break since current colum header have already been saved
-                            break;
-                        }
-
-                        if (iAttr == attributes_.length - 1) {
-                            // If all attributes were checked and header didn't match any of them it will not be imported.
-                            // Print list of not imported column
-                            // TODO: is this really necessary? Maybe import everything and using only valid data
-                            ignoredColumns += key + "\n";
-                            removeColumns.push(key);
-                        }
-                    }
-                }
-
-                // Remove columns that do not have an associated feature
-                for (var i = 0; i < removeColumns.length; i++) {
-                    for (var row = 0; row < allData_.length; row++) {
-                        delete allData_[row][removeColumns[i]];
-                    }
-                }
-
-                var checkboxes = document.getElementsByName("semanticsExport");
-                var accrualCheckboxes =
-                    document.getElementsByName("accrualExport");
-                var semantics = ";";
-
-                var accruals = "-";
-                // loop over all accruals
-                for (var i = 0; i < accrualCheckboxes.length; i++) {
-                    // And stick the checked ones onto an array...
-                    if (accrualCheckboxes[i].checked) {
-                        accruals += accrualCheckboxes[i].value + "*";
-                    }
-                }
-
-                accruals = accruals.slice(0, -1);
-
-                // loop over them all
-                for (var i = 0; i < checkboxes.length; i++) {
-                    // And stick the checked ones onto an array...
-                    if (checkboxes[i].checked) {
-                        if (checkboxes[i].value == "Expert System") {
-                            semantics += "expert,";
-                        } else if (checkboxes[i].value == "Preferred") {
-                            semantics += "preferred,";
-                        } else if (checkboxes[i].value == "Grounded") {
-                            semantics += "grounded,";
-                        } else if (checkboxes[i].value == "Eager") {
-                            semantics += "eager,";
-                        } else if (checkboxes[i].value == "Ideal") {
-                            semantics += "ideal,";
-                        } else if (checkboxes[i].value == "Stable") {
-                            semantics += "stable,";
-                        } else if (checkboxes[i].value == "Semi-stable") {
-                            semantics += "semistable,";
-                        } else if (checkboxes[i].value == "Admissible") {
-                            semantics += "admissible,";
-                        } else if (checkboxes[i].value == "Categoriser") {
-                            semantics += "categoriser,";
-                        }
-                    }
-                }
-
-                var select = document.getElementById("featureset"),
-                    i = select.selectedIndex,
-                    currentFeatureset = select.options[i].text;
-
-                // Remove last coma
-                semantics = semantics.slice(0, -1);
-                semantics += accruals;
-
-                graph.exportAll(
-                    currentFeatureset,
-                    semantics,
-                    true,
-                    parser,
-                    size
-                );
-
-                //parser.resume();
-                if (size >= file_.size) {
-                    console.log("Files on server...");
+                    parser.resume();
+                } catch (error) {
+                    fail(error);
+                    parser.abort();
                 }
             },
+            complete: function () {
+                allData_ = previewData;
+                if (failed) return;
+                if (!output.finish) {
+                    fail(new Error("No records to export."));
+                    return;
+                }
+                output.finish();
+                document.getElementById("exportControl").textContent = "Export complete: " + processed + " records across " + chunkNumber + " chunks.";
+            },
+            error: fail
         });
     }
 });
@@ -3793,7 +3601,7 @@ function printArguments() {
 
     args_.forEach(arg => {
         if (arg.featureset === currentFeatureset && arg.graph === currentGraph) {
-            html += `<i>${arg.label}</i>: ${arg.argument} ${arg.conclusion !== "NULL" ? `<b>&#8594;</b> ${arg.conclusion}` : ""}<br>`;
+            html += `<i>${escapeHtml(arg.label)}</i>: ${escapeHtml(arg.argument)} ${arg.conclusion !== "NULL" ? `<b>&#8594;</b> ${escapeHtml(arg.conclusion)}` : ""}<br>`;
             argumentsN++;
         }
     });
@@ -3813,7 +3621,7 @@ function printAttacks() {
         if (graph_.featureset === currentFeatureset && graph_.name === currentGraph) {
             const edges = graph.getListAttacks();
             edges.forEach(edge => {
-                html += `<i>${edge.source}</i> &rArr; <i>${edge.target}</i><br>`;
+                html += `<i>${escapeHtml(edge.source)}</i> &rArr; <i>${escapeHtml(edge.target)}</i><br>`;
             });
             attacksN = edges.length;
             break;
@@ -3833,16 +3641,16 @@ function printFeatureSet() {
 
     attributesByFeatureset_[currentFeatureset].forEach(attr => {
         if (attr.attribute !== currentAttribute) {
-            html += `<br><i>Attribute</i>: ${attr.attribute}<br>`;
+            html += `<br><i>Attribute</i>: ${escapeHtml(attr.attribute)}<br>`;
             currentAttribute = attr.attribute;
             attributesN++;
         }
-        html += `<i>Level</i>: ${attr.a_level}, <i>From:</i> ${attr.a_from}, <i>To:</i> ${attr.a_to}<br>`;
+        html += `<i>Level</i>: ${escapeHtml(attr.a_level)}, <i>From:</i> ${escapeHtml(attr.a_from)}, <i>To:</i> ${escapeHtml(attr.a_to)}<br>`;
     });
 
     conclusionsByFeatureset_[currentFeatureset].forEach((conc, index) => {
         if (index === 0) html += "<br>";
-        html += `<i>Conclusion</i>: ${conc.conclusion}<br><i>From:</i> ${conc.c_from}, <i>To:</i> ${conc.c_to}<br>${index !== conclusionsByFeatureset_[currentFeatureset].length - 1 ? "<br>" : ""}`;
+        html += `<i>Conclusion</i>: ${escapeHtml(conc.conclusion)}<br><i>From:</i> ${escapeHtml(conc.c_from)}, <i>To:</i> ${escapeHtml(conc.c_to)}<br>${index !== conclusionsByFeatureset_[currentFeatureset].length - 1 ? "<br>" : ""}`;
         attributesN++;
     });
 

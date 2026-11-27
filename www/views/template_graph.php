@@ -1,6 +1,7 @@
 <div class='col-md-5 col-md-push-7' id='righ-side'>
     <span id="breakexpand"></span>
     <form class="form-inline" id="deleteGraphForm" action="index.php?action=deleteGraph" method="post" role="form">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
         <div class="controls"> 
             <input type="hidden" maxlength="2000" name="featuresetName" id="featuresetName">
             <input type="hidden" maxlength="2000" name="graphName" id="graphName">
@@ -8,6 +9,7 @@
     </form>
 
     <form class="form-inline" id="editGraphForm" action="index.php?action=update" method="post" role="form">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
         <!-- <input type="hidden" maxlength="40" name="semantic" id="hiddenSemantic"> -->
         <div class="controlsEdit"> 
             <input type="hidden" maxlength="2000" name="editFeaturesetName" id="editFeaturesetName">
@@ -209,6 +211,7 @@
             </div>
             <div class="modal-body">
                 <form class="form-inline" action="index.php?action=copyGraph" method="post" role="form">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
                     <input type="text" form="editGraphForm" class="form-control" name="copyNameGraph" id="copyNameGraph" style="width:75%;" placeholder="Enter new copy name">
                     &nbsp
                     <button type="submit" form="editGraphForm" class="btn btn-primary pull-right" id="editCopyGraph"
@@ -230,6 +233,7 @@
             </div>
              <div class="modal-body ">
                 <form class="form-inline" action="index.php?action=newGraph" method="post" role="form">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8'); ?>">
                     <label for="sel1">Select feature set: &nbsp</label>
                     <select class="form-control" name="featuresetNewGraph" id="featuresetNewGraph">
                         <?php foreach ($view_featuresets as $d) {
@@ -397,6 +401,7 @@
 
     <div id="toolboxtopright">
         <span id="warningfeatureset"></span>
+        <div id="warningMissingRanges" role="status" style="color:red; font-weight:bold;" hidden></div>
         <span id="warningsaved"></span>
         <input id="save-graph" type="image" title="save graph" src="save-graph.png" alt="save grah" hidden>
         <span id="warningrenamed"></span>
@@ -444,19 +449,19 @@
 
     <script>
 
-    var levels_ = <?php echo json_encode($view_levels, JSON_PRETTY_PRINT); ?>;
+    var levels_ = <?php echo json_encode($view_levels, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
-    var graphs_ = <?php echo json_encode($view_featuresetGraphs, JSON_PRETTY_PRINT); ?>;
+    var graphs_ = <?php echo json_encode($view_featuresetGraphs, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
-    var args_ = <?php echo json_encode($view_featuresetArguments, JSON_PRETTY_PRINT); ?>;
+    var args_ = <?php echo json_encode($view_featuresetArguments, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
-    var conclusions_ = <?php echo json_encode($view_conclusionsByFeatureset, JSON_PRETTY_PRINT); ?>;
+    var conclusions_ = <?php echo json_encode($view_conclusionsByFeatureset, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
-    var featuresets_ = <?php echo json_encode($view_featuresets, JSON_PRETTY_PRINT); ?>;
+    var featuresets_ = <?php echo json_encode($view_featuresets, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
-    var attributesByFeatureset_ = <?php echo json_encode($view_attributesByFeatureset, JSON_PRETTY_PRINT); ?>;
+    var attributesByFeatureset_ = <?php echo json_encode($view_attributesByFeatureset, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
-    var conclusionsByFeatureset_ = <?php echo json_encode($view_conclusionsByFeatureset, JSON_PRETTY_PRINT); ?>;
+    var conclusionsByFeatureset_ = <?php echo json_encode($view_conclusionsByFeatureset, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
     </script>
 
@@ -475,8 +480,8 @@ $(document).ready(function(){
 
 
 <?php if ($view_successType == "createGraph") {?>
-var featureset = <?php echo json_encode($view_currentFeatureset, JSON_PRETTY_PRINT); ?>;
-var graph =  <?php echo json_encode($view_currentGraph, JSON_PRETTY_PRINT); ?>;
+var featureset = <?php echo json_encode($view_currentFeatureset, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+var graph =  <?php echo json_encode($view_currentGraph, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 <?php } ?>
 
 var expand = false;
@@ -551,8 +556,8 @@ document.getElementById("editInvertRange").addEventListener("click", function(ev
     }
     selectedConclusion = conclusionsList.options[conclusionsList.selectedIndex].text;
     currentArgument.value += " -> " + selectedConclusion + " [" + to + ", " + from + "]";
-    document.getElementById("editConclusionFrom").innerHTML = to;
-    document.getElementById("editConclusionTo").innerHTML = from;
+    document.getElementById("editConclusionFrom").textContent = to;
+    document.getElementById("editConclusionTo").textContent = from;
 });
 
 document.getElementById("editFeatureset").addEventListener("change", function(event) {
@@ -771,7 +776,7 @@ function validateArgument(argument) {
             }
         }
     
-        document.getElementById('warningArgument').innerHTML += String(i + 1) + '. ' + trueSets + "<br>";
+        document.getElementById('warningArgument').innerHTML += String(i + 1) + '. ' + escapeHtml(trueSets) + "<br>";
     }
 
     document.getElementById('warningArgument').hidden = false;
@@ -1103,7 +1108,7 @@ function setEditNodeForm() {
         attributesList.remove(i);
     }
 
-    var attributes = <?php echo json_encode($view_attributes, JSON_PRETTY_PRINT); ?>;
+    var attributes = <?php echo json_encode($view_attributes, JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
     var select = document.getElementById('editFeatureset'),
         i = select.selectedIndex;
@@ -1184,7 +1189,7 @@ function setEditLevelsRange() {
         if (levels_[i].featureset == currentFeatureset && 
             levels_[i].attribute == currentAttribute && 
             levels_[i].a_level == currentLevel) {
-            document.getElementById('levelRange').innerHTML = " (from " +  levels_[i].a_from + " to " + levels_[i].a_to + ")";
+            document.getElementById('levelRange').innerHTML = " (from " + escapeHtml(levels_[i].a_from) + " to " + escapeHtml(levels_[i].a_to) + ")";
             return;
         }
     }
@@ -1221,8 +1226,8 @@ function editAddConclusion() {
 
         for (var i = 0; i < conclusions_[currentFeatureset].length; i++) {
             if (currentConclusion == conclusions_[currentFeatureset][i].conclusion) {
-                document.getElementById("editConclusionFrom").innerHTML = conclusions_[currentFeatureset][i].c_from;
-                document.getElementById("editConclusionTo").innerHTML = conclusions_[currentFeatureset][i].c_to;
+                document.getElementById("editConclusionFrom").textContent = conclusions_[currentFeatureset][i].c_from;
+                document.getElementById("editConclusionTo").textContent = conclusions_[currentFeatureset][i].c_to;
                 break;
             }
         }
@@ -1238,8 +1243,8 @@ function editAddConclusion() {
             // be removed from the argument and no conclusion will be added.
             currentArgument.value = premiseAndConclusion[0];
 
-            document.getElementById("editConclusionFrom").innerHTML = "none";
-            document.getElementById("editConclusionTo").innerHTML = "none";
+            document.getElementById("editConclusionFrom").textContent = "none";
+            document.getElementById("editConclusionTo").textContent = "none";
 
             document.getElementById('editInvertRange').disabled = true;
         } else {
@@ -1252,8 +1257,8 @@ function editAddConclusion() {
 
             for (var i = 0; i < conclusions_[currentFeatureset].length; i++) {
                 if (currentConclusion == conclusions_[currentFeatureset][i].conclusion) {
-                    document.getElementById("editConclusionFrom").innerHTML = conclusions_[currentFeatureset][i].c_from;
-                    document.getElementById("editConclusionTo").innerHTML = conclusions_[currentFeatureset][i].c_to;
+                    document.getElementById("editConclusionFrom").textContent = conclusions_[currentFeatureset][i].c_from;
+                    document.getElementById("editConclusionTo").textContent = conclusions_[currentFeatureset][i].c_to;
                     break;
                 }
             }
@@ -1269,7 +1274,15 @@ function editAddConclusion() {
 function setPrevious(){
     <?php if ($view_successType == "createGraph") {
     ?> 
-        $('#warningrenamed').html('<font color=\"red\"> <?php echo $view_success; ?> </font>');
+        const message = <?php echo json_encode($view_success, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+        const prefix = "Graph created with success! Now working on graph ";
+        const notice = $('<span>').css('color', 'red');
+        if (message.startsWith(prefix)) {
+            notice.text(prefix).append($('<b>').text(message.slice(prefix.length)));
+        } else {
+            notice.text(message);
+        }
+        $('#warningrenamed').empty().append(notice);
         setTimeout(function() {$('#warningrenamed').html('');}, 5000);
 
         // Set current graph as the graph created
@@ -1300,7 +1313,7 @@ function setPrevious(){
     <?php
     } else if ($view_successType == "deleteGraph") {
     ?> // Generic modal included in the index page
-        $('#warningrenamed').html('<font color=\"red\"> <?php echo $view_success; ?> </font>');
+        $('#warningrenamed').html('<font color=\"red\"> ' + escapeHtml(<?php echo json_encode($view_success, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>) + ' </font>');
         setTimeout(function() {$('#warningrenamed').html('');}, 5000);
         //$('#modal').modal('show');
         /*$("#modal").alert();
@@ -1349,12 +1362,12 @@ function printArguments() {
         }
 
         if (args_[i].conclusion != "NULL") {
-            html += "<i>" + args_[i].label + "</i>: " + 
-                    args_[i].argument + " <b>&#8594;</b> " +
-                    args_[i].conclusion + "<br>";
+            html += "<i>" + escapeHtml(args_[i].label) + "</i>: " + 
+                    escapeHtml(args_[i].argument) + " <b>&#8594;</b> " +
+                    escapeHtml(args_[i].conclusion) + "<br>";
         } else {
-            html += "<i>" + args_[i].label + "</i>: " + 
-                    args_[i].argument + "<br>";
+            html += "<i>" + escapeHtml(args_[i].label) + "</i>: " + 
+                    escapeHtml(args_[i].argument) + "<br>";
         }
 
         argumentsN++;
@@ -1409,8 +1422,8 @@ function printAttacks() {
                 continue;
             }
 
-            html += "<i>" + graphObj[j].source + "</i>" + arrow + 
-                "<i>" + graphObj[j].target + "</i><br>";
+            html += "<i>" + escapeHtml(graphObj[j].source) + "</i>" + arrow + 
+                "<i>" + escapeHtml(graphObj[j].target) + "</i><br>";
                 attacksN++;
         }
 
@@ -1434,19 +1447,19 @@ function printFeatureSet() {
     // Run through all attributes and their respective level in order
     // to find the current premise's range
     var currentAttribute = attributesByFeatureset_[currentFeatureset][0].attribute;
-    html += "<i>Attribute</i>: " + attributesByFeatureset_[currentFeatureset][0].attribute + "<br>";
+    html += "<i>Attribute</i>: " + escapeHtml(attributesByFeatureset_[currentFeatureset][0].attribute) + "<br>";
     var attributesN = 1;
     for (var attr = 0; attr < attributesByFeatureset_[currentFeatureset].length; attr++) {
 
         if (attributesByFeatureset_[currentFeatureset][attr].attribute != currentAttribute) {
-            html += "<br><i>Attribute</i>: " + attributesByFeatureset_[currentFeatureset][attr].attribute + "<br>";
+            html += "<br><i>Attribute</i>: " + escapeHtml(attributesByFeatureset_[currentFeatureset][attr].attribute) + "<br>";
             currentAttribute = attributesByFeatureset_[currentFeatureset][attr].attribute;
             attributesN++;
         }
 
-        html += "<i>Level</i>: " + attributesByFeatureset_[currentFeatureset][attr].a_level +
-                ", <i>From:</i> " + attributesByFeatureset_[currentFeatureset][attr].a_from +
-                ", <i>To:</i> " + attributesByFeatureset_[currentFeatureset][attr].a_to +
+        html += "<i>Level</i>: " + escapeHtml(attributesByFeatureset_[currentFeatureset][attr].a_level) +
+                ", <i>From:</i> " + escapeHtml(attributesByFeatureset_[currentFeatureset][attr].a_from) +
+                ", <i>To:</i> " + escapeHtml(attributesByFeatureset_[currentFeatureset][attr].a_to) +
                 "<br>";
     }
 
@@ -1455,9 +1468,9 @@ function printFeatureSet() {
             html += "<br>";
         }
 
-        html += "<i>Conclusion</i>: " + conclusionsByFeatureset_[currentFeatureset][conc].conclusion + "<br>" +
-                "<i>From:</i> " + conclusionsByFeatureset_[currentFeatureset][conc].c_from +
-                ", <i>To:</i> " + conclusionsByFeatureset_[currentFeatureset][conc].c_to + "<br>"; 
+        html += "<i>Conclusion</i>: " + escapeHtml(conclusionsByFeatureset_[currentFeatureset][conc].conclusion) + "<br>" +
+                "<i>From:</i> " + escapeHtml(conclusionsByFeatureset_[currentFeatureset][conc].c_from) +
+                ", <i>To:</i> " + escapeHtml(conclusionsByFeatureset_[currentFeatureset][conc].c_to) + "<br>"; 
 
         if (conc != conclusionsByFeatureset_[currentFeatureset].length - 1) {
             html += "<br>";

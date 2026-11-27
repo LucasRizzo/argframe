@@ -40,30 +40,45 @@ A running example can be seen here https://lucasrizzo.com/framework/index.php
 <a name="getting-started"></a>
 ## Getting started
 
-1. Clone the repo by running this command in the terminal:
+### Installation
 
-```
+Install [Docker](https://www.docker.com/) with Docker Compose, then run:
+
+```bash
 git clone https://github.com/LucasRizzo/argframe.git
-```
-
-2. Make sure to run the command git pull (if you already cloned this repo):
-
-```
-git pull https://github.com/LucasRizzo/argframe.git
-```
-
-3. Build docker image by running below commands in the terminal (make sure docker is running and you have [docker-compose](https://docs.docker.com/compose/) installed):
-
-```
 cd argframe
-sudo docker-compose up -d
+docker compose up -d --build
+docker compose exec www composer install
 ```
 
-4. Go to the link http://localhost:8001/index.php/login to use the app
+The Docker image includes PHP 8.4, Composer and the required PHP extensions.
 
-5. The guest account comes with a feature set and a dataset set that can be downloaded in the "Compute graph" page.
+Open [ArgFrame](http://localhost:8001/index.php/login) and use the Guest login to explore the example feature sets and graphs. Example datasets are available on the Compute graph page.
 
-6. To add new users go to the link http://localhost:8000/ to manage the database. Login/password: admin/admin. In the `arg-db` databases, add new users to the table `users` by inserting email and md5(password). Users are only usefull to segment the featuresets and graphs.
+### Registered users
+
+Open [phpMyAdmin](http://localhost:8000/) (default local username and password: `admin`).
+
+To create a user, generate a password hash:
+
+```bash
+read -r -s -p "New password: " password
+printf '\n'
+printf '%s' "$password" | docker compose exec -T www php -r 'echo password_hash(stream_get_contents(STDIN), PASSWORD_DEFAULT), PHP_EOL;'
+unset password
+```
+
+Insert the user's email and the generated hash into the `users` table of the `arg-db` database.
+
+The default database credentials are intended for local development only. Feature-set names must be unique across accounts.
+
+### Testing
+
+```bash
+docker compose exec www composer test
+```
+
+To stop the containers while keeping your data, run `docker compose down`. Do not use the `-v` option unless you intend to delete the database.
 
 <a name="citing-this-project"></a>
 ## Citing this project

@@ -807,7 +807,7 @@ function createEditionGraph(d3, saveAs, Blob) {
                         }
                     }
 
-                    d3.select("#modalTitle").html("Edit node (" + d.title + ")");
+                    d3.select("#modalTitle").text("Edit node (" + d.title + ")");
 
                     document.getElementById("editAddArgument").style.visibility='visible';
                     document.getElementById("editNewArgument").style.visibility='hidden';
@@ -915,19 +915,20 @@ function createEditionGraph(d3, saveAs, Blob) {
             return;
         }
 
-        currentFeatureset = select.options[i].text;
+        const currentFeatureset = select.options[i].text;
+        const attributes = attributesByFeatureset_[currentFeatureset] ?? [];
 
         // Run through all attributes and their respective level in order
         // to find the current premise's range
-        for (var attr = 0; attr < attributesByFeatureset_[currentFeatureset].length; attr++) {
+        for (var attr = 0; attr < attributes.length; attr++) {
 
-            var correctAttributeLevel = attributesByFeatureset_[currentFeatureset][attr].attribute == attribute &&
-                                        attributesByFeatureset_[currentFeatureset][attr].a_level == level;
+            var correctAttributeLevel = attributes[attr].attribute == attribute &&
+                                        attributes[attr].a_level == level;
 
             if (correctAttributeLevel) {
 
-                var from = attributesByFeatureset_[currentFeatureset][attr].a_from;
-                var to = attributesByFeatureset_[currentFeatureset][attr].a_to;
+                var from = attributes[attr].a_from;
+                var to = attributes[attr].a_to;
 
                 return [from, to];
             }
@@ -935,92 +936,65 @@ function createEditionGraph(d3, saveAs, Blob) {
     }
 
 
-    GraphCreator.prototype.getLevelsDescription = function(argument) {
-
-        var result = "<br><b>Attributes used</b><br>";
-        
-        // Remove conclusion
-        var premiseAndConclusion = String(argument).split(" -> ");
-        argument = premiseAndConclusion[0];
-
-        // Run through all premises of the node's argument
-        var premises = argument.split(" AND ");
-
-        // Dictionary to be built with attributes as keys, and numeric levels as values
-        var attribute_values = {};
-
-        // Each premise can have zero or many OR clauses. For example "('low fatigue' OR 'high fatigue')"
-        for(let premise of premises){
-
-            // Remove parathesis and quotes from the premise
-            premise = premise.replace("(", "").replace(")", "").replace(/"/g, "");
-
-            // Check if premise has OR operator
-            if (premise.includes(" OR ")) {
-
-                // Break the premise in all the level-attribute pairs
-                var allLevelandAttributes = premise.split(" OR ");
-
-                // Get the attribute of the premise (it should be the same attribute for all level-attribute pairs)
-                var attribute = allLevelandAttributes[1].split(" ")[1];
-
-                // Concatenate all the levels (as ranges) of this attribute to the tooltip
-                for (let levelAndAttribute of allLevelandAttributes) {
-
-                    // Split level-attribute pairs
-                    levelAndAttribute = levelAndAttribute.split(" ")
-                    
-                    if (! attribute_values[levelAndAttribute[1]]) {
-                        attribute_values[levelAndAttribute[1]] = []
-                    }
-
-                    // Get the min-max of the level of the attribtue
-                    var from_to = graph.get_from_to(levelAndAttribute[0], levelAndAttribute[1]);
-                    
-                    
-                    // From and to are the same. Categorical level
-                    if (Math.abs(from_to[0] - from_to[1]) < 0.00001) {
-                        attribute_values[levelAndAttribute[1]].push(from_to[0])
-                    } else {
-                        attribute_values[levelAndAttribute[1]].push(from_to)
-                    }
-                }
-
-            } else {  // There is no " OR " operator. It is a single level-attribute pair
-                var level = premise.split(" ")[0];
-                var attribute = premise.split(" ")[1];
-                var from_to = graph.get_from_to(level, attribute);
-
-                if (! attribute_values[attribute]) {
-                    attribute_values[attribute] = []
-                }
-
-                if (Math.abs(from_to[0] - from_to[1]) < 0.00001) {
-                    attribute_values[attribute].push(from_to[0]);
-                } else {
-                    attribute_values[attribute].push(from_to);
-                }
+    GraphCreator.prototype.resolvePremiseRanges = function(argument) {
+        const premise = String(argument ?? "").split(" -> ")[0];
+        const attributeValues = Object.create(null);
+        const unavailable = [];
+        // Resolve each premise independently; this is display-only, not inference.
+        for (const clause of premise.split(/\s+(?:AND|OR)\s+/)) {
+            const pair = clause.replace(/[()"]/g, "").trim();
+            if (!pair) continue;
+            const match = pair.match(/^(\S+)\s+(.+)$/);
+            if (!match) {
+                unavailable.push(pair);
+                continue;
             }
+            const [, level, attribute] = match;
+            const range = this.get_from_to(level, attribute);
+            if (!Array.isArray(range) || range.length !== 2) {
+                unavailable.push(pair);
+                continue;
+            }
+            if (!attributeValues[attribute]) attributeValues[attribute] = [];
+            attributeValues[attribute].push(
+                Math.abs(range[0] - range[1]) < 0.00001 ? range[0] : range
+            );
         }
 
-        // Go over the dictionary and add it to the correspoding resulting html
-        Object.keys(attribute_values).forEach(key => {
-            result += "<i>" + key + "</i>: ";
+        return { attributeValues, unavailable };
+    }
 
-            for (let level of attribute_values[key]) {
-                if (Array.isArray(level) ) {
-                    result += "(" + level[0] + ", " + level[1] + "), ";
-                } else {
-                    result += level + ", ";
-                }
+    GraphCreator.prototype.updateRangeWarning = function() {
+        const warning = document.getElementById("warningMissingRanges");
+        if (!warning) return;
+        const affected = [];
+        for (const node of this.nodes) {
+            const { unavailable } = this.resolvePremiseRanges(node.tooltip);
+            if (unavailable.length) {
+                affected.push(String(node.title ?? node.id) + ": " + unavailable.join(", "));
             }
+        }
+        warning.hidden = affected.length === 0;
+        warning.textContent = affected.length
+            ? "Warning: " + affected.length + " argument(s) use unavailable attribute ranges."
+            : "";
+        warning.title = affected.join("\n");
+    }
 
-            // Remove last ", "
-            result = result.slice(0, -2);
-            result += "<br>";
-
-        });
-
+    GraphCreator.prototype.getLevelsDescription = function(argument) {
+        const { attributeValues, unavailable } = this.resolvePremiseRanges(argument);
+        let result = "<br><b>Attributes used</b><br>";
+        for (const attribute of Object.keys(attributeValues)) {
+            const ranges = attributeValues[attribute].map(range =>
+                Array.isArray(range)
+                    ? "(" + escapeHtml(range[0]) + ", " + escapeHtml(range[1]) + ")"
+                    : escapeHtml(range)
+            );
+            result += "<i>" + escapeHtml(attribute) + "</i>: " + ranges.join(", ") + "<br>";
+        }
+        if (unavailable.length) {
+            result += '<span style="color:red"><b>Range unavailable:</b> ' + unavailable.map(escapeHtml).join(", ") + "</span><br>";
+        }
         return result;
     }
 
@@ -1101,6 +1075,7 @@ function createEditionGraph(d3, saveAs, Blob) {
 
     // call to propagate changes to graph
     GraphCreator.prototype.updateGraph = function(firstCall = false){
+        this.updateRangeWarning();
         var thisGraph = this,
             consts = thisGraph.consts,
             state = thisGraph.state;
@@ -1323,9 +1298,9 @@ function createEditionGraph(d3, saveAs, Blob) {
             }
 
             if (levelDescription.length < 30) { //Greater than <br><b>Attributes used<b><br>
-                tooltip.selectAll("text").html("<b>" + d.title + "</b>: " + d.tooltip + "<br/>Weight: " + weight + "<br/><b>Source attacks:</b> " + String(source) + "<br /><b>Target attacks:</b> " + String(target));
+                tooltip.selectAll("text").html("<b>" + escapeHtml(d.title) + "</b>: " + escapeHtml(d.tooltip) + "<br/>Weight: " + escapeHtml(weight) + "<br/><b>Source attacks:</b> " + String(source) + "<br /><b>Target attacks:</b> " + String(target));
             } else {
-                tooltip.selectAll("text").html("<b>" + d.title + "</b>: " + d.tooltip  + "<br/>Weight: " + weight + "<br>" + levelDescription + "<br><b>Source attacks:</b> " + String(source) + "<br /><b>Target attacks:</b> " + String(target));
+                tooltip.selectAll("text").html("<b>" + escapeHtml(d.title) + "</b>: " + d.tooltip  + "<br/>Weight: " + escapeHtml(weight) + "<br>" + levelDescription + "<br><b>Source attacks:</b> " + String(source) + "<br /><b>Target attacks:</b> " + String(target));
             }
 
             tooltip.style("visibility", "visible");

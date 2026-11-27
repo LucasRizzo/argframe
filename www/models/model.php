@@ -120,7 +120,7 @@ class Model {
     
     public function createNewGraph($newGraph) {
         $this->dataSetDAO->createNewGraph($newGraph);
-        $this->success = "Graph created with success! Now working on graph <b>" . $newGraph["newGraph"] . ".</b>";
+        $this->success = "Graph created with success! Now working on graph " . $newGraph["newGraph"] . ".";
         $this->successType = "createGraph";
         $this->currentGraph = $newGraph["newGraph"];
         $this->currentFeatureset = $newGraph["featuresetNewGraph"];
@@ -253,7 +253,7 @@ class Model {
         $featuresets = $this->dataSetDAO->getFeaturesets();
         foreach ($featuresets as $d) {
             if ($newFeatureset["featureset"] == $d) {
-                $this->error = "Feature set " . $newFeatureset["featureset"] . " already exists. Please try again.";
+                $this->error = "This feature set name cannot be used. Feature set names must be unique across all accounts. Please choose a different name.";
                 $this->errorType = "create";
                 return;
             }
@@ -350,7 +350,7 @@ class Model {
 
         //session_start (); // start a new session or reconnect to an existing one
 
-        if (! empty ( $_SESSION ["username"] ) && ! empty ( $_SESSION ["password"] )) {
+        if (($_SESSION["authenticated"] ?? false) === true && !empty($_SESSION["username"])) {
             return true;
         } else {
             return false;
@@ -402,14 +402,14 @@ class Model {
 
         // Style of the spreadsheet header
         $styleHeader = array('font' => array('bold' => true, 'size' => 9),
-                             'alignment' => array('horizontal' => PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
-                                                  'vertical' => PHPExcel_Style_Alignment::HORIZONTAL_CENTER,),
-                             'borders' => array('outline' => array('style' => PHPExcel_Style_Border::BORDER_THIN,),));
+                             'alignment' => array('horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                                                  'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,),
+                             'borders' => array('outline' => array('borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,),));
 
         // Style of the spreadsheet body
         $styleBody = array('font' => array('size' => 9),
-                            'alignment' => array('horizontal' => PHPExcel_Style_Alignment::HORIZONTAL_RIGHT),
-                            'borders' => array('outline' => array('style' => PHPExcel_Style_Border::BORDER_THIN,),));
+                            'alignment' => array('horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT),
+                            'borders' => array('outline' => array('borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,),));
 
         // Apply header style
         $objPHPExcel->getActiveSheet()->getStyle($columnId . $line . ":" . $columnES[N_SYSTEMS - 1] . $line)
