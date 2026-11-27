@@ -1806,8 +1806,12 @@ function create(d3, saveAs, Blob) {
                         }
                         
 
-                        if (inferences.length !== allData_.length) {
+                        if (inferences.length !== allData_.length || stats.length !== allData_.length) {
                             throw new Error("Incomplete computation results.");
+                        }
+                        const expectedStatsColumns = createHeaderStats(semanticsVector).length;
+                        if (stats.some(row => row.length !== expectedStatsColumns)) {
+                            throw new Error("Statistics export column count does not match its header.");
                         }
                         if (!await deleteComputations()) throw new Error("Could not clear computation results.");
                         createCSVs(inferences, stats, semanticsVector);
@@ -1864,11 +1868,14 @@ function create(d3, saveAs, Blob) {
             // Magic
             enxtensionVector[0] = "[" + enxtensionVector[0];
 
-            var preferred_stats = []; // number of extensions
-            var categoriser_stats = []; // number of ties at the top
+            const includePreferredStats = semanticsVector.includes("preferred");
+            const includeCategoriserStats = semanticsVector.includes("categoriser");
 
             for (var index = from; index < Math.min(to, allData_.length); index++) {
                 var row_inferences = []; // row of inferences.
+                // A missing statistic must retain its own column and row.
+                let preferredCount = "";
+                let categoriserCount = "";
 
                 for (var key in allData_[index]) {
                     if (key.toUpperCase() == "ID" || key == "GroundTruth") {
@@ -1903,21 +1910,14 @@ function create(d3, saveAs, Blob) {
                     }
 
                     // Add stats
-                    if (semanticsVector[ei] == "preferred") {
-                        if (jsonExtension[ei].length == undefined) {
-                            preferred_stats.push(0);
-                        } else {
-                            // Number of extensions
-                            preferred_stats.push(jsonExtension[ei].length);
-                        }
+                    if (semanticsVector[ei] === "preferred") {
+                        preferredCount = Array.isArray(jsonExtension[ei]) ? jsonExtension[ei].length : "";
                     }
 
-                    if (semanticsVector[ei] == "categoriser") {
-                        if (jsonExtension[ei].length == undefined) {
-                            categoriser_stats.push(0);
-                        } else {
-                            categoriser_stats.push(categoriserTiesAtTop(jsonExtension[ei][0]))
-                        }
+                    if (semanticsVector[ei] === "categoriser") {
+                        categoriserCount = Array.isArray(jsonExtension[ei])
+                            ? categoriserTiesAtTop(jsonExtension[ei][0] ?? {})
+                            : "";
                     }
 
                     if (jsonExtension[ei].length == 1 && jsonExtension[ei][0].length == 0) {
@@ -1987,21 +1987,10 @@ function create(d3, saveAs, Blob) {
                     }
                 }
 
-                infereces.push(row_inferences);                
-            }
-
-            // Add categoriser and/or preferred stats
-            for (let index = 0; index < stats.length; index++) {
-                if (categoriser_stats.length > 0 && preferred_stats.length > 0) {
-                    stats[index].push(preferred_stats[index], categoriser_stats[index]);
-                } else {
-                    if (categoriser_stats.length > 0) {
-                        stats[index].push(categoriser_stats[index]);
-                    }
-                    if (categoriser_stats.length == 0) {
-                        stats[index].push(preferred_stats[index]);
-                    }
-                }
+                infereces.push(row_inferences);
+                // Append to this record only, in the same order as createHeaderStats().
+                if (includePreferredStats) stats[index].push(preferredCount);
+                if (includeCategoriserStats) stats[index].push(categoriserCount);
             }
         }
     };
