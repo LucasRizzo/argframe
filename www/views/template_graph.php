@@ -401,6 +401,7 @@
 
     <div id="toolboxtopright">
         <span id="warningfeatureset"></span>
+        <div id="warningMissingRanges" role="status" style="color:red; font-weight:bold;" hidden></div>
         <span id="warningsaved"></span>
         <input id="save-graph" type="image" title="save graph" src="save-graph.png" alt="save grah" hidden>
         <span id="warningrenamed"></span>

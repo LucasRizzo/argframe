@@ -437,6 +437,7 @@ ini_set('php_max_size', '100M');
     </div>
     <div id="toolboxtopright">
         <span id="warningfeatureset"></span>
+        <div id="warningMissingRanges" role="status" style="color:red; font-weight:bold;" hidden></div>
         <svg height="75" width="200">
             <circle cx="160" cy="45" r="20" stroke="black" stroke-width="2" fill="none" stroke-dasharray="10 10"/>
             <text font-size="12" x="110" y="10" fill="black">No conclusion</text>

@@ -2350,6 +2350,7 @@ function create(d3, saveAs, Blob) {
 
     // call to propagate changes to graph
     GraphCreator.prototype.updateGraph = function () {
+        this.updateRangeWarning();
         var thisGraph = this,
             consts = thisGraph.consts,
             state = thisGraph.state;
@@ -2774,7 +2775,7 @@ function create(d3, saveAs, Blob) {
     }
 
 
-    GraphCreator.prototype.getLevelsDescription = function(argument) {
+    GraphCreator.prototype.resolvePremiseRanges = function(argument) {
         const premise = String(argument ?? "").split(" -> ")[0];
         const attributeValues = Object.create(null);
         const unavailable = [];
@@ -2799,6 +2800,28 @@ function create(d3, saveAs, Blob) {
             );
         }
 
+        return { attributeValues, unavailable };
+    }
+
+    GraphCreator.prototype.updateRangeWarning = function() {
+        const warning = document.getElementById("warningMissingRanges");
+        if (!warning) return;
+        const affected = [];
+        for (const node of this.nodes) {
+            const { unavailable } = this.resolvePremiseRanges(node.tooltip);
+            if (unavailable.length) {
+                affected.push(String(node.title ?? node.id) + ": " + unavailable.join(", "));
+            }
+        }
+        warning.hidden = affected.length === 0;
+        warning.textContent = affected.length
+            ? "Warning: " + affected.length + " argument(s) use unavailable attribute ranges."
+            : "";
+        warning.title = affected.join("\n");
+    }
+
+    GraphCreator.prototype.getLevelsDescription = function(argument) {
+        const { attributeValues, unavailable } = this.resolvePremiseRanges(argument);
         let result = "<br><b>Attributes used</b><br>";
         for (const attribute of Object.keys(attributeValues)) {
             const ranges = attributeValues[attribute].map(range =>
@@ -2809,7 +2832,7 @@ function create(d3, saveAs, Blob) {
             result += "<i>" + escapeHtml(attribute) + "</i>: " + ranges.join(", ") + "<br>";
         }
         if (unavailable.length) {
-            result += "<i>Range unavailable:</i> " + unavailable.map(escapeHtml).join(", ") + "<br>";
+            result += '<span style="color:red"><b>Range unavailable:</b> ' + unavailable.map(escapeHtml).join(", ") + "</span><br>";
         }
         return result;
     }
